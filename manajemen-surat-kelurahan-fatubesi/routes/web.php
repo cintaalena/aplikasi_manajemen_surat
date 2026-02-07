@@ -31,10 +31,14 @@ Route::middleware('guest')->group(function () {
     return Inertia::render('Auth/RegisterSuccess');
     })->name('register.success');   
     
+    // Rate limiting: Max 3 request OTP per 10 menit per IP
     Route::post('/register/request-otp', [RegisterOtpController::class, 'requestOtp'])
+        ->middleware('throttle:3,10')
         ->name('register.request-otp');
 
+    // Rate limiting: Max 5 attempt verify OTP per 5 menit per IP
     Route::post('/register/verify-otp', [RegisterOtpController::class, 'verifyOtp'])
+        ->middleware('throttle:5,5')
         ->name('register.verify-otp');
 });
 
@@ -66,7 +70,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/arsip-surat', [LetterArchiveController::class, 'index'])->name('arsip-surat.index');
     Route::get('/penduduk', [PendudukController::class, 'index'])->name('penduduk.index');
     Route::get('/penduduk/export', [PendudukController::class, 'export'])->name('penduduk.export');
-    Route::post('/penduduk/import', [PendudukController::class, 'import'])->name('penduduk.import');
+    
+    // SECURITY: File upload protected with secure.upload middleware
+    Route::post('/penduduk/import', [PendudukController::class, 'import'])
+        ->middleware('secure.upload')
+        ->name('penduduk.import');
 });
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
