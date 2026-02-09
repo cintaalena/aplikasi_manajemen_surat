@@ -18,13 +18,17 @@ class SecurityHeaders
 
         // SECURITY: Content Security Policy (CSP)
         // Prevent XSS by restricting resource loading
+        $viteDevServer = config('app.env') === 'local' 
+            ? ' http://localhost:5173 http://localhost:5174 http://127.0.0.1:5173 http://127.0.0.1:5174 ws://localhost:5173 ws://localhost:5174 ws://127.0.0.1:5173 ws://127.0.0.1:5174'
+            : '';
+        
         $csp = [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Inertia needs unsafe-inline
-            "style-src 'self' 'unsafe-inline'", // Tailwind needs unsafe-inline
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'" . $viteDevServer, // Inertia needs unsafe-inline
+            "style-src 'self' 'unsafe-inline' https://fonts.bunny.net" . $viteDevServer, // Tailwind needs unsafe-inline
             "img-src 'self' data: https:",
-            "font-src 'self' data:",
-            "connect-src 'self'",
+            "font-src 'self' data: https://fonts.bunny.net",
+            "connect-src 'self'" . $viteDevServer,
             "frame-ancestors 'none'", // Prevent clickjacking
             "base-uri 'self'",
             "form-action 'self'",

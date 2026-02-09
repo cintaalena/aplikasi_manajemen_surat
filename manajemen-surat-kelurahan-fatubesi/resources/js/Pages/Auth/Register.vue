@@ -142,7 +142,7 @@ const verifyOtp = () => {
         <!-- STEP 2: Input OTP + Verifikasi -->
         <form v-else @submit.prevent="verifyOtp">
             <div class="mb-3 text-sm text-gray-600">
-                OTP sudah dikirim ke WhatsApp <b>{{ form.phone }}</b>. Masukkan OTP untuk menyelesaikan pendaftaran.
+                OTP sudah dikirim ke email <b>{{ form.email }}</b>. Periksa inbox atau folder spam email Anda dan masukkan OTP untuk menyelesaikan pendaftaran.
             </div>
 
             <div>

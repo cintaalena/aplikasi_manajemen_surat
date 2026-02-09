@@ -9,17 +9,33 @@ class Penduduk extends Model
     protected $table = 'penduduks';
 
     protected $fillable = [
+        // Data Keluarga
         'kode_keluarga',
         'nama_kepala_keluarga',
         'alamat',
         'rt',
         'rw',
-        'nama_dusun',
-        'bulan',
-        'tahun',
-        'nama_pengisi',
+        'dusun',
+        
+        // Data Individu
+        'no_urut',
+        'nik',
+        'nama',
+        'jenis_kelamin',
+        'hubungan',
+        'tempat_lahir',
+        'tanggal_lahir',
+        'usia',
+        'status_perkawinan',
+        'agama',
+        'golongan_darah',
+        'kewarganegaraan',
+        'etnis',
+        'pendidikan',
         'pekerjaan',
-        'jabatan',
-        'sumber_data',
+    ];
+
+    protected $casts = [
+        'tanggal_lahir' => 'date',
     ];
 }
