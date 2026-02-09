@@ -21,15 +21,21 @@ class SecureFileUpload
             $file = $request->file('file');
 
             // SECURITY: Validate real MIME type from content (not just extension)
-            $realMimeType = $file->getMimeType();
+           $realMimeType = $file->getMimeType();
+
             $allowedMimeTypes = [
+                // CSV / Text
                 'text/plain',
                 'text/csv',
                 'application/csv',
                 'text/x-csv',
-                'application/vnd.ms-excel', // CSV opened in Excel
-            ];
 
+                // Excel
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                'application/vnd.ms-excel',                                          // .xls (common)
+                'application/CDFV2',                                                 // .xls (OLE / Windows)
+            ];
+            
             if (!in_array($realMimeType, $allowedMimeTypes, true)) {
                 Log::warning('Rejected file upload - invalid MIME type', [
                     'mime_type' => $realMimeType,

@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Shuchkin\SimpleXLSX;
-use Shuchkin\SimpleXLS;
 
 class PendudukController extends Controller
 {
@@ -128,7 +127,7 @@ class PendudukController extends Controller
                         $r->jenis_kelamin,
                         $r->hubungan,
                         $r->tempat_lahir,
-                        $r->tanggal_lahir ? (is_string($r->tanggal_lahir) ? $r->tanggal_lahir : $r->tanggal_lahir->format('d-m-Y')) : '',
+                        $r->tanggal_lahir ? $r->tanggal_lahir->format('d-m-Y') : '',
                         $r->usia,
                         $r->status_perkawinan,
                         $r->agama,
@@ -147,140 +146,65 @@ class PendudukController extends Controller
 
     public function import(Request $request)
     {
-        // STEP 1: Validasi file upload
         $validator = Validator::make($request->all(), [
             'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:10240'], // 10MB
-        ], [
-            'file.required' => 'File harus dipilih!',
-            'file.mimes' => 'Format file harus .csv, .txt, .xlsx, atau .xls',
-            'file.max' => 'Ukuran file maksimal 10MB',
         ]);
 
         if ($validator->fails()) {
-            return back()->with('error', '❌ Upload Gagal: ' . $validator->errors()->first());
+            return back()->with('error', $validator->errors()->first());
         }
 
         $file = $request->file('file');
-        $filename = $file->getClientOriginalName();
         $path = $file->getRealPath();
         $extension = strtolower($file->getClientOriginalExtension());
 
         $rows = [];
 
-        // STEP 2: Baca file sesuai format
-        try {
-            if ($extension === 'xlsx') {
-                $xlsx = SimpleXLSX::parse($path);
-                if (!$xlsx) {
-                    $error = SimpleXLSX::parseError();
-                    return back()->with('error', "❌ Gagal membaca file Excel (.xlsx): {$error}\n\nSolusi: Pastikan file tidak corrupt dan format valid.");
-                }
-                $rows = $xlsx->rows();
-            } elseif ($extension === 'xls') {
-                if (!class_exists(SimpleXLS::class)) {
-                    return back()->with('error', "❌ Library pembaca .xls tidak tersedia.\n\nSolusi: Simpan ulang file menjadi .xlsx atau .csv lalu upload ulang.");
-                }
-                $xls = SimpleXLS::parse($path);
-                if (!$xls) {
-                    $error = SimpleXLS::parseError();
-                    return back()->with('error', "❌ Gagal membaca file Excel (.xls): {$error}\n\nSolusi: Coba save ulang file sebagai .xlsx atau .csv");
-                }
-                $rows = $xls->rows();
-            } else {
-                $handle = fopen($path, 'r');
-                if (!$handle) {
-                    return back()->with('error', "❌ Gagal membuka file CSV.\n\nSolusi: Pastikan file CSV tidak sedang dibuka di aplikasi lain.");
-                }
-                while (($row = fgetcsv($handle)) !== false) {
-                    $rows[] = $row;
-                }
-                fclose($handle);
+        // Read file based on extension
+        if (in_array($extension, ['xlsx', 'xls'])) {
+            // Read Excel using SimpleXLSX
+            $xlsx = SimpleXLSX::parse($path);
+            if (!$xlsx) {
+                return back()->with('error', 'Gagal membaca file Excel: ' . SimpleXLSX::parseError());
             }
-        } catch (\Throwable $e) {
-            return back()->with('error', "❌ Error membaca file '{$filename}': {$e->getMessage()}\n\nSolusi: Coba tutup file di Excel/LibreOffice, lalu upload ulang.");
+            $rows = $xlsx->rows();
+        } else {
+            // Read CSV
+            $handle = fopen($path, 'r');
+            if (!$handle) {
+                return back()->with('error', 'Gagal membaca file CSV.');
+            }
+            while (($row = fgetcsv($handle)) !== false) {
+                $rows[] = $row;
+            }
+            fclose($handle);
         }
 
-        // STEP 3: Validasi file tidak kosong
         if (empty($rows)) {
-            return back()->with('error', "❌ File '{$filename}' kosong atau tidak memiliki data.\n\nSolusi: Pastikan file memiliki minimal 1 baris header dan 1 baris data.");
+            return back()->with('error', 'File kosong atau format tidak valid.');
         }
 
-        if (count($rows) < 2) {
-            return back()->with('error', "❌ File hanya memiliki header tanpa data.\n\nData ditemukan: " . count($rows) . " baris\n\nSolusi: Tambahkan minimal 1 baris data setelah header.");
-        }
-
-        // STEP 4: Validasi header dan mapping
+        // Get header and normalize
         $header = array_shift($rows);
         $headerMap = $this->buildHeaderMap($header);
 
-        // Cek apakah ada kolom yang berhasil dimapping
-        if (empty($headerMap)) {
-            $headerList = implode(', ', array_slice($header, 0, 12));
-            return back()->with('error', "❌ Tidak ada kolom yang dikenali dari header file.\n\nHeader ditemukan: {$headerList}...\n\nSolusi: Pastikan file memiliki kolom minimal:\n- 'Nama' / 'Nama Anggota Keluarga'\n- 'Kode Keluarga'\n- 'RT', 'RW', 'Dusun'");
-        }
-
-        // Validasi kolom wajib
-        $requiredMapped = ['nama', 'kode_keluarga'];
-        $missingRequired = [];
-        $mappedFields = array_values($headerMap); // nilai map adalah field DB
-
-        foreach ($requiredMapped as $req) {
-            if (!in_array($req, $mappedFields, true)) {
-                $missingRequired[] = $req;
-            }
-        }
-
-        if (!empty($missingRequired)) {
-            $missing = implode(', ', $missingRequired);
-            $headerList = implode(', ', $header);
-            return back()->with('error', "❌ Kolom wajib tidak ditemukan: {$missing}\n\nHeader file Anda: {$headerList}\n\nSolusi: Pastikan kolom 'Nama Anggota Keluarga' dan 'Kode Keluarga' ada di file Excel.");
-        }
-
-        // STEP 5: Import data
         $inserted = 0;
         $updated = 0;
         $skipped = 0;
-        $errors = [];
-        $rowNumber = 2; // Mulai dari baris 2 (setelah header)
 
         DB::beginTransaction();
         try {
             foreach ($rows as $row) {
-                // Skip baris kosong
-                if (empty(array_filter($row))) {
+                if (count($row) < count($header)) {
                     $skipped++;
-                    $rowNumber++;
-                    continue;
-                }
-
-                // Validasi jumlah kolom (longgar sedikit)
-                if (count($row) < 4) {
-                    $skipped++;
-                    if (count($errors) < 5) {
-                        $errors[] = "Baris {$rowNumber}: Baris terlalu pendek / tidak valid";
-                    }
-                    $rowNumber++;
                     continue;
                 }
 
                 $data = $this->mapRowToData($row, $header, $headerMap);
 
-                // Validasi data minimal
-                if (empty($data['kode_keluarga'])) {
+                // Validasi minimal
+                if (empty($data['kode_keluarga']) || empty($data['nama'])) {
                     $skipped++;
-                    if (count($errors) < 5) {
-                        $errors[] = "Baris {$rowNumber}: Kode Keluarga kosong";
-                    }
-                    $rowNumber++;
-                    continue;
-                }
-
-                if (empty($data['nama'])) {
-                    $skipped++;
-                    if (count($errors) < 5) {
-                        $errors[] = "Baris {$rowNumber}: Nama kosong";
-                    }
-                    $rowNumber++;
                     continue;
                 }
 
@@ -296,132 +220,61 @@ class PendudukController extends Controller
                         ->first();
                 }
 
-                try {
-                    if ($existing) {
-                        $existing->update($data);
-                        $updated++;
-                    } else {
-                        Penduduk::create($data);
-                        $inserted++;
-                    }
-                } catch (\Throwable $e) {
-                    $skipped++;
-                    if (count($errors) < 5) {
-                        $errors[] = "Baris {$rowNumber}: Error database - " . $e->getMessage();
-                    }
+                if ($existing) {
+                    $existing->update($data);
+                    $updated++;
+                } else {
+                    Penduduk::create($data);
+                    $inserted++;
                 }
-
-                $rowNumber++;
             }
 
             DB::commit();
-
-            $successMsg = "✅ Import selesai!\n\n";
-            $successMsg .= "📊 Statistik:\n";
-            $successMsg .= "• Berhasil INSERT: {$inserted} data baru\n";
-            $successMsg .= "• Berhasil UPDATE: {$updated} data existing\n";
-            $successMsg .= "• Dilewati: {$skipped} baris\n";
-            $successMsg .= "• Total diproses: " . ($inserted + $updated + $skipped) . " baris\n";
-
-            if (!empty($errors)) {
-                $successMsg .= "\n⚠️ Peringatan (5 error pertama):\n";
-                $successMsg .= implode("\n", $errors);
-            }
-
-            // penting: paksa reload props index (Inertia)
-            return redirect()->route('penduduk.index')->with('success', $successMsg);
-
         } catch (\Throwable $e) {
             DB::rollBack();
-
-            $errorMsg = "❌ Import GAGAL pada baris {$rowNumber}\n\n";
-            $errorMsg .= "Error: " . $e->getMessage() . "\n\n";
-            $errorMsg .= "Solusi:\n";
-            $errorMsg .= "1. Cek format data pada baris {$rowNumber}\n";
-            $errorMsg .= "2. Pastikan NIK tidak duplikat (jika ada)\n";
-            $errorMsg .= "3. Pastikan format tanggal benar (dd-mm-yyyy)\n";
-            $errorMsg .= "4. Pastikan jenis kelamin L atau P\n\n";
-            $errorMsg .= "Data yang sukses di-import: INSERT {$inserted}, UPDATE {$updated}";
-
-            return back()->with('error', $errorMsg);
+            return back()->with('error', 'Import gagal: ' . $e->getMessage());
         }
+
+        return back()->with('success', "Import selesai! Berhasil insert: {$inserted}, update: {$updated}, skip: {$skipped}");
     }
 
     /**
      * Build header mapping from various possible column names
-     * (SUDAH DIPERBAIKI: pakai normalizeHeader untuk header dan alias)
      */
     private function buildHeaderMap(array $header): array
     {
         $map = [];
 
-        // Alias berdasarkan file excel kamu (database_penduduk.xlsx)
+        // Header alias mapping
         $aliases = [
             'no_urut' => ['no', 'no.', 'nomor', 'no urut'],
-
-            'kode_keluarga' => [
-                'kode keluarga', 'kode_keluarga', 'no kk', 'nomor kk', 'kk', 'kodekeluarga'
-            ],
-
-            'nama_kepala_keluarga' => [
-                'nama kepala keluarga', 'nama kk', 'kepala keluarga', 'namakepalakeluarga'
-            ],
-
-            // file kamu pakai "Nama Anggota Keluarga"
-            'nama' => [
-                'nama', 'nama anggota', 'nama anggota keluarga', 'namaanggotakeluarga'
-            ],
-
-            // file kamu pakai "N I K"
-            'nik' => [
-                'nik', 'n i k'
-            ],
-
-            'jenis_kelamin' => ['jk', 'jenis kelamin', 'kelamin', 'jeniskelamin'],
-
-            'hubungan' => ['hubungan', 'hub', 'hub. keluarga', 'hubkeluarga'],
-
-            'tempat_lahir' => ['tempat lahir', 'tmp lahir', 'tempatlahir'],
-
-            'tanggal_lahir' => ['tanggal lahir', 'tgl lahir', 'tgl. lahir', 'tanggallahir'],
-
-            'usia' => ['usia', 'umur'],
-
-            'status_perkawinan' => ['status', 'status perkawinan', 'status kawin', 'statusperkawinan'],
-
-            // file kamu pakai "GDarah"
-            'golongan_darah' => ['gdarah', 'gol darah', 'golongan darah', 'gol. darah', 'goldarah', 'golongandarah'],
-
-            'agama' => ['agama'],
-
-            'kewarganegaraan' => ['warga negara', 'kewarganegaraan', 'wn', 'kewarganegaraan'],
-
-            // file kamu pakai "Etnis / Suku"
-            'etnis' => ['etnis', 'suku', 'etnis/suku', 'etnis / suku', 'etnissuku'],
-
-            'pendidikan' => ['pendidikan', 'pend', 'pend.', 'pendidikan'],
-
-            'pekerjaan' => ['pekerjaan', 'pek', 'pek.', 'pekerjaan'],
-
+            'kode_keluarga' => ['kode keluarga', 'no kk', 'nomor kk', 'kk'],
+            'nama_kepala_keluarga' => ['kepala keluarga', 'nama kk', 'nama kepala keluarga'],
+            'nama' => ['nama', 'nama anggota', 'nama anggota keluarga'],
+            'jenis_kelamin' => ['jk', 'jenis kelamin', 'kelamin'],
+            'tempat_lahir' => ['tempat lahir', 'tmp lahir'],
+            'tanggal_lahir' => ['tanggal lahir', 'tgl lahir', 'tgl. lahir'],
+            'status_perkawinan' => ['status', 'status perkawinan', 'status kawin'],
+            'golongan_darah' => ['gdarah', 'gol darah', 'golongan darah', 'gol. darah'],
+            'etnis' => ['etnis', 'suku', 'etnis/suku'],
+            'kewarganegaraan' => ['warga negara', 'kewarganegaraan', 'wn'],
             'rt' => ['rt'],
             'rw' => ['rw'],
-            'dusun' => ['dusun', 'nama dusun', 'namadusun'],
+            'dusun' => ['dusun', 'nama dusun'],
             'alamat' => ['alamat'],
+            'nik' => ['nik'],
+            'hubungan' => ['hubungan', 'hub', 'hub. keluarga'],
+            'usia' => ['usia', 'umur'],
+            'agama' => ['agama'],
+            'pendidikan' => ['pendidikan', 'pend', 'pend.'],
+            'pekerjaan' => ['pekerjaan', 'pek', 'pek.'],
         ];
 
-        // Pre-normalize alias list (biar cepat dan konsisten)
-        $aliasNormalized = [];
-        foreach ($aliases as $field => $possibleNames) {
-            foreach ($possibleNames as $name) {
-                $aliasNormalized[$field][] = $this->normalizeHeader((string) $name);
-            }
-        }
-
         foreach ($header as $index => $col) {
-            $normalized = $this->normalizeHeader((string) $col);
-
-            foreach ($aliasNormalized as $field => $possibleNorms) {
-                if (in_array($normalized, $possibleNorms, true)) {
+            $normalized = strtolower(trim($col));
+            
+            foreach ($aliases as $field => $possibleNames) {
+                if (in_array($normalized, $possibleNames)) {
                     $map[$index] = $field;
                     break;
                 }
@@ -429,20 +282,6 @@ class PendudukController extends Controller
         }
 
         return $map;
-    }
-
-    /**
-     * Normalize header agar robust terhadap spasi/tanda baca:
-     * "N I K" -> "nik"
-     * "Etnis / Suku" -> "etnissuku"
-     * "Kode Keluarga" -> "kodekeluarga"
-     */
-    private function normalizeHeader(string $h): string
-    {
-        $h = strtolower(trim($h));
-        $h = preg_replace('/\s+/', '', $h);
-        $h = str_replace(['.', '/', '\\', '-', '_', '(', ')'], '', $h);
-        return $h;
     }
 
     /**
@@ -527,8 +366,8 @@ class PendudukController extends Controller
     private function normalizeJenisKelamin($value): ?string
     {
         $v = strtoupper(trim((string) $value));
-        if (in_array($v, ['L', 'LAKI-LAKI', 'LAKI', 'MALE', 'M'], true)) return 'L';
-        if (in_array($v, ['P', 'PEREMPUAN', 'FEMALE', 'F'], true)) return 'P';
+        if (in_array($v, ['L', 'LAKI-LAKI', 'LAKI', 'MALE', 'M'])) return 'L';
+        if (in_array($v, ['P', 'PEREMPUAN', 'FEMALE', 'F'])) return 'P';
         return null;
     }
 

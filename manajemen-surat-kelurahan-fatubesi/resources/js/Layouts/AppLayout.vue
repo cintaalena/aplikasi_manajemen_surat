@@ -5,28 +5,33 @@ import { computed, ref, watchEffect } from 'vue'
 const page = usePage()
 
 const isCurrent = (name) => {
-  try { return route().current(name) } catch { return false }
+  try { 
+    const result = route().current(name)
+    return result
+  } catch (e) { 
+    console.error('Route helper error:', e)
+    return false 
+  }
 }
 
 const logout = () => {
   router.post(route('logout'))
 }
 
+const goToPenduduk = () => {
+  try {
+    console.log('Navigating to penduduk...')
+    router.visit('/penduduk')
+  } catch (e) {
+    console.error('Navigation error:', e)
+  }
+}
+
 const templates = [
   { label: 'Surat Keterangan Domisili', slug: 'keterangan-domisili' },
-  { label: 'Surat Keterangan Kelakuan Baik', slug: 'keterangan-kelakuan-baik' },
-  { label: 'Surat Keterangan Usaha', slug: 'keterangan-usaha' },
-  { label: 'Surat Keterangan (Umum)', slug: 'keterangan-umum' },
-  { label: 'Surat Keterangan Selesai Penelitian', slug: 'keterangan-selesai-penelitian' },
   { label: 'Surat Keterangan Kelahiran', slug: 'keterangan-kelahiran' },
   { label: 'Surat Keterangan Kematian', slug: 'keterangan-kematian' },
   { label: 'Surat Keterangan Pindah', slug: 'keterangan-pindah' },
-  { label: 'Surat Keterangan Belum Menikah', slug: 'keterangan-belum-menikah' },
-  { label: 'Surat Keterangan Tidak Mampu', slug: 'keterangan-tidak-mampu' },
-  { label: 'Surat Keterangan Domisili Tanah', slug: 'keterangan-domisili-tanah' },
-  { label: 'Surat Keterangan Waris', slug: 'keterangan-waris' },
-  { label: 'Surat Keterangan Ahli Waris', slug: 'keterangan-ahli-waris' },
-  { label: 'Surat Keterangan Hilang', slug: 'keterangan-hilang' },
 ]
 
 // submenu auto-open kalau user ada di halaman template
@@ -158,9 +163,10 @@ const isTemplateActive = (slug) => {
 
 
       <!-- PENDUDUK -->
-      <Link
-        :href="route('penduduk.index')"
-        class="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition border"
+      <a
+        href="/penduduk"
+        @click.prevent="goToPenduduk"
+        class="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition border cursor-pointer"
         :class="isCurrent('penduduk.index')
           ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
           : 'bg-white text-gray-700 border-transparent hover:bg-emerald-50/60 hover:text-emerald-900'"
@@ -170,7 +176,7 @@ const isTemplateActive = (slug) => {
           Database Penduduk
         </span>
         <span v-if="isCurrent('penduduk.index')" class="text-xs text-emerald-700">Aktif</span>
-      </Link>
+      </a>
 
       <!-- LOG OUT -->
       <button

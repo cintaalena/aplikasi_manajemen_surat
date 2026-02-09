@@ -141,47 +141,13 @@ class RegisterOtpController extends Controller
     /** 🔥 BUAT USER DI SINI (BUKAN DI requestOtp) */
     $user = User::where('email', $email)->firstOrFail();
 
-    $map = [
-        'lurah' => 'LRH',
-        'sekretaris' => 'SEK',
-        'kasie pelayanan masyarakat' => 'KPM',
-        'kasie pem dan trantib umum' => 'KPT',
-        'pengelola pemberdayaan masyarakat dan kelembagaan' => 'PPM',
-        'pengadministrasian umum' => 'ADM',
-        'pppk' => 'PPPK',
-        'ptt' => 'PTT',
-    ];
-
+    // CREDENTIAL: Ambil credential tetap berdasarkan jabatan dari config
     $jabatanKey = strtolower($user->jabatan);
-    $prefix = $map[$jabatanKey] ?? 'USR';
+    $credentials = config('credentials.jabatan_credentials', []);
+    $credential = $credentials[$jabatanKey] ?? config('credentials.default_credential', 'A-999');
 
-    $credential = DB::transaction(function () use ($user, $jabatanKey, $prefix, $email) {
-
-        $row = DB::table('credential_counters')
-            ->where('jabatan_key', $jabatanKey)
-            ->lockForUpdate()
-            ->first();
-
-        if (! $row) {
-            DB::table('credential_counters')->insert([
-                'jabatan_key' => $jabatanKey,
-                'last_number' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            $last = 0;
-        } else {
-            $last = $row->last_number;
-        }
-
-        $next = $last + 1;
-
-        DB::table('credential_counters')
-            ->where('jabatan_key', $jabatanKey)
-            ->update(['last_number' => $next]);
-
-        $credential = sprintf('%s-%03d', $prefix, $next);
-
+    DB::transaction(function () use ($user, $credential, $email) {
+        // Update user dengan credential tetap berdasarkan jabatan
         $user->forceFill([
             'is_active' => true,
             'email_verified_at' => now(),
@@ -189,11 +155,10 @@ class RegisterOtpController extends Controller
             'credential_issued_at' => now(),
         ])->save();
 
+        // Tandai OTP sebagai terverifikasi
         DB::table('email_otps')
             ->where('email', $email)
             ->update(['verified_at' => now()]);
-
-        return $credential;
     });
 
     return Inertia::render('Auth/RegisterSuccess', [
