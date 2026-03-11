@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Penduduk extends Model
 {
+    use SoftDeletes, Auditable;
+
     protected $table = 'penduduks';
 
     protected $fillable = [
@@ -16,7 +20,7 @@ class Penduduk extends Model
         'rt',
         'rw',
         'dusun',
-        
+
         // Data Individu
         'no_urut',
         'nik',
@@ -35,7 +39,14 @@ class Penduduk extends Model
         'pekerjaan',
     ];
 
+    // Field ini tidak akan pernah muncul dalam JSON response otomatis
+    // NIK adalah data sensitif PII (Personally Identifiable Information)
+    protected $hidden = [
+        'deleted_at',
+    ];
+
     protected $casts = [
         'tanggal_lahir' => 'date',
+        'deleted_at' => 'datetime',
     ];
 }

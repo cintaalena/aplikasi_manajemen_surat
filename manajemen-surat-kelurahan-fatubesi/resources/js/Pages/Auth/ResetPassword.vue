@@ -37,23 +37,23 @@ const submit = () => {
 
         <form @submit.prevent="submit">
             <div>
-                <InputLabel for="email" value="Email" />
+                <InputLabel for="email" value="Email Akun" />
 
                 <TextInput
                     id="email"
                     type="email"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full bg-gray-100 cursor-not-allowed"
                     v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
+                    readonly
+                    autocomplete="off"
                 />
+                <p class="mt-1 text-xs text-gray-500">Email akun Anda (tidak dapat diubah).</p>
 
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
             <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+                <InputLabel for="password" value="Password Baru" />
 
                 <TextInput
                     id="password"
@@ -63,6 +63,7 @@ const submit = () => {
                     required
                     autocomplete="new-password"
                 />
+                <p class="mt-1 text-xs text-gray-500">Min. 8 karakter, wajib mengandung huruf kapital, huruf kecil, angka, dan simbol (!, @, #, $, dll.)</p>
 
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>

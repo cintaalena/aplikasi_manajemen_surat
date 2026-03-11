@@ -13,7 +13,8 @@ defineProps({
 });
 
 const form = useForm({
-    email: '',
+    name: '',
+    recovery_email: '',
 });
 
 const submit = () => {
@@ -23,12 +24,11 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Forgot Password" />
+        <Head title="Lupa Password" />
 
         <div class="mb-4 text-sm text-gray-600">
-            Forgot your password? No problem. Just let us know your email
-            address and we will email you a password reset link that will allow
-            you to choose a new one.
+            Lupa password? Masukkan <strong>username</strong> dan <strong>email pemulihan</strong>
+            yang Anda daftarkan saat registrasi. Kami akan mengirimkan link reset password ke email tersebut.
         </div>
 
         <div
@@ -40,19 +40,36 @@ const submit = () => {
 
         <form @submit.prevent="submit">
             <div>
-                <InputLabel for="email" value="Email" />
+                <InputLabel for="name" value="Username" />
 
                 <TextInput
-                    id="email"
-                    type="email"
+                    id="name"
+                    type="text"
                     class="mt-1 block w-full"
-                    v-model="form.email"
+                    v-model="form.name"
                     required
                     autofocus
-                    autocomplete="username"
+                    autocomplete="off"
+                    placeholder="Masukkan username Anda"
                 />
 
-                <InputError class="mt-2" :message="form.errors.email" />
+                <InputError class="mt-2" :message="form.errors.name" />
+            </div>
+
+            <div class="mt-4">
+                <InputLabel for="recovery_email" value="Email Pemulihan" />
+
+                <TextInput
+                    id="recovery_email"
+                    type="email"
+                    class="mt-1 block w-full"
+                    v-model="form.recovery_email"
+                    required
+                    autocomplete="off"
+                    placeholder="Masukkan email pemulihan Anda"
+                />
+
+                <InputError class="mt-2" :message="form.errors.recovery_email" />
             </div>
 
             <div class="mt-4 flex items-center justify-end">
@@ -60,7 +77,7 @@ const submit = () => {
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Email Password Reset Link
+                    Kirim Link Reset Password
                 </PrimaryButton>
             </div>
         </form>
