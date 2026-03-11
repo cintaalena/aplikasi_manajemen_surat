@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Letter extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes, Auditable;
 
     protected $fillable = [
         'template_slug',
@@ -22,8 +24,18 @@ class Letter extends Model
         'printed_by',
     ];
 
+    protected $hidden = [
+        'deleted_at',
+    ];
+
     protected $casts = [
         'payload' => 'array',
         'printed_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
+
+    public function printedBy()
+    {
+        return $this->belongsTo(User::class, 'printed_by');
+    }
 }

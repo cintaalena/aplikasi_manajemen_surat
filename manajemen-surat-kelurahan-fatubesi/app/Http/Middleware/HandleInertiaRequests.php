@@ -39,9 +39,11 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
-                'credential' => fn () => $request->session()->get('credential'),
+                'success'      => fn () => $request->session()->get('success'),
+                'error'        => fn () => $request->session()->get('error'),
+                'credential'   => fn () => $request->session()->get('credential'),
+                'otp_sent'     => fn () => $request->session()->get('otp_sent'),
+                'mail_warning' => fn () => $request->session()->get('mail_warning'),
             ],
         ]);
     }

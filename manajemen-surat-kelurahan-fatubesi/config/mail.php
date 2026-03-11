@@ -45,8 +45,17 @@ return [
             'port' => env('MAIL_PORT', 2525),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            'timeout' => 15,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+            // MAIL_VERIFY_SSL=false untuk nonaktifkan sementara di dev lokal
+            // (jika Avast/antivirus mengaktifkan HTTPS scanning yang intercept TLS)
+            'stream' => [
+                'ssl' => [
+                    'cafile'            => env('MAIL_CAFILE', 'C:/xampp/php/cacert.pem') ?: null,
+                    'verify_peer'       => env('MAIL_VERIFY_SSL', true),
+                    'verify_peer_name'  => env('MAIL_VERIFY_SSL', true),
+                ],
+            ],
         ],
 
         'ses' => [

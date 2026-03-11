@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 
 class RegisterOtpController extends Controller
@@ -15,57 +16,89 @@ class RegisterOtpController extends Controller
     public function requestOtp(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'jabatan' => 'required|string|max:50',
-            'password' => 'required|confirmed|min:8',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'recovery_email' => [
+                'required',
+                'email',
+                'unique:users,recovery_email',
+                'different:email',
+            ],
+            'jabatan'  => 'required|string|max:50',
+            'password' => [
+                'required',
+                'confirmed',
+                Rules\Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),
+            ],
+        ], [
+            'recovery_email.required' => 'Email pemulihan wajib diisi.',
+            'recovery_email.email'    => 'Format email pemulihan tidak valid.',
+            'recovery_email.unique'   => 'Email pemulihan sudah digunakan oleh akun lain.',
+            'recovery_email.different'=> 'Email pemulihan harus berbeda dari email akun utama.',
+            'password.min'            => 'Password minimal 8 karakter.',
+            'password.mixed'          => 'Password harus mengandung minimal 1 huruf kapital dan 1 huruf kecil.',
+            'password.letters'        => 'Password harus mengandung minimal 1 huruf.',
+            'password.numbers'        => 'Password harus mengandung minimal 1 angka.',
+            'password.symbols'        => 'Password harus mengandung minimal 1 simbol (contoh: !, @, #, $).',
+            'password.uncompromised'  => 'Password ini terlalu umum atau pernah bocor. Gunakan password lain.',
         ]);
 
-        DB::beginTransaction();
+        // Generate OTP sebelum transaksi agar bisa dikirim setelah commit
+        $otp = random_int(100000, 999999);
 
+        DB::beginTransaction();
         try {
             $user = User::create([
-                'name' => $request->name,
-                'email' => strtolower($request->email),
-                'password' => Hash::make($request->password),
-                'jabatan' => $request->jabatan,
-                'is_active' => false,
+                'name'           => $request->name,
+                'email'          => strtolower($request->email),
+                'recovery_email' => strtolower($request->recovery_email),
+                'password'       => Hash::make($request->password),
+                'jabatan'        => $request->jabatan,
+                'is_active'      => false,
             ]);
 
-            $otp = random_int(100000, 999999);
-
-            // SECURITY: Reset attempts, cooldown, dan generate OTP baru
             DB::table('email_otps')->updateOrInsert(
                 ['email' => $user->email],
                 [
-                    'otp_hash' => Hash::make($otp),
-                    'expires_at' => now()->addMinutes(10),
-                    'attempts' => 0, // SECURITY: Reset counter saat OTP baru
-                    'consecutive_failures' => 0, // SECURITY: Reset consecutive failures
-                    'locked_until' => null, // SECURITY: Reset cooldown
-                    'last_failed_at' => null, // SECURITY: Reset last failed timestamp
-                    'verified_at' => null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'otp_hash'             => Hash::make($otp),
+                    'expires_at'           => now()->addMinutes(10),
+                    'attempts'             => 0,
+                    'consecutive_failures' => 0,
+                    'locked_until'         => null,
+                    'last_failed_at'       => null,
+                    'verified_at'          => null,
+                    'created_at'           => now(),
+                    'updated_at'           => now(),
                 ]
             );
 
-            Mail::raw("Kode OTP Anda: {$otp} (berlaku 10 menit)", function ($m) use ($user) {
-                $m->to($user->email)->subject('Verifikasi Registrasi Akun');
-            });
-
             DB::commit();
-
-            // opsional: simpan email agar form OTP tidak perlu ketik ulang
-            return back()->with([
-                'status' => 'OTP dikirim ke email',
-                'otp_email' => $user->email,
-            ]);
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
-            abort(500, 'Terjadi kesalahan saat mengirim OTP.');
+            abort(500, 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.');
         }
+
+        // Kirim email DI LUAR transaksi — agar kegagalan SMTP tidak membatalkan
+        // data yang sudah tersimpan dan tidak memblokir user lanjut ke step OTP.
+        $mailWarning = null;
+        try {
+            Mail::raw(
+                "Kode OTP Anda: {$otp}\n\nKode ini berlaku selama 10 menit.\nJangan bagikan kode ini kepada siapapun.",
+                function ($m) use ($user) {
+                    $m->to($user->email)->subject('Kode OTP Verifikasi Registrasi - Kelurahan Fatubesi');
+                }
+            );
+        } catch (\Throwable $e) {
+            // Log tapi jangan gagalkan request — user tetap bisa ke step 2 dan klik "Kirim ulang OTP"
+            report($e);
+            $mailWarning = 'Email OTP mungkin terlambat sampai. Jika tidak menerima dalam beberapa menit, gunakan tombol "Kirim ulang OTP".';
+        }
+
+        return back()->with([
+            'otp_sent'     => true,
+            'mail_warning' => $mailWarning,
+        ]);
     }
 
    public function verifyOtp(Request $request)

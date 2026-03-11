@@ -4,14 +4,18 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const step = ref(1); // 1 = isi data + request OTP, 2 = input OTP + verify
+const mailWarning = ref(null);
+
+const page = usePage();
 
 const form = useForm({
     name: '',
     email: '',
+    recovery_email: '',
     jabatan: '',
     password: '',
     password_confirmation: '',
@@ -23,6 +27,8 @@ const requestOtp = () => {
     form.post(route('register.request-otp'), {
         preserveScroll: true,
         onSuccess: () => {
+            // Flash 'otp_sent' dikirim server saat berhasil simpan → pindah ke step 2
+            mailWarning.value = page.props.flash?.mail_warning ?? null;
             step.value = 2;
         },
     });
@@ -51,7 +57,7 @@ const verifyOtp = () => {
                     v-model="form.name"
                     required
                     autofocus
-                    autocomplete="name"
+                    autocomplete="off"
                 />
                 <InputError class="mt-2" :message="form.errors.name" />
             </div>
@@ -64,9 +70,25 @@ const verifyOtp = () => {
                     class="mt-1 block w-full"
                     v-model="form.email"
                     required
-                    autocomplete="username"
+                    autocomplete="off"
                 />
                 <InputError class="mt-2" :message="form.errors.email" />
+            </div>
+
+            <div class="mt-4">
+                <InputLabel for="recovery_email" value="Email Pemulihan" />
+                <TextInput
+                    id="recovery_email"
+                    type="email"
+                    class="mt-1 block w-full"
+                    v-model="form.recovery_email"
+                    required
+                    autocomplete="off"
+                />
+                <p class="mt-1 text-xs text-gray-500">
+                    Email ini digunakan untuk menerima link reset password. Harus berbeda dari email utama di atas.
+                </p>
+                <InputError class="mt-2" :message="form.errors.recovery_email" />
             </div>
 
 
@@ -105,6 +127,7 @@ const verifyOtp = () => {
                     required
                     autocomplete="new-password"
                 />
+                <p class="mt-1 text-xs text-gray-500">Min. 8 karakter, wajib mengandung huruf kapital, huruf kecil, angka, dan simbol (!, @, #, $, dll.)</p>
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
@@ -143,6 +166,11 @@ const verifyOtp = () => {
         <form v-else @submit.prevent="verifyOtp">
             <div class="mb-3 text-sm text-gray-600">
                 OTP sudah dikirim ke email <b>{{ form.email }}</b>. Periksa inbox atau folder spam email Anda dan masukkan OTP untuk menyelesaikan pendaftaran.
+            </div>
+
+            <!-- Peringatan jika kirim email gagal -->
+            <div v-if="mailWarning" class="mb-3 rounded-md bg-yellow-50 border border-yellow-300 p-3 text-sm text-yellow-800">
+                ⚠️ {{ mailWarning }}
             </div>
 
             <div>
