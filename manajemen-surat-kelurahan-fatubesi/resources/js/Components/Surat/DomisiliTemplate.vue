@@ -79,7 +79,7 @@ const formatTanggalSurat = () => {
           </td>
         </tr>
         <tr>
-          <td class="lbl">Jens Kelamin</td><td class="sep">:</td>
+          <td class="lbl">Jenis Kelamin</td><td class="sep">:</td>
           <td class="val">{{ form.jenisKelamin || '________' }}</td>
         </tr>
         <tr>
