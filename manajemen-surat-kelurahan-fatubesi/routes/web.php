@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\LetterArchiveController;
 use App\Http\Controllers\PendudukController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Api\LetterController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -75,6 +76,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/penduduk/import', [PendudukController::class, 'import'])
         ->middleware('secure.upload')
         ->name('penduduk.import');
+
+    // Finalize surat — pakai web route agar session auth bekerja
+    Route::post('/surat/{templateSlug}/finalize', [LetterController::class, 'finalize'])
+        ->middleware('throttle:10,1')
+        ->name('surat.finalize');
 });
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
