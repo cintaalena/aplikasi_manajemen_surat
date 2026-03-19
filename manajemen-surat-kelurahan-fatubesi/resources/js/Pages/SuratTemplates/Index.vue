@@ -5,6 +5,7 @@ import { Link } from '@inertiajs/vue3'
 const templates = [
   { label: 'Surat Keterangan Domisili', slug: 'keterangan-domisili' },
   { label: 'Surat Keterangan Kelahiran', slug: 'keterangan-kelahiran' },
+  { label: 'Surat Keterangan Kematian', slug: 'keterangan-kematian' },
 ]
 </script>
 
