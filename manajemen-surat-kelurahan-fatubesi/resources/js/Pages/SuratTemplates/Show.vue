@@ -2,14 +2,53 @@
 import AppLayout from '@/Layouts/AppLayout.vue'
 import DomisiliTemplate from '@/Components/Surat/DomisiliTemplate.vue'
 import KelahiranTemplate from '@/Components/Surat/KelahiranTemplate.vue'
+import KematianTemplate from '@/Components/Surat/KematianTemplate.vue'
 import { computed, reactive, ref, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { router } from '@inertiajs/vue3'
 
 const props = defineProps({ slug: String })
 const isDomisili = computed(() => props.slug === 'keterangan-domisili')
 const isKelahiran = computed(() => props.slug === 'keterangan-kelahiran')
+const isKematian = computed(() => props.slug === 'keterangan-kematian')
 
 const showPreview = ref(false)
 const printMode = ref(false)
+const isPrinting = ref(false)
+
+// Preview scale — fit 794px A4 content into the container
+const previewContainerRef = ref(null)
+const previewInnerRef = ref(null)
+const previewScale = ref(1)
+const previewScaledHeight = ref(0)
+let previewResizeObserver = null
+
+const recalcPreviewScale = () => {
+  if (!previewContainerRef.value || !previewInnerRef.value) return
+  const padding = 40 // p-5 both sides
+  const containerWidth = previewContainerRef.value.clientWidth - padding
+  const scale = Math.min(1, containerWidth / 794)
+  previewScale.value = scale
+  nextTick(() => {
+    if (previewInnerRef.value) {
+      previewScaledHeight.value = previewInnerRef.value.offsetHeight * scale
+    }
+  })
+}
+
+watch(showPreview, (val) => {
+  if (val) {
+    nextTick(() => {
+      recalcPreviewScale()
+      if (previewContainerRef.value) {
+        previewResizeObserver = new ResizeObserver(recalcPreviewScale)
+        previewResizeObserver.observe(previewContainerRef.value)
+      }
+    })
+  } else {
+    previewResizeObserver?.disconnect()
+    previewResizeObserver = null
+  }
+})
 
 const form = reactive({
   judulSurat: 'Surat Keterangan Domisili',
@@ -32,6 +71,10 @@ const form = reactive({
   rw: '',
   kelurahan: '',
   kecamatan: '',
+  sebabKematian: '',
+  tanggalMeninggal: '',
+  tempatMeninggal: '',
+  umur: '',
 })
 
 const tanggalIndo = (yyyy_mm_dd) => {
@@ -180,6 +223,8 @@ onMounted(async () => {
       form.judulSurat = 'Surat Keterangan Domisili'
     } else if (isKelahiran.value) {
       form.judulSurat = 'Surat Keterangan Kelahiran'
+    } else if (isKematian.value) {
+      form.judulSurat = 'Surat Keterangan Kematian'
     }
     console.log('Letter title set to:', form.judulSurat)
 
@@ -205,32 +250,30 @@ onMounted(async () => {
   }
 })
 
-// reset setelah print selesai, lalu tampilkan nomor berikutnya
+// reset setelah print selesai — tampilkan konfirmasi sebelum finalize
+const showPrintConfirm = ref(false)
+
 const handleAfterPrint = () => {
   printMode.value = false
-  // Tampilkan nomor berikutnya untuk surat selanjutnya
-  if (lastCounterSnapshot.value) {
-    setNoSuratFromCounter(lastCounterSnapshot.value)
-  }
+  showPrintConfirm.value = true
 }
 
 onMounted(() => window.addEventListener('afterprint', handleAfterPrint))
-onBeforeUnmount(() => window.removeEventListener('afterprint', handleAfterPrint))
+onBeforeUnmount(() => {
+  window.removeEventListener('afterprint', handleAfterPrint)
+  previewResizeObserver?.disconnect()
+})
 
 const finalizeLetter = async (templateSlug) => {
   if (!selectedIndexCode.value) {
     throw new Error('Silakan pilih kategori dan nomor index terlebih dahulu!')
   }
 
-  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-  if (!csrfToken) throw new Error('CSRF token tidak ditemukan. Silakan refresh halaman.')
-
   const res = await fetch(`/surat/${templateSlug}/finalize`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'X-CSRF-TOKEN': csrfToken,
       'X-Requested-With': 'XMLHttpRequest',
     },
     credentials: 'include',
@@ -241,40 +284,66 @@ const finalizeLetter = async (templateSlug) => {
     }),
   })
 
-  if (!res.ok) throw new Error(await res.text())
-  return await res.json() // {id,noSurat,urut,monthRoman,year}
+  if (!res.ok) {
+    let errMsg = `Server error ${res.status}`
+    try {
+      const errData = await res.json()
+      errMsg = errData.message || errData.error || JSON.stringify(errData)
+    } catch {
+      errMsg = await res.text().catch(() => `Server error ${res.status}`)
+    }
+    if (res.status === 401) throw new Error('Sesi habis. Silakan refresh halaman dan login kembali.')
+    if (res.status === 403) throw new Error('Akses ditolak. Silakan refresh halaman.')
+    if (res.status === 429) throw new Error('Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.')
+    if (res.status === 422) throw new Error('Data tidak valid: ' + errMsg)
+    throw new Error(errMsg)
+  }
+
+  const data = await res.json()
+  if (!data || !data.noSurat) throw new Error('Respons tidak valid dari server.')
+  return data // {id,noSurat,urut,monthRoman,year}
 }
 
 const printNow = async () => {
+  if (isPrinting.value) return
+  if (!selectedIndexCode.value) {
+    alert('Silakan pilih kategori dan nomor index terlebih dahulu!')
+    return
+  }
+
+  // Langsung cetak dengan nomor preview (belum finalize)
+  // Finalize hanya terjadi setelah user konfirmasi berhasil cetak
+  showPreview.value = true
+  printMode.value = true
+  await nextTick()
+  window.print()
+}
+
+const confirmFinalize = async (confirmed) => {
+  showPrintConfirm.value = false
+
+  if (!confirmed) {
+    // User batalkan: kembalikan tampilan nomor preview
+    if (lastCounterSnapshot.value) setNoSuratFromCounter(lastCounterSnapshot.value)
+    return
+  }
+
+  isPrinting.value = true
   try {
-    const result = await finalizeLetter(props.slug)
-
-    // Simpan nomor surat resmi yang dipakai untuk dicetak
-    form.noSurat = result.noSurat
-
-    // Update snapshot counter dengan urut yang baru saja dipakai
-    // Sehingga setelah print, preview akan menampilkan nomor berikutnya
-    lastCounterSnapshot.value = {
-      count: result.urut,
-      monthRoman: result.monthRoman,
-      year: result.year,
-    }
-
-    showPreview.value = true
-    printMode.value = true
-
-    await nextTick()
-    window.print()
+    await finalizeLetter(props.slug)
+    // Berhasil disimpan: kembali ke dashboard dengan form bersih
+    router.visit('/dashboard')
   } catch (e) {
-    console.error(e)
-    alert('Gagal finalisasi / cetak surat. Coba ulangi.')
+    console.error('finalize error:', e)
+    alert(e.message || 'Gagal menyimpan data surat ke arsip. Silakan coba lagi.')
+    isPrinting.value = false
   }
 }
 </script>
 
 <template>
   <AppLayout>
-    <div v-if="!isDomisili && !isKelahiran">
+    <div v-if="!isDomisili && !isKelahiran && !isKematian">
       <h1 class="text-xl font-bold text-gray-900">Template: {{ slug }}</h1>
       <p class="mt-2 text-sm text-gray-600">Form dan template untuk surat ini akan diisi nanti.</p>
     </div>
@@ -299,19 +368,21 @@ const printNow = async () => {
 
           <button
             type="button"
+            :disabled="isPrinting || !selectedIndexCode"
             class="rounded-xl px-4 py-2 text-sm font-semibold text-white
                    bg-gradient-to-r from-purple-600 to-fuchsia-500
-                   hover:from-purple-700 hover:to-fuchsia-600 transition"
+                   hover:from-purple-700 hover:to-fuchsia-600 transition
+                   disabled:opacity-50 disabled:cursor-not-allowed"
             @click.prevent.stop="printNow"
           >
-            Cetak
+            {{ isPrinting ? 'Memproses...' : 'Cetak' }}
           </button>
         </div>
       </div>
 
       
 
-      <div class="grid gap-6 lg:grid-cols-2">
+      <div class="grid gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]" :class="showPreview ? '' : 'lg:grid-cols-2'">
         <!-- FORM -->
         <div class="print:hidden rounded-2xl border border-purple-100 bg-white p-5 shadow-sm">
           <div class="text-sm font-semibold text-gray-900">Form Data</div>
@@ -606,28 +677,165 @@ const printNow = async () => {
                 />
               </div>
             </template>
+
+            <!-- Kematian Fields -->
+            <template v-else-if="isKematian">
+              <div class="sm:col-span-2">
+                <label class="text-xs font-semibold text-gray-700">Nama</label>
+                <input
+                  v-model="form.nama"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan nama lengkap"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Jenis Kelamin</label>
+                <select
+                  v-model="form.jenisKelamin"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                >
+                  <option value="">Pilih Jenis Kelamin</option>
+                  <option value="Laki-laki">Laki-laki</option>
+                  <option value="Perempuan">Perempuan</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">NIK</label>
+                <input
+                  v-model="form.nik"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan NIK"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Tempat Lahir</label>
+                <input
+                  v-model="form.tempatLahir"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan tempat lahir"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Tanggal Lahir</label>
+                <input
+                  v-model="form.tanggalLahir"
+                  type="date"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Agama</label>
+                <input
+                  v-model="form.agama"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan agama"
+                />
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="text-xs font-semibold text-gray-700">Alamat</label>
+                <textarea
+                  v-model="form.alamat"
+                  rows="2"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan alamat"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Sebab Kematian</label>
+                <input
+                  v-model="form.sebabKematian"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Contoh: sakit"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Tanggal Meninggal</label>
+                <input
+                  v-model="form.tanggalMeninggal"
+                  type="date"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Umur</label>
+                <input
+                  v-model="form.umur"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Contoh: 78 Tahun"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Tempat Meninggal</label>
+                <input
+                  v-model="form.tempatMeninggal"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Contoh: Kupang"
+                />
+              </div>
+            </template>
           </div>
         </div>
 
         <!-- PREVIEW (di page, untuk lihat saja) -->
-        <div class="rounded-2xl border border-purple-100 bg-white p-5 shadow-sm" :class="showPreview ? '' : 'opacity-60'">
+        <div
+          ref="previewContainerRef"
+          class="rounded-2xl border border-purple-100 bg-white p-5 shadow-sm"
+          :class="{ 'opacity-60': !showPreview }"
+        >
           <div class="print:hidden flex items-center justify-between">
             <div class="text-sm font-semibold text-gray-900">Preview Surat</div>
             <div class="text-xs text-gray-500">Format siap cetak</div>
           </div>
 
-          <div v-if="showPreview">
-            <DomisiliTemplate
-              v-if="isDomisili"
-              :form="form"
-              :tanggalIndo="tanggalIndo"
-            />
-
-            <KelahiranTemplate
-              v-else-if="isKelahiran"
-              :form="form"
-              :tanggalIndo="tanggalIndo"
-            />
+          <div
+            v-if="showPreview"
+            class="mt-3 relative overflow-hidden"
+            :style="previewScaledHeight > 0 ? { height: previewScaledHeight + 'px' } : {}"
+          >
+            <div
+              ref="previewInnerRef"
+              :style="{
+                width: '794px',
+                transform: `scale(${previewScale})`,
+                transformOrigin: 'top left',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+              }"
+            >
+              <DomisiliTemplate
+                v-if="isDomisili"
+                :form="form"
+                :tanggalIndo="tanggalIndo"
+              />
+              <KelahiranTemplate
+                v-else-if="isKelahiran"
+                :form="form"
+                :tanggalIndo="tanggalIndo"
+              />
+              <KematianTemplate
+                v-else-if="isKematian"
+                :form="form"
+                :tanggalIndo="tanggalIndo"
+              />
+            </div>
           </div>
 
           <div v-if="!showPreview" class="print:hidden mt-3 text-xs text-gray-500">
@@ -644,6 +852,37 @@ const printNow = async () => {
       <div class="print-sheet">
         <DomisiliTemplate v-if="isDomisili" :form="form" :tanggalIndo="tanggalIndo" />
         <KelahiranTemplate v-else-if="isKelahiran" :form="form" :tanggalIndo="tanggalIndo" />
+        <KematianTemplate v-else-if="isKematian" :form="form" :tanggalIndo="tanggalIndo" />
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- ✅ KONFIRMASI setelah print dialog ditutup -->
+  <Teleport to="body">
+    <div v-if="showPrintConfirm" class="fixed inset-0 z-[999998] flex items-center justify-center bg-black/50">
+      <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
+        <h3 class="text-base font-semibold text-gray-900">Konfirmasi Cetak</h3>
+        <p class="mt-2 text-sm text-gray-600">
+          Apakah surat berhasil dicetak atau disimpan sebagai PDF?
+          <br />
+          <span class="text-xs text-gray-400 mt-1 block">Jika Ya, nomor surat akan dicatat dan masuk ke arsip.</span>
+        </p>
+        <div class="mt-5 flex gap-3 justify-end">
+          <button
+            type="button"
+            class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+            @click="confirmFinalize(false)"
+          >
+            Tidak, Batal
+          </button>
+          <button
+            type="button"
+            class="rounded-xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:from-purple-700 hover:to-fuchsia-600 transition"
+            @click="confirmFinalize(true)"
+          >
+            Ya, Berhasil Dicetak
+          </button>
+        </div>
       </div>
     </div>
   </Teleport>
