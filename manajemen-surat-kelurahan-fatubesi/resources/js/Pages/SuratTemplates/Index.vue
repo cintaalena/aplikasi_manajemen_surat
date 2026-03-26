@@ -6,6 +6,7 @@ const templates = [
   { label: 'Surat Keterangan Domisili', slug: 'keterangan-domisili' },
   { label: 'Surat Keterangan Kelahiran', slug: 'keterangan-kelahiran' },
   { label: 'Surat Keterangan Kematian', slug: 'keterangan-kematian' },
+  { label: 'Surat Keterangan Pindah', slug: 'keterangan-pindah' },
 ]
 </script>
 
