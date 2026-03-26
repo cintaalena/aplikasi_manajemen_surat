@@ -3,6 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import DomisiliTemplate from '@/Components/Surat/DomisiliTemplate.vue'
 import KelahiranTemplate from '@/Components/Surat/KelahiranTemplate.vue'
 import KematianTemplate from '@/Components/Surat/KematianTemplate.vue'
+import PindahTemplate from '@/Components/Surat/PindahTemplate.vue'
 import { computed, reactive, ref, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 
@@ -10,6 +11,7 @@ const props = defineProps({ slug: String })
 const isDomisili = computed(() => props.slug === 'keterangan-domisili')
 const isKelahiran = computed(() => props.slug === 'keterangan-kelahiran')
 const isKematian = computed(() => props.slug === 'keterangan-kematian')
+const isPindah = computed(() => props.slug === 'keterangan-pindah')
 
 const showPreview = ref(false)
 const printMode = ref(false)
@@ -75,6 +77,16 @@ const form = reactive({
   tanggalMeninggal: '',
   tempatMeninggal: '',
   umur: '',
+  statusPerkawinan: '',
+  kewarganegaraan: 'Indonesia',
+  alamatTujuan: '',
+  desaTujuan: '',
+  kecamatanTujuan: '',
+  kabupatenTujuan: '',
+  provinsiTujuan: '',
+  tanggalPindah: '',
+  alasanPindah: '',
+  pengikut: [],
 })
 
 const tanggalIndo = (yyyy_mm_dd) => {
@@ -125,6 +137,20 @@ const incrementCounter = async (templateSlug) => {
   })
   if (!res.ok) throw new Error('Gagal increment counter')
   return await res.json() // {count, monthRoman, year}
+}
+
+const addPengikut = () => {
+  form.pengikut.push({
+    nama: '',
+    nik: '',
+    tempatLahir: '',
+    tanggalLahir: '',
+    hubungan: '',
+  })
+}
+
+const removePengikut = (index) => {
+  form.pengikut.splice(index, 1)
 }
 
 const indexGroups = ref([])        // [{key,label,items:[{code,name}]}]
@@ -225,6 +251,8 @@ onMounted(async () => {
       form.judulSurat = 'Surat Keterangan Kelahiran'
     } else if (isKematian.value) {
       form.judulSurat = 'Surat Keterangan Kematian'
+    } else if (isPindah.value) {
+      form.judulSurat = 'Surat Keterangan Pindah'
     }
     console.log('Letter title set to:', form.judulSurat)
 
@@ -343,7 +371,7 @@ const confirmFinalize = async (confirmed) => {
 
 <template>
   <AppLayout>
-    <div v-if="!isDomisili && !isKelahiran && !isKematian">
+    <div v-if="!isDomisili && !isKelahiran && !isKematian && !isPindah">
       <h1 class="text-xl font-bold text-gray-900">Template: {{ slug }}</h1>
       <p class="mt-2 text-sm text-gray-600">Form dan template untuk surat ini akan diisi nanti.</p>
     </div>
@@ -515,7 +543,7 @@ const confirmFinalize = async (confirmed) => {
                   v-model="form.alamatAsal"
                   rows="2"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                />
+                ></textarea>
               </div>
 
               <div class="sm:col-span-2">
@@ -524,7 +552,7 @@ const confirmFinalize = async (confirmed) => {
                   v-model="form.alamatDomisili"
                   rows="2"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                />
+                ></textarea>
               </div>
 
               <div>
@@ -748,7 +776,7 @@ const confirmFinalize = async (confirmed) => {
                   rows="2"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan alamat"
-                />
+                ></textarea>
               </div>
 
               <div>
@@ -790,9 +818,270 @@ const confirmFinalize = async (confirmed) => {
                 />
               </div>
             </template>
+
+            <!-- Pindahan Fields -->
+            <template v-else-if="isPindah">
+              <div class="sm:col-span-2">
+                <div class="space-y-4">
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Nama</label>
+                <input
+                  v-model="form.nama"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan nama lengkap"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Jenis Kelamin</label>
+                <select
+                  v-model="form.jenisKelamin"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                >
+                  <option value="">Pilih Jenis Kelamin</option>
+                  <option value="Laki-laki">Laki-laki</option>
+                  <option value="Perempuan">Perempuan</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">NIK</label>
+                <input
+                  v-model="form.nik"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan NIK"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Tempat Lahir</label>
+                <input
+                  v-model="form.tempatLahir"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan tempat lahir"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Tanggal Lahir</label>
+                <input
+                  v-model="form.tanggalLahir"
+                  type="date"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Status Perkawinan</label>
+                <input
+                  v-model="form.statusPerkawinan"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Contoh: Kawin"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Kewarganegaraan</label>
+                <input
+                  v-model="form.kewarganegaraan"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Contoh: Indonesia"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Agama</label>
+                <input
+                  v-model="form.agama"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan agama"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Pekerjaan</label>
+                <input
+                  v-model="form.pekerjaan"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan pekerjaan"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Alamat Asal</label>
+                <textarea
+                  v-model="form.alamatAsal"
+                  rows="2"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan alamat asal"
+                ></textarea>
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Alamat Tujuan</label>
+                <textarea
+                  v-model="form.alamatTujuan"
+                  rows="2"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan alamat tujuan"
+                ></textarea>
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Desa/Kelurahan Tujuan</label>
+                <input
+                  v-model="form.desaTujuan"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan desa/kelurahan tujuan"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Kecamatan Tujuan</label>
+                <input
+                  v-model="form.kecamatanTujuan"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan kecamatan tujuan"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Kabupaten/Kota Tujuan</label>
+                <input
+                  v-model="form.kabupatenTujuan"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan kabupaten/kota tujuan"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Provinsi Tujuan</label>
+                <input
+                  v-model="form.provinsiTujuan"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Masukkan provinsi tujuan"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Tanggal Pindah</label>
+                <input
+                  v-model="form.tanggalPindah"
+                  type="date"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Alasan Pindah</label>
+                <input
+                  v-model="form.alasanPindah"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Contoh: Pindah Domisili"
+                />
+              </div>
+
+              <div class="pt-2">
+                <div class="mb-2 flex items-center justify-between">
+                  <label class="text-xs font-semibold text-gray-700">Data Pengikut</label>
+                  <button
+                    type="button"
+                    @click="addPengikut"
+                    class="rounded-xl bg-purple-600 px-3 py-2 text-sm font-medium text-white hover:bg-purple-700"
+                  >
+                    + Tambah Pengikut
+                  </button>
+                </div>
+
+                <div
+                  v-for="(item, index) in form.pengikut"
+                  :key="index"
+                  class="mb-3 rounded-2xl border border-gray-200 p-4"
+                >
+                  <div class="mb-3 flex items-center justify-between">
+                    <div class="text-sm font-semibold text-gray-700">
+                      Pengikut {{ index + 1 }}
+                    </div>
+                    <button
+                      type="button"
+                      @click="removePengikut(index)"
+                      class="text-sm font-medium text-red-600 hover:text-red-700"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+
+                  <div class="space-y-3">
+                    <div>
+                      <label class="text-xs font-semibold text-gray-700">Nama</label>
+                      <input
+                        v-model="item.nama"
+                        type="text"
+                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                        placeholder="Masukkan nama pengikut"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="text-xs font-semibold text-gray-700">NIK</label>
+                      <input
+                        v-model="item.nik"
+                        type="text"
+                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                        placeholder="Masukkan NIK pengikut"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="text-xs font-semibold text-gray-700">Tempat Lahir</label>
+                      <input
+                        v-model="item.tempatLahir"
+                        type="text"
+                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                        placeholder="Contoh: Kupang"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="text-xs font-semibold text-gray-700">Tanggal Lahir</label>
+                      <input
+                        v-model="item.tanggalLahir"
+                        type="date"
+                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                      />
+                    </div>
+
+                   <div>
+                      <label class="text-xs font-semibold text-gray-700">Hubungan Keluarga</label>
+                      <input
+                        v-model="item.hubungan"
+                        type="text"
+                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                        placeholder="Contoh: Anak"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
           </div>
         </div>
-
+        
         <!-- PREVIEW (di page, untuk lihat saja) -->
         <div
           ref="previewContainerRef"
@@ -835,6 +1124,11 @@ const confirmFinalize = async (confirmed) => {
                 :form="form"
                 :tanggalIndo="tanggalIndo"
               />
+              <PindahTemplate
+                v-else-if="isPindah"
+                :form="form"
+                :tanggalIndo="tanggalIndo"
+              />
             </div>
           </div>
 
@@ -853,6 +1147,7 @@ const confirmFinalize = async (confirmed) => {
         <DomisiliTemplate v-if="isDomisili" :form="form" :tanggalIndo="tanggalIndo" />
         <KelahiranTemplate v-else-if="isKelahiran" :form="form" :tanggalIndo="tanggalIndo" />
         <KematianTemplate v-else-if="isKematian" :form="form" :tanggalIndo="tanggalIndo" />
+        <PindahTemplate v-else-if="isPindah" :form="form" :tanggalIndo="tanggalIndo" />
       </div>
     </div>
   </Teleport>
