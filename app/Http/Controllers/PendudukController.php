@@ -377,9 +377,21 @@ class PendudukController extends Controller
                 if (!$handle) {
                     return back()->with('error', "❌ Gagal membuka file CSV.\n\nSolusi: Pastikan file CSV tidak sedang dibuka di aplikasi lain.");
                 }
-                while (($row = fgetcsv($handle)) !== false) {
-                    $rows[] = $row;
+
+                $firstLine = fgets($handle);
+                rewind($handle);
+
+                $delimiter = ',';
+                if ($firstLine !== false) {
+                    $commaCount = substr_count($firstLine, ',');
+                    $semicolonCount = substr_count($firstLine, ';');
+                    $delimiter = $semicolonCount > $commaCount ? ';' : ',';
                 }
+
+                while (($line = fgetcsv($handle, 0, $delimiter)) !== false) {
+                    $rows[] = $line;
+                }
+
                 fclose($handle);
             }
         } catch (\Throwable $e) {
@@ -483,13 +495,8 @@ class PendudukController extends Controller
                 }
 
                 try {
-                    if ($existing) {
-                        $existing->update($data);
-                        $updated++;
-                    } else {
-                        Penduduk::create($data);
-                        $inserted++;
-                    }
+                    Penduduk::create($data);
+                    $inserted++;
                 } catch (\Throwable $e) {
                     $skipped++;
                     if (count($errors) < 5) {
@@ -690,63 +697,134 @@ class PendudukController extends Controller
      * Map row data to database fields
      */
     private function mapRowToData(array $row, array $header, array $headerMap): array
-    {
-        $data = [
-            'kode_keluarga' => '',
-            'nama_kepala_keluarga' => '',
-            'alamat' => '',
-            'rt' => '',
-            'rw' => '',
-            'dusun' => '',
-            'no_urut' => null,
-            'nik' => null,
-            'nama' => '',
-            'jenis_kelamin' => null,
-            'hubungan' => null,
-            'tempat_lahir' => null,
-            'tanggal_lahir' => null,
-            'usia' => null,
-            'status_perkawinan' => null,
-            'agama' => null,
-            'golongan_darah' => null,
-            'kewarganegaraan' => 'WNI',
-            'etnis' => null,
-            'pendidikan' => null,
-            'pekerjaan' => null,
-        ];
+{
+    $data = [
+        'kode_keluarga' => '',
+        'nama_kepala_keluarga' => '',
+        'alamat' => '',
+        'rt' => '',
+        'rw' => '',
+        'dusun' => '',
+        'no_urut' => null,
+        'nik' => null,
+        'nama' => '',
+        'jenis_kelamin' => null,
+        'hubungan' => null,
+        'tempat_lahir' => null,
+        'tanggal_lahir' => null,
+        'usia' => null,
+        'status_perkawinan' => null,
+        'agama' => null,
+        'golongan_darah' => null,
+        'kewarganegaraan' => 'WNI',
+        'etnis' => null,
+        'pendidikan' => null,
+        'pekerjaan' => null,
+    ];
 
-        foreach ($headerMap as $index => $field) {
-            if (!isset($row[$index])) continue;
-
-            $value = trim((string) $row[$index]);
-            if ($value === '') continue;
-
-            switch ($field) {
-                case 'rt':
-                case 'rw':
-                    $data[$field] = $this->normalizeRtRw($value);
-                    break;
-
-                case 'jenis_kelamin':
-                    $data[$field] = $this->normalizeJenisKelamin($value);
-                    break;
-
-                case 'tanggal_lahir':
-                    $data[$field] = $this->parseTanggalLahir($value);
-                    break;
-
-                case 'no_urut':
-                case 'usia':
-                    $data[$field] = (int) $value ?: null;
-                    break;
-
-                default:
-                    $data[$field] = $value;
-            }
+    foreach ($headerMap as $index => $field) {
+        if (!array_key_exists($index, $row)) {
+            continue;
         }
 
-        return $data;
+        $value = $this->cleanCellValue($row[$index]);
+
+        if ($value === '' || $value === null) {
+            continue;
+        }
+
+        switch ($field) {
+            case 'kode_keluarga':
+                $data[$field] = ltrim((string) $value, "'");
+                break;
+
+            case 'nik':
+    $rawNik = trim((string) $value);
+
+    // Jika format scientific notation dari Excel, anggap tidak valid
+    if (
+        stripos($rawNik, 'E+') !== false ||
+        stripos($rawNik, 'E-') !== false ||
+        stripos($rawNik, 'e+') !== false ||
+        stripos($rawNik, 'e-') !== false
+    ) {
+        $data[$field] = null;
+        break;
     }
+
+    // Hilangkan semua karakter selain angka
+    $nik = preg_replace('/\D+/', '', $rawNik);
+
+    // Kalau kosong atau terlalu panjang, anggap tidak valid
+    if ($nik === '' || strlen($nik) > 20) {
+        $data[$field] = null;
+    } else {
+        $data[$field] = $nik;
+    }
+    break;
+
+            case 'rt':
+            case 'rw':
+                $data[$field] = $this->normalizeRtRw($value);
+                break;
+
+            case 'jenis_kelamin':
+                $data[$field] = $this->normalizeJenisKelamin($value);
+                break;
+
+            case 'tanggal_lahir':
+                $data[$field] = $this->parseTanggalLahir($value);
+                break;
+
+            case 'golongan_darah':
+                $data[$field] = $this->normalizeGolonganDarah($value);
+                break;
+
+            case 'no_urut':
+            case 'usia':
+                $numeric = preg_replace('/[^\d]/', '', (string) $value);
+                $data[$field] = $numeric !== '' ? (int) $numeric : null;
+                break;
+
+            default:
+                $data[$field] = $value;
+                break;
+        }
+    }
+
+    if (!empty($data['nama']) && empty($data['nama_kepala_keluarga']) && (int) ($data['no_urut'] ?? 0) === 1) {
+        $data['nama_kepala_keluarga'] = $data['nama'];
+    }
+
+    if ((int) ($data['no_urut'] ?? 0) === 1 && empty($data['hubungan'])) {
+        $data['hubungan'] = 'Kepala Keluarga';
+    }
+
+    return $data;
+}
+
+private function cleanCellValue($value): ?string
+{
+    if ($value === null) {
+        return null;
+    }
+
+    $value = (string) $value;
+
+    $value = preg_replace('/^\xEF\xBB\xBF/', '', $value);
+    $value = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $value = str_replace("\xc2\xa0", ' ', $value);
+    $value = str_replace('&nbsp;', ' ', $value);
+    $value = trim($value);
+
+    $value = preg_replace('/\s+/', ' ', $value);
+
+    if ($value === '' || strtolower($value) === 'null' || strtolower($value) === 'nbsp') {
+        return null;
+    }
+
+    return $value;
+}
 
     /**
      * Normalize RT/RW to 3-digit format
@@ -773,29 +851,45 @@ class PendudukController extends Controller
         return null;
     }
 
+    private function normalizeGolonganDarah($value): ?string
+{
+    $v = strtoupper(trim((string) $value));
+
+    if ($v === '' || in_array($v, ['TIDAK TAHU', 'TIDAKTAHU', '-', '--', 'NULL'], true)) {
+        return null;
+    }
+
+    if (in_array($v, ['A', 'B', 'AB', 'O'], true)) {
+        return $v;
+    }
+
+    return null;
+}
+
     /**
      * Parse tanggal lahir from various formats
      */
     private function parseTanggalLahir($value): ?string
-    {
-        if (!$value) return null;
+{
+    $value = $this->cleanCellValue($value);
+    if (!$value) return null;
 
-        $formats = [
-            'd-m-Y',
-            'd/m/Y',
-            'd.m.Y',
-            'Y-m-d',
-            'd-M-Y',
-            'd M Y',
-        ];
+    $formats = [
+        'd-m-Y',
+        'd/m/Y',
+        'd.m.Y',
+        'Y-m-d',
+        'd-M-Y',
+        'd M Y',
+    ];
 
-        foreach ($formats as $format) {
-            $date = \DateTime::createFromFormat($format, $value);
-            if ($date) {
-                return $date->format('Y-m-d');
-            }
+    foreach ($formats as $format) {
+        $date = \DateTime::createFromFormat($format, $value);
+        if ($date instanceof \DateTime) {
+            return $date->format('Y-m-d');
         }
-
-        return null;
     }
+
+    return null;
+}
 }
