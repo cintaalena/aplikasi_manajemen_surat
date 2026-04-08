@@ -127,21 +127,108 @@ onBeforeUnmount(() => {
             Update otomatis mengikuti perubahan data (polling 15 detik).
           </p>
 
-          <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             <div class="rounded-xl border border-gray-100 p-4">
-              <div class="text-sm text-gray-500">Total KK</div>
+              <div class="text-sm text-gray-500">Jumlah RT</div>
               <div class="text-3xl font-bold text-gray-900">
-                {{ loading ? '...' : metrics?.population?.total_kk ?? 0 }}
+                {{ loading ? '...' : metrics?.population?.jumlah_rt ?? 0 }}
               </div>
             </div>
 
             <div class="rounded-xl border border-gray-100 p-4">
-              <div class="text-sm text-gray-500">Estimasi total penduduk</div>
+              <div class="text-sm text-gray-500">Jumlah RW</div>
               <div class="text-3xl font-bold text-gray-900">
-                {{ loading ? '...' : metrics?.population?.total_penduduk ?? 0 }}
+                {{ loading ? '...' : metrics?.population?.jumlah_rw ?? 0 }}
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-100 p-4">
+              <div class="text-sm text-gray-500">Jumlah Jiwa</div>
+              <div class="text-3xl font-bold text-gray-900">
+                {{ loading ? '...' : metrics?.population?.jumlah_jiwa ?? 0 }}
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-100 p-4">
+              <div class="text-sm text-gray-500">Total Laki-laki</div>
+              <div class="text-3xl font-bold text-gray-900">
+                {{ loading ? '...' : metrics?.population?.total_laki_laki ?? 0 }}
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-100 p-4">
+              <div class="text-sm text-gray-500">Total Perempuan</div>
+              <div class="text-3xl font-bold text-gray-900">
+                {{ loading ? '...' : metrics?.population?.total_perempuan ?? 0 }}
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-100 p-4">
+              <div class="text-sm text-gray-500">Jumlah Kepala Keluarga</div>
+              <div class="text-3xl font-bold text-gray-900">
+                {{ loading ? '...' : metrics?.population?.jumlah_kepala_keluarga ?? 0 }}
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-100 p-4 sm:col-span-2 xl:col-span-3">
+              <div class="text-sm text-gray-500">Total KK</div>
+              <div class="text-3xl font-bold text-gray-900">
+                {{ loading ? '...' : metrics?.population?.total_kk ?? 0 }}
               </div>
               <div class="text-xs text-gray-500 mt-1">
-                (sementara dihitung dari total KK × 4; nanti kita ganti ke data individu)
+                Total KK dihitung dari jumlah kode keluarga (No. KK) yang unik.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- agama -->
+
+        <div class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm mt-6">
+          <h2 class="text-lg font-semibold text-gray-800">Pengelompokan Berdasarkan Agama</h2>
+          <p class="text-sm text-gray-500">
+            Data jumlah penduduk berdasarkan agama yang terdaftar di Kelurahan Fatubesi.
+          </p>
+
+          <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div class="rounded-xl border border-gray-100 p-4">
+              <div class="text-sm text-gray-500">Kristen</div>
+              <div class="text-3xl font-bold text-gray-900">
+                {{ loading ? '...' : metrics?.agama?.kristen ?? 0 }}
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-100 p-4">
+              <div class="text-sm text-gray-500">Islam</div>
+              <div class="text-3xl font-bold text-gray-900">
+                {{ loading ? '...' : metrics?.agama?.islam ?? 0 }}
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-100 p-4">
+              <div class="text-sm text-gray-500">Katholik</div>
+              <div class="text-3xl font-bold text-gray-900">
+                {{ loading ? '...' : metrics?.agama?.katholik ?? 0 }}
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-100 p-4">
+              <div class="text-sm text-gray-500">Hindu</div>
+              <div class="text-3xl font-bold text-gray-900">
+                {{ loading ? '...' : metrics?.agama?.hindu ?? 0 }}
+              </div>
+            </div>
+            <div class="rounded-xl border border-gray-100 p-4">
+              <div class="text-sm text-gray-500">Buddha</div>
+              <div class="text-3xl font-bold text-gray-900">
+                {{ loading ? '...' : metrics?.agama?.buddha ?? 0 }}
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-100 p-4">
+              <div class="text-sm text-gray-500">Konghucu</div>
+              <div class="text-3xl font-bold text-gray-900">
+                {{ loading ? '...' : metrics?.agama?.konghucu ?? 0 }}
               </div>
             </div>
           </div>
