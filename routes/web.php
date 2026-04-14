@@ -1,9 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Auth\RegisterOtpController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\LetterArchiveController;
 use App\Http\Controllers\PendudukController;
 use App\Http\Controllers\DashboardController;
@@ -19,30 +17,8 @@ Route::get('/', function () {
 
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
     ]);
 });
-
-
-Route::middleware('guest')->group(function () {
-    Route::get('/register', function () {
-        return Inertia::render('Auth/Register');
-    })->name('register');
-    Route::get('/register/success', function () {
-    return Inertia::render('Auth/RegisterSuccess');
-    })->name('register.success');   
-    
-    // Rate limiting: Max 3 request OTP per 10 menit per IP
-    Route::post('/register/request-otp', [RegisterOtpController::class, 'requestOtp'])
-        ->middleware('throttle:3,10')
-        ->name('register.request-otp');
-
-    // Rate limiting: Max 5 attempt verify OTP per 5 menit per IP
-    Route::post('/register/verify-otp', [RegisterOtpController::class, 'verifyOtp'])
-        ->middleware('throttle:5,5')
-        ->name('register.verify-otp');
-});
-
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
@@ -61,6 +37,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/metrics', [DashboardController::class, 'metrics'])->name('dashboard.metrics');
+    Route::get('/dashboard/letters-by-month', [DashboardController::class, 'lettersByMonth'])->name('dashboard.letters-by-month');
+    Route::get('/dashboard/export-excel', [DashboardController::class, 'exportExcel'])->name('dashboard.export.excel');
     
 });
 

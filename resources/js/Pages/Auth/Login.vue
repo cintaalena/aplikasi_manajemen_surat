@@ -130,19 +130,5 @@ const submit = () => {
             
             </div>
         </form>
-        <div class="mt-6 text-center">
-    <p class="text-sm text-gray-600">
-        Belum punya akun?
-    </p>
-
-    <Link
-        :href="route('register')"
-        class="inline-block mt-2 px-4 py-2 text-sm font-semibold
-               text-purple-700 border border-purple-300 rounded-lg
-               hover:bg-purple-50 transition"
-    >
-        Daftar Akun Kelurahan
-    </Link>
-</div>
     </GuestLayout>
 </template>
