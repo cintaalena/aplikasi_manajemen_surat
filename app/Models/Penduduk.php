@@ -37,6 +37,7 @@ class Penduduk extends Model
         'etnis',
         'pendidikan',
         'pekerjaan',
+        'status_kehidupan',
     ];
 
     // Field ini tidak akan pernah muncul dalam JSON response otomatis

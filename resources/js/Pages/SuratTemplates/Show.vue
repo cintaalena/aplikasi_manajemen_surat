@@ -13,6 +13,18 @@ const isKelahiran = computed(() => props.slug === 'keterangan-kelahiran')
 const isKematian = computed(() => props.slug === 'keterangan-kematian')
 const isPindah = computed(() => props.slug === 'keterangan-pindah')
 
+// Hitung usia dari tanggal lahir hingga tanggal meninggal
+const hitungUmurKematian = (tanggalLahir, tanggalMeninggal) => {
+  if (!tanggalLahir || !tanggalMeninggal) return ''
+  const lahir = new Date(tanggalLahir)
+  const meninggal = new Date(tanggalMeninggal)
+  if (isNaN(lahir) || isNaN(meninggal)) return ''
+  let tahun = meninggal.getFullYear() - lahir.getFullYear()
+  const bulanDiff = meninggal.getMonth() - lahir.getMonth()
+  if (bulanDiff < 0 || (bulanDiff === 0 && meninggal.getDate() < lahir.getDate())) tahun--
+  return tahun >= 0 ? `${tahun} Tahun` : ''
+}
+
 const showPreview = ref(false)
 const printMode = ref(false)
 const isPrinting = ref(false)
@@ -95,6 +107,16 @@ const form = reactive({
   alasanPindah: '',
   pengikut: [],
 })
+
+// Auto-isi umur saat tanggal meninggal atau tanggal lahir berubah
+watch(
+  () => [form.tanggalMeninggal, form.tanggalLahir],
+  ([meninggal, lahir]) => {
+    if (isKematian.value) {
+      form.umur = hitungUmurKematian(lahir, meninggal)
+    }
+  }
+)
 
 const tanggalIndo = (yyyy_mm_dd) => {
   if (!yyyy_mm_dd) return ''
@@ -212,7 +234,8 @@ const applyPendudukToForm = (p) => {
   form.penduduk_id = p.id ?? ''
   form.nama = p.nama ?? ''
   form.nik = p.nik ?? ''
-  form.jenisKelamin = p.jenis_kelamin ?? ''
+  const jkMap = { 'L': 'Laki-laki', 'P': 'Perempuan' }
+  form.jenisKelamin = jkMap[p.jenis_kelamin] ?? p.jenis_kelamin ?? ''
   form.tempatLahir = p.tempat_lahir ?? ''
   form.tanggalLahir = p.tanggal_lahir ?? ''
   form.agama = p.agama ?? ''
@@ -918,14 +941,13 @@ const confirmFinalize = async (confirmed) => {
 
               <div>
                 <label class="text-xs font-semibold text-gray-700">Jenis Kelamin</label>
-                <select
-                  v-model="form.jenisKelamin"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                >
-                  <option value="">Pilih Jenis Kelamin</option>
-                  <option value="Laki-laki">Laki-laki</option>
-                  <option value="Perempuan">Perempuan</option>
-                </select>
+                <input
+                  :value="form.jenisKelamin || '-'"
+                  type="text"
+                  readonly
+                  class="mt-1 w-full rounded-xl border-gray-200 bg-gray-50 text-gray-600"
+                  placeholder="Otomatis dari data penduduk"
+                />
               </div>
 
               <div>
@@ -1046,7 +1068,7 @@ const confirmFinalize = async (confirmed) => {
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
                     <div class="text-xs text-gray-500">
-                      NIK: {{ item.nik }} • RT {{ item.rt }}/RW {{ item.rw }}
+                      NIK: {{ item.nik }} ΓÇó RT {{ item.rt }}/RW {{ item.rw }}
                     </div>
                   </button>
                 </div>
@@ -1054,13 +1076,13 @@ const confirmFinalize = async (confirmed) => {
                <p v-if="isSearchingPenduduk" class="mt-1 text-xs text-gray-500">Mencari data penduduk...</p>
               <p v-else-if="pendudukSearchError" class="mt-1 text-xs text-red-600">{{ pendudukSearchError }}</p>
               <p v-else-if="pendudukSelected" class="mt-1 text-xs text-green-600">
-                ✓ Nama ditemukan di database penduduk Kelurahan Fatubesi
+                Γ£ô Nama ditemukan di database penduduk Kelurahan Fatubesi
               </p>
               <p
                 v-else-if="form.nama && form.nama.length >= 2 && !showPendudukDropdown && pendudukSuggestions.length === 0"
                 class="mt-1 text-xs text-red-600"
               >
-                ✗ Nama belum ditemukan di database penduduk Kelurahan Fatubesi
+                Γ£ù Nama belum ditemukan di database penduduk Kelurahan Fatubesi
               </p>
               </div>
 
@@ -1370,7 +1392,7 @@ const confirmFinalize = async (confirmed) => {
     </div>
   </AppLayout>
 
-  <!-- ✅ PRINT OVERLAY: keluar dari AppLayout -->
+  <!-- Γ£à PRINT OVERLAY: keluar dari AppLayout -->
   <Teleport to="body">
     <div v-if="printMode" class="print-overlay">
       <div class="print-sheet">
@@ -1382,7 +1404,7 @@ const confirmFinalize = async (confirmed) => {
     </div>
   </Teleport>
 
-  <!-- ✅ KONFIRMASI setelah print dialog ditutup -->
+  <!-- Γ£à KONFIRMASI setelah print dialog ditutup -->
   <Teleport to="body">
     <div v-if="showPrintConfirm" class="fixed inset-0 z-[999998] flex items-center justify-center bg-black/50">
       <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">

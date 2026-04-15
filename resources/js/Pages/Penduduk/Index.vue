@@ -19,6 +19,7 @@ const filtersForm = reactive({
   dusun: props.filters?.dusun ?? '',
   rt: props.filters?.rt ?? '',
   rw: props.filters?.rw ?? '',
+  status_kehidupan: props.filters?.status_kehidupan ?? 'Hidup',
   perPage: props.filters?.perPage ?? 20,
 })
 
@@ -77,6 +78,7 @@ const resetFilters = () => {
   filtersForm.dusun = ''
   filtersForm.rt = ''
   filtersForm.rw = ''
+  filtersForm.status_kehidupan = 'Hidup'
   filtersForm.perPage = 20
 }
 
@@ -92,7 +94,7 @@ const exportCsv = () => {
     rt: filtersForm.rt ?? '',
     rw: filtersForm.rw ?? '',
   }).toString()
-
+  // Export selalu hanya Hidup (sesuai kebijakan)
   window.location.href = route('penduduk.export') + (params ? `?${params}` : '')
 }
 
@@ -162,7 +164,7 @@ const importCsv = () => {
         </div>
 
         <div class="mb-4 rounded-2xl border bg-white p-4 shadow-sm">
-          <div class="grid grid-cols-1 gap-3 md:grid-cols-6">
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-7">
             <div class="md:col-span-2">
               <label class="text-xs text-gray-500">Pencarian</label>
               <input
@@ -201,6 +203,18 @@ const importCsv = () => {
                 class="mt-1 w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                 placeholder="contoh: 001"
               />
+            </div>
+
+            <div>
+              <label class="text-xs text-gray-500">Status</label>
+              <select
+                v-model="filtersForm.status_kehidupan"
+                class="mt-1 w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+              >
+                <option value="">Semua</option>
+                <option value="Hidup">Hidup</option>
+                <option value="Meninggal">Meninggal</option>
+              </select>
             </div>
 
             <div>
@@ -304,6 +318,7 @@ const importCsv = () => {
                   <th class="px-3 py-3">Etnis/Suku</th>
                   <th class="px-3 py-3">Pendidikan</th>
                   <th class="px-3 py-3">Pekerjaan</th>
+                  <th class="px-3 py-3">Ket. Hidup/Wafat</th>
                 </tr>
               </thead>
 
@@ -343,10 +358,18 @@ const importCsv = () => {
                   <td class="px-3 py-3">{{ p.etnis }}</td>
                   <td class="px-3 py-3">{{ p.pendidikan }}</td>
                   <td class="px-3 py-3">{{ p.pekerjaan }}</td>
+                  <td class="px-3 py-3">
+                    <span
+                      class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
+                      :class="p.status_kehidupan === 'Meninggal' ? 'bg-gray-200 text-gray-700' : 'bg-green-100 text-green-700'"
+                    >
+                      {{ p.status_kehidupan ?? 'Hidup' }}
+                    </span>
+                  </td>
                 </tr>
 
                 <tr v-if="penduduks.data.length === 0">
-                  <td colspan="22" class="px-4 py-8 text-center text-gray-500">
+                  <td colspan="23" class="px-4 py-8 text-center text-gray-500">
                     Data tidak ditemukan.
                   </td>
                 </tr>

@@ -39,6 +39,7 @@ class PendudukController extends Controller
                 'status_perkawinan',
                 'kewarganegaraan',
             ])
+            ->where('status_kehidupan', '!=', 'Meninggal')
             ->where('nama', 'like', '%' . $q . '%')
             ->orderBy('nama', 'asc')
             ->limit(10)
@@ -205,6 +206,7 @@ class PendudukController extends Controller
         $dusun = trim((string) $request->query('dusun', ''));
         $rt = trim((string) $request->query('rt', ''));
         $rw = trim((string) $request->query('rw', ''));
+        $statusKehidupan = trim((string) $request->query('status_kehidupan', 'Hidup'));
         $perPage = (int) $request->query('perPage', 20);
         if (!in_array($perPage, [10, 20, 30, 50], true)) $perPage = 20;
 
@@ -249,6 +251,7 @@ class PendudukController extends Controller
                 'rt' => $rt,
                 'rw' => $rw,
                 'perPage' => $perPage,
+                'status_kehidupan' => $statusKehidupan,
             ],
             'dusunOptions' => $dusunOptions,
         ]);
@@ -275,6 +278,9 @@ class PendudukController extends Controller
         if ($dusun !== '') $query->where('dusun', $dusun);
         if ($rt !== '') $query->where('rt', $this->normalizeRtRw($rt));
         if ($rw !== '') $query->where('rw', $this->normalizeRtRw($rw));
+
+        // Export hanya penduduk hidup
+        $query->where('status_kehidupan', '!=', 'Meninggal');
 
         $filename = 'penduduk-fatubesi-' . now()->format('Y-m-d_His') . '.csv';
 
@@ -570,6 +576,7 @@ class PendudukController extends Controller
             'etnis'                => ['nullable', 'string', 'max:50'],
             'pendidikan'           => ['nullable', 'string', 'max:100'],
             'pekerjaan'            => ['nullable', 'string', 'max:100'],
+            'status_kehidupan'     => ['nullable', 'in:Hidup,Meninggal'],
         ], [
             'nik.required'         => 'NIK wajib diisi.',
             'nik.unique'           => 'NIK sudah terdaftar untuk penduduk lain.',
