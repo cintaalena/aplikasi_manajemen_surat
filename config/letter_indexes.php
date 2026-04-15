@@ -1,87 +1,51 @@
 <?php
 
+/**
+ * Daftar kode indeks surat kelurahan — sesuai klasifikasi arsip pemerintah daerah.
+ * Hanya mencakup bidang Kependudukan dan Catatan Sipil (400.12) yang relevan
+ * untuk Kelurahan Fatubesi.
+ */
+
 return [
     [
-        'key' => 'wilayah_126_129',
-        'label' => 'Wilayah (126–129)',
+        'key'   => 'kependudukan_umum',
+        'label' => 'Kebijakan Kependudukan',
         'items' => [
-            ['code' => 126, 'name' => 'Pembagian Wilayah'],
-            ['code' => 127, 'name' => 'Penyerahan Wewenang'],
-            ['code' => 128, 'name' => 'Perangkat Daerah'],
-            ['code' => 129, 'name' => 'Penghapusan/Penggabungan Wilayah/Daerah'],
+            ['code' => '400.12.1', 'name' => 'Kebijakan di Bidang Kependudukan dan Catatan Sipil'],
         ],
     ],
     [
-        'key' => 'pemkab_130',
-        'label' => 'Pemerintah Kabupaten/Kota (130)',
+        'key'   => 'pendaftaran_penduduk',
+        'label' => 'Pendaftaran Penduduk (400.12.2)',
         'items' => [
-            ['code' => 131, 'name' => 'Kepala Daerah TK II'],
-            ['code' => 132, 'name' => 'Wakil KDH TK II'],
-            ['code' => 133, 'name' => 'Sekwilda TK II/Sekda'],
-            ['code' => 134, 'name' => 'Forum Koordinasi Pemerintah di Daerah'],
-            ['code' => 135, 'name' => 'Pembentukan/Pemekaran Wilayah'],
-            ['code' => 136, 'name' => 'Pembagian Wilayah'],
-            ['code' => 137, 'name' => 'Penyerahan urusan/wewenang'],
-            ['code' => 138, 'name' => 'Pemerintah Wilayah Kecamatan'],
-            ['code' => 139, 'name' => 'Program Pengembangan Kecamatan'],
+            ['code' => '400.12.2',   'name' => 'Pendaftaran Penduduk (Umum)'],
+            ['code' => '400.12.2.1', 'name' => 'Identitas Penduduk'],
+            ['code' => '400.12.2.2', 'name' => 'Pindah Datang Penduduk Dalam Wilayah NKRI'],
+            ['code' => '400.12.2.3', 'name' => 'Pindah Datang Penduduk Antar Negara'],
+            ['code' => '400.12.2.4', 'name' => 'Pendataan Penduduk Rentan'],
+            ['code' => '400.12.2.5', 'name' => 'Monitoring Evaluasi dan Dokumentasi'],
         ],
     ],
     [
-        'key' => 'pemdes_140',
-        'label' => 'Pemerintah Desa/Kelurahan (140)',
+        'key'   => 'pencatatan_sipil',
+        'label' => 'Pencatatan Sipil (400.12.3)',
         'items' => [
-            ['code' => 141, 'name' => 'Pamong Desa'],
-            ['code' => 142, 'name' => 'Penghasilan Pamong Desa'],
-            ['code' => 143, 'name' => 'Kekayaan Desa/Kelurahan'],
-            ['code' => 144, 'name' => 'Dewan Tingkat Desa, Dewan Marga'],
-            ['code' => 145, 'name' => 'Rembug Desa'],
-            ['code' => 146, 'name' => 'Administrasi Desa/Kelurahan'],
-            ['code' => 147, 'name' => 'Kewilayahan'],
-            ['code' => 148, 'name' => 'Lembaga Tingkat Desa, Badan Perwakilan Desa'],
-            ['code' => 149, 'name' => 'Perangkat Desa/Kelurahan'],
-            ['code' => 150, 'name' => 'RT, RW, RK, Dusun'],
+            ['code' => '400.12.3',   'name' => 'Pencatatan Sipil (Umum)'],
+            ['code' => '400.12.3.1', 'name' => 'Kelahiran dan Kematian'],
+            ['code' => '400.12.3.2', 'name' => 'Perkawinan dan Perceraian'],
+            ['code' => '400.12.3.3', 'name' => 'Pengangkatan, Pengakuan dan Pengesahan Anak serta Perubahan'],
+            ['code' => '400.12.3.4', 'name' => 'Pencatatan Kewarganegaraan'],
+            ['code' => '400.12.3.5', 'name' => 'Monitoring Evaluasi dan Dokumentasi'],
         ],
     ],
     [
-        'key' => 'sosial_463_469',
-        'label' => 'Kesejahteraan Sosial (463–469)',
+        'key'   => 'informasi_kependudukan',
+        'label' => 'Pengelolaan Informasi Administrasi Kependudukan (400.12.4)',
         'items' => [
-            ['code' => 463, 'name' => 'Kesejahteraan Anak/Keluarga'],
-            ['code' => 464, 'name' => 'Pembinaan Pahlawan'],
-            ['code' => 465, 'name' => 'Kesejahteraan Sosial'],
-            ['code' => 466, 'name' => 'Sumbangan Sosial'],
-            ['code' => 467, 'name' => 'Bimbingan Sosial'],
-            ['code' => 468, 'name' => 'PMI'],
-            ['code' => 469, 'name' => 'Makam'],
-        ],
-    ],
-    [
-        'key' => 'kependudukan_470',
-        'label' => 'Kependudukan (470)',
-        'items' => [
-            ['code' => 471, 'name' => 'Kewarganegaraan Indonesia'],
-            ['code' => 472, 'name' => 'Kewarganegaraan Asing'],
-            ['code' => 473, 'name' => 'Tidak berkewarganegaraan'],
-            ['code' => 474, 'name' => 'Pendaftaran Penduduk'],
-            ['code' => 475, 'name' => 'Perpindahan Penduduk'],
-            ['code' => 476, 'name' => 'Keluarga Berencana'],
-            ['code' => 477, 'name' => 'Catatan Sipil'],
-            ['code' => 478, 'name' => 'Akte'],
-            ['code' => 479, 'name' => '—'],
-        ],
-    ],
-    [
-        'key' => 'media_480',
-        'label' => 'Media Massa (480)',
-        'items' => [
-            ['code' => 481, 'name' => 'Penerbitan, media cetak'],
-            ['code' => 482, 'name' => 'Radio'],
-            ['code' => 483, 'name' => 'Televisi'],
-            ['code' => 484, 'name' => 'Film'],
-            ['code' => 485, 'name' => 'Pers'],
-            ['code' => 486, 'name' => '—'],
-            ['code' => 487, 'name' => 'Penerangan'],
-            ['code' => 488, 'name' => 'Operasion room'],
+            ['code' => '400.12.4',   'name' => 'Pengelolaan Informasi Administrasi Kependudukan (Umum)'],
+            ['code' => '400.12.4.1', 'name' => 'Sistem Informasi Administrasi Kependudukan'],
+            ['code' => '400.12.4.2', 'name' => 'Kelembagaan Informasi Administrasi Kependudukan'],
+            ['code' => '400.12.4.3', 'name' => 'Pengelolaan Data Administrasi Kependudukan'],
         ],
     ],
 ];

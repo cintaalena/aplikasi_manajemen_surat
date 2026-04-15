@@ -205,7 +205,9 @@ class DashboardController extends Controller
         // ==========================
         // 3) METRIK PENDUDUK
         // ==========================
-        $pendudukQuery = DB::table('penduduks')->whereNull('deleted_at');
+        $pendudukQuery = DB::table('penduduks')
+            ->whereNull('deleted_at')
+            ->where('status_kehidupan', '!=', 'Meninggal');
 
         $jumlahJiwa = (clone $pendudukQuery)->count();
 
@@ -298,6 +300,7 @@ class DashboardController extends Controller
         // ==========================
         $genderPerRtRw = DB::table('penduduks')
             ->whereNull('deleted_at')
+            ->where('status_kehidupan', '!=', 'Meninggal')
             ->whereNotNull('rt')->where('rt', '!=', '')
             ->whereNotNull('rw')->where('rw', '!=', '')
             ->select(
@@ -323,6 +326,7 @@ class DashboardController extends Controller
 
         $subtotalPerRw = DB::table('penduduks')
             ->whereNull('deleted_at')
+            ->where('status_kehidupan', '!=', 'Meninggal')
             ->whereNotNull('rw')->where('rw', '!=', '')
             ->select(
                 'rw',
@@ -353,6 +357,7 @@ class DashboardController extends Controller
         // ==========================
         $kepalaKeluargaBase = DB::table('penduduks')
             ->whereNull('deleted_at')
+            ->where('status_kehidupan', '!=', 'Meninggal')
             ->where('hubungan', 'Kepala Keluarga')
             ->whereNotNull('kode_keluarga')->where('kode_keluarga', '!=', '')
             ->whereNotNull('rt')->where('rt', '!=', '')
@@ -464,6 +469,7 @@ class DashboardController extends Controller
 
         $ageRows = DB::table('penduduks')
             ->whereNull('deleted_at')
+            ->where('status_kehidupan', '!=', 'Meninggal')
             ->whereNotNull('tanggal_lahir')
             ->whereDate('tanggal_lahir', '<=', now()->toDateString())
             ->whereIn('jenis_kelamin', ['L', 'P'])
@@ -520,6 +526,7 @@ class DashboardController extends Controller
         // ==========================
         $jobRows = DB::table('penduduks')
             ->whereNull('deleted_at')
+            ->where('status_kehidupan', '!=', 'Meninggal')
             ->whereIn('jenis_kelamin', ['L', 'P'])
             ->select(
                 DB::raw("
@@ -614,6 +621,7 @@ class DashboardController extends Controller
 
         $educationRows = DB::table('penduduks')
             ->whereNull('deleted_at')
+            ->where('status_kehidupan', '!=', 'Meninggal')
             ->whereIn('jenis_kelamin', ['L', 'P'])
             ->select('pendidikan', 'jenis_kelamin')
             ->get();

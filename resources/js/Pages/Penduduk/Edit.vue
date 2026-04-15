@@ -30,6 +30,7 @@ const form = useForm({
   etnis:             props.penduduk.etnis             ?? '',
   pendidikan:        props.penduduk.pendidikan        ?? '',
   pekerjaan:         props.penduduk.pekerjaan         ?? '',
+  status_kehidupan:  props.penduduk.status_kehidupan  ?? 'Hidup',
 })
 
 const hitungUsia = (tanggalLahir) => {
@@ -267,6 +268,15 @@ const submit = () => {
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Pekerjaan</label>
                   <input v-model="form.pekerjaan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                </div>
+
+                <div class="sm:col-span-2">
+                  <label class="text-xs font-semibold text-gray-700">Keterangan Hidup / Meninggal</label>
+                  <select v-model="form.status_kehidupan" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400">
+                    <option value="Hidup">Hidup</option>
+                    <option value="Meninggal">Meninggal Dunia</option>
+                  </select>
+                  <p v-if="form.errors.status_kehidupan" class="mt-1 text-xs text-red-600">{{ form.errors.status_kehidupan }}</p>
                 </div>
               </div>
             </div>

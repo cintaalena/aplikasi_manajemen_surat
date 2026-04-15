@@ -17,7 +17,7 @@ class LetterController extends Controller
         return $romans[max(1, min(12, $monthNumber)) - 1];
     }
 
-    private function buildNoSurat(int $urut, int $indexCode, string $monthRoman, int $year): string
+    private function buildNoSurat(int $urut, string $indexCode, string $monthRoman, int $year): string
     {
         return "{$urut}/Kel.Ftbs.{$indexCode}/{$monthRoman}/{$year}";
     }
@@ -46,7 +46,7 @@ class LetterController extends Controller
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:150'],
-            'index_code' => ['required', 'integer', 'min:1'],
+            'index_code' => ['required', 'string', 'max:50'],
             'payload' => ['required', 'array'],
         ]);
 
@@ -98,7 +98,7 @@ class LetterController extends Controller
             $counter->save();
 
             $urut = (int) $counter->count;
-            $indexCode = (int) $validated['index_code'];
+            $indexCode = (string) $validated['index_code'];
             $noSurat = $this->buildNoSurat($urut, $indexCode, $monthRoman, $year);
 
             return Letter::create([
@@ -117,6 +117,15 @@ class LetterController extends Controller
                 'printed_by' => auth()->id(),
             ]);
         });
+
+        // Jika surat kematian → otomatis tandai penduduk sebagai Meninggal
+        if ($templateSlug === 'keterangan-kematian') {
+            $pendudukId = $validated['payload']['penduduk_id'] ?? null;
+            if ($pendudukId) {
+                Penduduk::where('id', $pendudukId)
+                    ->update(['status_kehidupan' => 'Meninggal']);
+            }
+        }
 
         return response()->json([
             'id' => $letter->id,
