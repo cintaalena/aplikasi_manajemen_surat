@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/arsip-surat', [LetterArchiveController::class, 'index'])->name('arsip-surat.index');
+    Route::post('/arsip-surat', [LetterArchiveController::class, 'store'])->name('arsip-surat.store');
     Route::get('/penduduk', [PendudukController::class, 'index'])->name('penduduk.index');
     Route::get('/penduduk/create', [PendudukController::class, 'create'])->name('penduduk.create');
     Route::post('/penduduk', [PendudukController::class, 'store'])->name('penduduk.store');
@@ -57,7 +58,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/penduduk/search-kepala-keluarga', [PendudukController::class, 'searchKepalaKeluarga'])
         ->name('penduduk.searchKepalaKeluarga');
-        
+
+    Route::get('/penduduk/{penduduk}/edit', [PendudukController::class, 'edit'])->name('penduduk.edit');
+    Route::put('/penduduk/{penduduk}', [PendudukController::class, 'update'])->name('penduduk.update');
+
     // SECURITY: File upload protected with secure.upload middleware
     Route::post('/penduduk/import', [PendudukController::class, 'import'])
         ->middleware('secure.upload')

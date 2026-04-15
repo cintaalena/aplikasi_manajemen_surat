@@ -282,6 +282,7 @@ const importCsv = () => {
             <table class="min-w-[2400px] w-full text-sm">
               <thead class="sticky top-0 border-b bg-gray-50">
                 <tr class="text-left text-gray-600">
+                  <th class="px-3 py-3">Aksi</th>
                   <th class="px-3 py-3">RT</th>
                   <th class="px-3 py-3">RW</th>
                   <th class="px-3 py-3">Dusun</th>
@@ -312,6 +313,15 @@ const importCsv = () => {
                   :key="p.id"
                   class="border-b hover:bg-gray-50"
                 >
+                  <td class="px-3 py-3">
+                    <button
+                      type="button"
+                      class="rounded-lg bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-200 transition"
+                      @click="router.visit(route('penduduk.edit', p.id))"
+                    >
+                      Edit
+                    </button>
+                  </td>
                   <td class="px-3 py-3 text-xs font-mono">{{ p.rt }}</td>
                   <td class="px-3 py-3 text-xs font-mono">{{ p.rw }}</td>
                   <td class="px-3 py-3">{{ p.dusun }}</td>
@@ -336,7 +346,7 @@ const importCsv = () => {
                 </tr>
 
                 <tr v-if="penduduks.data.length === 0">
-                  <td colspan="21" class="px-4 py-8 text-center text-gray-500">
+                  <td colspan="22" class="px-4 py-8 text-center text-gray-500">
                     Data tidak ditemukan.
                   </td>
                 </tr>

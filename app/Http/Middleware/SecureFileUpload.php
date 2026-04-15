@@ -30,13 +30,24 @@ class SecureFileUpload
                 'application/csv',
                 'text/x-csv',
 
-                // Excel
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-                'application/vnd.ms-excel',                                          // .xls (common)
-                'application/CDFV2',                                                 // .xls (OLE / Windows)
+                // Excel .xlsx (ZIP-based format — PHP finfo detects as application/zip on many systems)
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/zip',
+                'application/x-zip-compressed',
+                'multipart/x-zip',
+
+                // Excel .xls (OLE compound document)
+                'application/vnd.ms-excel',
+                'application/CDFV2',
+                'application/msword',        // some finfo versions misdetect .xls
+                'application/octet-stream',  // generic binary fallback
             ];
             
-            if (!in_array($realMimeType, $allowedMimeTypes, true)) {
+            // Allow based on extension when MIME is ambiguous (zip/octet-stream + xlsx/xls extension)
+            $ext = strtolower($file->getClientOriginalExtension());
+            $isExcel = in_array($ext, ['xlsx', 'xls'], true);
+
+            if (!$isExcel && !in_array($realMimeType, $allowedMimeTypes, true)) {
                 Log::warning('Rejected file upload - invalid MIME type', [
                     'mime_type' => $realMimeType,
                     'original_name' => $file->getClientOriginalName(),
@@ -48,30 +59,33 @@ class SecureFileUpload
             }
 
             // SECURITY: Check for malicious content patterns
-            $content = file_get_contents($file->getRealPath());
-            
-            // Check for PHP tags (code injection)
-            if (preg_match('/<\?php|<\?=/i', $content)) {
-                Log::alert('Rejected file upload - PHP code detected!', [
-                    'file' => $file->getClientOriginalName(),
-                    'ip' => $request->ip(),
-                    'user_id' => $request->user()?->id,
-                ]);
-                abort(422, 'File contains forbidden content.');
-            }
+            // Only scan text-based files (CSV/TXT) — Excel/ZIP binaries are skipped
+            if (!$isExcel) {
+                $content = file_get_contents($file->getRealPath());
 
-            // Check for script tags
-            if (preg_match('/<script[^>]*>/i', $content)) {
-                Log::alert('Rejected file upload - Script tags detected!', [
-                    'file' => $file->getClientOriginalName(),
-                    'ip' => $request->ip(),
-                    'user_id' => $request->user()?->id,
-                ]);
-                abort(422, 'File contains forbidden content.');
+                // Check for PHP tags (code injection)
+                if (preg_match('/<\?php|<\?=/i', $content)) {
+                    Log::alert('Rejected file upload - PHP code detected!', [
+                        'file' => $file->getClientOriginalName(),
+                        'ip' => $request->ip(),
+                        'user_id' => $request->user()?->id,
+                    ]);
+                    abort(422, 'File contains forbidden content.');
+                }
+
+                // Check for script tags
+                if (preg_match('/<script[^>]*>/i', $content)) {
+                    Log::alert('Rejected file upload - Script tags detected!', [
+                        'file' => $file->getClientOriginalName(),
+                        'ip' => $request->ip(),
+                        'user_id' => $request->user()?->id,
+                    ]);
+                    abort(422, 'File contains forbidden content.');
+                }
             }
 
             // SECURITY: File size validation (already in validation, but double-check)
-            if ($file->getSize() > 5 * 1024 * 1024) { // 5MB
+            if ($file->getSize() > 10 * 1024 * 1024) { // 10MB
                 abort(422, 'File too large. Maximum 5MB.');
             }
 
