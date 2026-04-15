@@ -1,21 +1,23 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { Link, router } from '@inertiajs/vue3'
+import { Link, router, useForm, usePage } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
   filters: Object,
-  templateOptions: Array,
   letters: Object,
 })
 
-// Sinkron state form dengan filter dari server
+const page = usePage()
+const flashSuccess = computed(() => page.props.flash?.success)
+const flashError   = computed(() => page.props.flash?.error)
+
+// ── Filter / Pencarian ──────────────────────────────────────────────
 const form = ref({
-  no_surat:      props.filters?.no_surat      ?? '',
-  title:         props.filters?.title         ?? '',
-  template_slug: props.filters?.template_slug ?? '',
-  date_from:     props.filters?.date_from     ?? '',
-  date_to:       props.filters?.date_to       ?? '',
+  no_surat:  props.filters?.no_surat  ?? '',
+  title:     props.filters?.title     ?? '',
+  date_from: props.filters?.date_from ?? '',
+  date_to:   props.filters?.date_to   ?? '',
 })
 
 const hasActiveFilter = computed(() =>
@@ -23,20 +25,35 @@ const hasActiveFilter = computed(() =>
 )
 
 const search = () => {
-  // Kirim hanya filter yang terisi agar URL tetap bersih
   const params = {}
-  Object.entries(form.value).forEach(([k, v]) => {
-    if (v !== '') params[k] = v
-  })
+  Object.entries(form.value).forEach(([k, v]) => { if (v !== '') params[k] = v })
   router.get(route('arsip-surat.index'), params, { preserveState: true, replace: true })
 }
 
 const reset = () => {
-  form.value = { no_surat: '', title: '', template_slug: '', date_from: '', date_to: '' }
+  form.value = { no_surat: '', title: '', date_from: '', date_to: '' }
   router.get(route('arsip-surat.index'), {}, { preserveState: false })
 }
 
-// Format tanggal ke "dd Mon yyyy HH:mm"
+// ── Form tambah manual ──────────────────────────────────────────────
+const showManualForm = ref(false)
+
+const manualForm = useForm({
+  no_surat: '',
+  title:    '',
+})
+
+const submitManual = () => {
+  manualForm.post(route('arsip-surat.store'), {
+    preserveScroll: true,
+    onSuccess: () => {
+      manualForm.reset()
+      showManualForm.value = false
+    },
+  })
+}
+
+// ── Format tanggal ──────────────────────────────────────────────────
 const formatDate = (raw) => {
   if (!raw) return '-'
   const d = new Date(raw)
@@ -46,28 +63,96 @@ const formatDate = (raw) => {
     hour: '2-digit', minute: '2-digit',
   })
 }
-
-// Label template slug
-const labelOf = (slug) => {
-  const found = props.templateOptions?.find(o => o.value === slug)
-  return found ? found.label : (slug ?? '-')
-}
 </script>
 
 <template>
   <AppLayout>
     <div class="space-y-5">
       <!-- Header -->
-      <div>
-        <h1 class="text-xl font-bold text-gray-900">Arsip Surat</h1>
-        <p class="mt-1 text-sm text-gray-600">
-          Cari arsip berdasarkan tanggal, jenis surat, nomor surat, atau judul.
-        </p>
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h1 class="text-xl font-bold text-gray-900">Arsip Surat</h1>
+          <p class="mt-1 text-sm text-gray-600">
+            Cari arsip berdasarkan tanggal, nomor surat, atau judul.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition whitespace-nowrap"
+          @click="showManualForm = !showManualForm"
+        >
+          + Tambah Surat Masuk
+        </button>
+      </div>
+
+      <!-- Flash messages -->
+      <div
+        v-if="flashSuccess"
+        class="rounded-xl border-2 border-green-200 bg-green-50 p-3 text-green-800 text-sm"
+      >
+        {{ flashSuccess }}
+      </div>
+      <div
+        v-if="flashError"
+        class="rounded-xl border-2 border-red-200 bg-red-50 p-3 text-red-800 text-sm"
+      >
+        {{ flashError }}
+      </div>
+
+      <!-- Form tambah surat manual -->
+      <div
+        v-if="showManualForm"
+        class="rounded-2xl border border-purple-200 bg-white p-5 shadow-sm space-y-4"
+      >
+        <h2 class="text-sm font-bold text-gray-800">Tambah Surat Masuk Manual</h2>
+        <p class="text-xs text-gray-500">Untuk surat yang diterima dari luar (mis. dari kecamatan). Waktu masuk akan dicatat otomatis.</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-gray-600">Nomor Surat <span class="text-red-500">*</span></label>
+            <input
+              v-model="manualForm.no_surat"
+              type="text"
+              placeholder="Contoh: 123/Kec.X/IV/2026"
+              class="rounded-xl border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400"
+            />
+            <p v-if="manualForm.errors.no_surat" class="text-xs text-red-600">{{ manualForm.errors.no_surat }}</p>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-gray-600">Judul Surat <span class="text-red-500">*</span></label>
+            <input
+              v-model="manualForm.title"
+              type="text"
+              placeholder="Contoh: Undangan Rapat Koordinasi"
+              class="rounded-xl border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400"
+            />
+            <p v-if="manualForm.errors.title" class="text-xs text-red-600">{{ manualForm.errors.title }}</p>
+          </div>
+        </div>
+
+        <div class="flex gap-2 justify-end">
+          <button
+            type="button"
+            class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+            @click="showManualForm = false; manualForm.reset()"
+          >
+            Batal
+          </button>
+          <button
+            type="button"
+            :disabled="manualForm.processing"
+            class="rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition disabled:opacity-60"
+            @click="submitManual"
+          >
+            {{ manualForm.processing ? 'Menyimpan...' : 'Simpan ke Arsip' }}
+          </button>
+        </div>
       </div>
 
       <!-- Panel Filter -->
       <div class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm space-y-3">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
           <!-- Nomor Surat -->
           <div class="flex flex-col gap-1">
@@ -93,24 +178,6 @@ const labelOf = (slug) => {
             />
           </div>
 
-          <!-- Jenis Surat -->
-          <div class="flex flex-col gap-1">
-            <label class="text-xs font-semibold text-gray-600">Jenis Surat</label>
-            <select
-              v-model="form.template_slug"
-              class="rounded-xl border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400"
-            >
-              <option value="">— Semua Jenis —</option>
-              <option
-                v-for="opt in templateOptions"
-                :key="opt.value"
-                :value="opt.value"
-              >
-                {{ opt.label }}
-              </option>
-            </select>
-          </div>
-
           <!-- Tanggal Dari -->
           <div class="flex flex-col gap-1">
             <label class="text-xs font-semibold text-gray-600">Tanggal Dari</label>
@@ -130,26 +197,26 @@ const labelOf = (slug) => {
               class="rounded-xl border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400"
             />
           </div>
+        </div>
 
-          <!-- Tombol -->
-          <div class="flex items-end gap-2">
-            <button
-              type="button"
-              class="flex-1 rounded-xl py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition"
-              @click="search"
-            >
-              Cari
-            </button>
-            <button
-              v-if="hasActiveFilter"
-              type="button"
-              class="rounded-xl border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
-              @click="reset"
-              title="Reset semua filter"
-            >
-              Reset
-            </button>
-          </div>
+        <!-- Tombol cari / reset -->
+        <div class="flex gap-2">
+          <button
+            type="button"
+            class="rounded-xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition"
+            @click="search"
+          >
+            Cari
+          </button>
+          <button
+            v-if="hasActiveFilter"
+            type="button"
+            class="rounded-xl border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+            @click="reset"
+            title="Reset semua filter"
+          >
+            Reset
+          </button>
         </div>
 
         <!-- Badge filter aktif -->
@@ -167,13 +234,6 @@ const labelOf = (slug) => {
           >
             Judul: {{ form.title }}
             <button @click="form.title = ''; search()" class="hover:text-purple-900">✕</button>
-          </span>
-          <span
-            v-if="form.template_slug"
-            class="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-700 text-xs font-medium px-2.5 py-1"
-          >
-            Jenis: {{ labelOf(form.template_slug) }}
-            <button @click="form.template_slug = ''; search()" class="hover:text-amber-900">✕</button>
           </span>
           <span
             v-if="form.date_from"
@@ -197,10 +257,10 @@ const labelOf = (slug) => {
         <table class="w-full text-sm">
           <thead class="bg-purple-50 text-gray-700">
             <tr>
-              <th class="p-3 text-left font-semibold whitespace-nowrap">Waktu Cetak</th>
+              <th class="p-3 text-left font-semibold whitespace-nowrap">Waktu</th>
               <th class="p-3 text-left font-semibold whitespace-nowrap">Nomor Surat</th>
               <th class="p-3 text-left font-semibold">Judul</th>
-              <th class="p-3 text-left font-semibold whitespace-nowrap">Jenis Surat</th>
+              <th class="p-3 text-left font-semibold whitespace-nowrap">Sumber</th>
             </tr>
           </thead>
           <tbody>
@@ -220,8 +280,17 @@ const labelOf = (slug) => {
                 {{ row.title ?? '-' }}
               </td>
               <td class="p-3">
-                <span class="inline-block rounded-full bg-purple-100 text-purple-700 text-xs font-medium px-2.5 py-0.5 whitespace-nowrap">
-                  {{ labelOf(row.template_slug) }}
+                <span
+                  v-if="row.is_manual"
+                  class="inline-block rounded-full bg-amber-100 text-amber-700 text-xs font-medium px-2.5 py-0.5 whitespace-nowrap"
+                >
+                  Surat Masuk
+                </span>
+                <span
+                  v-else
+                  class="inline-block rounded-full bg-purple-100 text-purple-700 text-xs font-medium px-2.5 py-0.5 whitespace-nowrap"
+                >
+                  Dicetak
                 </span>
               </td>
             </tr>

@@ -335,10 +335,10 @@ class PendudukController extends Controller
     {
         // STEP 1: Validasi file upload
         $validator = Validator::make($request->all(), [
-            'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:10240'], // 10MB
+            'file' => ['required', 'file', 'extensions:csv,txt,xlsx,xls', 'max:10240'], // 10MB
         ], [
             'file.required' => 'File harus dipilih!',
-            'file.mimes' => 'Format file harus .csv, .txt, .xlsx, atau .xls',
+            'file.extensions' => 'Format file harus .csv, .txt, .xlsx, atau .xls',
             'file.max' => 'Ukuran file maksimal 10MB',
         ]);
 
@@ -538,6 +538,61 @@ class PendudukController extends Controller
 
             return back()->with('error', $errorMsg);
         }
+    }
+
+    public function edit(Penduduk $penduduk)
+    {
+        return Inertia::render('Penduduk/Edit', [
+            'penduduk' => $penduduk,
+        ]);
+    }
+
+    public function update(Request $request, Penduduk $penduduk)
+    {
+        $validated = $request->validate([
+            'kode_keluarga'        => ['nullable', 'string', 'max:32'],
+            'nama_kepala_keluarga' => ['nullable', 'string', 'max:150'],
+            'rt'                   => ['nullable', 'string', 'max:3'],
+            'rw'                   => ['nullable', 'string', 'max:3'],
+            'dusun'                => ['nullable', 'string', 'max:100'],
+            'alamat'               => ['nullable', 'string'],
+            'no_urut'              => ['nullable', 'integer'],
+            'nik'                  => ['required', 'string', 'max:20', 'unique:penduduks,nik,' . $penduduk->id],
+            'nama'                 => ['required', 'string', 'max:150'],
+            'jenis_kelamin'        => ['required', 'in:L,P'],
+            'hubungan'             => ['nullable', 'string', 'max:50'],
+            'tempat_lahir'         => ['nullable', 'string', 'max:100'],
+            'tanggal_lahir'        => ['nullable', 'date'],
+            'status_perkawinan'    => ['nullable', 'string', 'max:50'],
+            'agama'                => ['nullable', 'string', 'max:30'],
+            'golongan_darah'       => ['nullable', 'string', 'max:3'],
+            'kewarganegaraan'      => ['nullable', 'string', 'max:50'],
+            'etnis'                => ['nullable', 'string', 'max:50'],
+            'pendidikan'           => ['nullable', 'string', 'max:100'],
+            'pekerjaan'            => ['nullable', 'string', 'max:100'],
+        ], [
+            'nik.required'         => 'NIK wajib diisi.',
+            'nik.unique'           => 'NIK sudah terdaftar untuk penduduk lain.',
+            'nama.required'        => 'Nama wajib diisi.',
+            'jenis_kelamin.in'     => 'Jenis kelamin tidak valid.',
+        ]);
+
+        if (!empty($validated['tanggal_lahir'])) {
+            $validated['usia'] = Carbon::parse($validated['tanggal_lahir'])->age;
+        }
+
+        if (!empty($validated['rt'])) {
+            $validated['rt'] = str_pad((string) $validated['rt'], 3, '0', STR_PAD_LEFT);
+        }
+        if (!empty($validated['rw'])) {
+            $validated['rw'] = str_pad((string) $validated['rw'], 3, '0', STR_PAD_LEFT);
+        }
+
+        $penduduk->update($validated);
+
+        return redirect()
+            ->route('penduduk.index')
+            ->with('success', 'Data penduduk berhasil diperbarui.');
     }
 
     public function searchKepalaKeluarga(Request $request)
@@ -874,11 +929,19 @@ private function cleanCellValue($value): ?string
     $value = $this->cleanCellValue($value);
     if (!$value) return null;
 
+    // Handle numeric Excel date serial (e.g. 32874.0 from SimpleXLSX without datetimeFormat)
+    if (is_numeric($value) && (float)$value > 1000) {
+        $unix = ((float)$value - 25569) * 86400;
+        $date = gmdate('Y-m-d', (int)$unix);
+        if ($date) return $date;
+    }
+
     $formats = [
+        'Y-m-d H:i:s', // SimpleXLSX default datetimeFormat
+        'Y-m-d',
         'd-m-Y',
         'd/m/Y',
         'd.m.Y',
-        'Y-m-d',
         'd-M-Y',
         'd M Y',
     ];

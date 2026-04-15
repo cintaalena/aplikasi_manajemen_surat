@@ -22,6 +22,7 @@ class Letter extends Model
         'payload',
         'printed_at',
         'printed_by',
+        'is_manual',
     ];
 
     protected $hidden = [

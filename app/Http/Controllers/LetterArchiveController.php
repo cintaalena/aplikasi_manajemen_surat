@@ -4,28 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Letter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class LetterArchiveController extends Controller
 {
-    /** Label untuk tiap template slug. */
-    private array $templateLabels = [
-        'keterangan-domisili'      => 'Surat Keterangan Domisili',
-        'keterangan-kematian'      => 'Surat Keterangan Kematian',
-        'keterangan-kelahiran'     => 'Surat Keterangan Kelahiran',
-        'keterangan-usaha'         => 'Surat Keterangan Usaha',
-        'keterangan-kelakuan-baik' => 'Surat Keterangan Kelakuan Baik',
-        'keterangan-umum'          => 'Surat Keterangan (Umum)',
-    ];
-
     public function index(Request $request)
     {
-        $no_surat      = trim((string) $request->query('no_surat', ''));
-        $title         = trim((string) $request->query('title', ''));
-        $template_slug = trim((string) $request->query('template_slug', ''));
-        $date_from     = trim((string) $request->query('date_from', ''));
-        $date_to       = trim((string) $request->query('date_to', ''));
+        $no_surat  = trim((string) $request->query('no_surat', ''));
+        $title     = trim((string) $request->query('title', ''));
+        $date_from = trim((string) $request->query('date_from', ''));
+        $date_to   = trim((string) $request->query('date_to', ''));
 
         // Backward-compat: jika masih ada param `q` lama
         $q = trim((string) $request->query('q', ''));
@@ -43,9 +31,6 @@ class LetterArchiveController extends Controller
             ->when($title !== '', fn($query) =>
                 $query->where('title', 'like', "%{$title}%")
             )
-            ->when($template_slug !== '', fn($query) =>
-                $query->where('template_slug', $template_slug)
-            )
             ->when($date_from !== '', fn($query) =>
                 $query->whereDate('printed_at', '>=', $date_from)
             )
@@ -56,30 +41,36 @@ class LetterArchiveController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        // Daftar jenis surat yang ada di DB (untuk dropdown pilihan)
-        $templateOptions = DB::table('letters')
-            ->select('template_slug')
-            ->whereNotNull('template_slug')
-            ->distinct()
-            ->orderBy('template_slug')
-            ->pluck('template_slug')
-            ->map(fn($slug) => [
-                'value' => $slug,
-                'label' => $this->templateLabels[$slug] ?? $slug,
-            ])
-            ->values()
-            ->toArray();
-
         return Inertia::render('ArsipSurat/Index', [
             'filters' => [
-                'no_surat'      => $no_surat,
-                'title'         => $title,
-                'template_slug' => $template_slug,
-                'date_from'     => $date_from,
-                'date_to'       => $date_to,
+                'no_surat'  => $no_surat,
+                'title'     => $title,
+                'date_from' => $date_from,
+                'date_to'   => $date_to,
             ],
-            'templateOptions' => $templateOptions,
-            'letters'         => $letters,
+            'letters' => $letters,
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'no_surat' => ['required', 'string', 'max:100', 'unique:letters,no_surat'],
+            'title'    => ['required', 'string', 'max:255'],
+        ], [
+            'no_surat.required' => 'Nomor surat wajib diisi.',
+            'no_surat.unique'   => 'Nomor surat sudah ada di arsip.',
+            'title.required'    => 'Judul surat wajib diisi.',
+        ]);
+
+        Letter::create([
+            'no_surat'   => $validated['no_surat'],
+            'title'      => $validated['title'],
+            'is_manual'  => true,
+            'printed_at' => now(),
+            'printed_by' => $request->user()?->id,
+        ]);
+
+        return back()->with('success', 'Surat berhasil ditambahkan ke arsip.');
     }
 }
