@@ -145,6 +145,11 @@ const submitPenduduk = () => {
     preserveScroll: true,
   })
 }
+
+const toTitleCase = (str) => {
+  if (!str) return str
+  return String(str).replace(/\S+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1))
+}
 </script>
 
 <template>
@@ -235,6 +240,7 @@ const submitPenduduk = () => {
             type="text"
             class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
             placeholder="Masukkan dusun"
+            @blur="form.dusun = toTitleCase(form.dusun)"
           />
           <p v-if="form.errors.dusun" class="mt-1 text-xs text-red-600">
             {{ form.errors.dusun }}
@@ -248,6 +254,7 @@ const submitPenduduk = () => {
             rows="3"
             class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
             placeholder="Masukkan alamat"
+            @blur="form.alamat = toTitleCase(form.alamat)"
           ></textarea>
           <p v-if="form.errors.alamat" class="mt-1 text-xs text-red-600">
             {{ form.errors.alamat }}
@@ -319,7 +326,7 @@ const submitPenduduk = () => {
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Nama</label>
-                  <input v-model="form.nama" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.nama" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" @blur="form.nama = toTitleCase(form.nama)" />
                   <p v-if="form.errors.nama" class="mt-1 text-xs text-red-600">{{ form.errors.nama }}</p>
                 </div>
 
@@ -358,7 +365,7 @@ const submitPenduduk = () => {
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Tempat Lahir</label>
-                  <input v-model="form.tempat_lahir" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.tempat_lahir" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" @blur="form.tempat_lahir = toTitleCase(form.tempat_lahir)" />
                 </div>
 
                 <div>
@@ -384,7 +391,7 @@ const submitPenduduk = () => {
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Agama</label>
-                  <input v-model="form.agama" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.agama" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" @blur="form.agama = toTitleCase(form.agama)" />
                 </div>
 
                 <div>
@@ -400,22 +407,22 @@ const submitPenduduk = () => {
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Kewarganegaraan</label>
-                  <input v-model="form.kewarganegaraan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.kewarganegaraan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" @blur="form.kewarganegaraan = toTitleCase(form.kewarganegaraan)" />
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Etnis/Suku</label>
-                  <input v-model="form.etnis" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.etnis" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" @blur="form.etnis = toTitleCase(form.etnis)" />
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Pendidikan</label>
-                  <input v-model="form.pendidikan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.pendidikan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" @blur="form.pendidikan = toTitleCase(form.pendidikan)" />
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Pekerjaan</label>
-                  <input v-model="form.pekerjaan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.pekerjaan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" @blur="form.pekerjaan = toTitleCase(form.pekerjaan)" />
                 </div>
               </div>
             </div>
