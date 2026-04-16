@@ -35,6 +35,19 @@ const showPendudukDropdown = ref(false)
 const pendudukSelected = ref(false)
 let pendudukSearchTimer = null
 
+// Kelahiran: pencarian ayah dan ibu dari database penduduk
+const ayahSuggestions = ref([])
+const isSearchingAyah = ref(false)
+const ayahSelected = ref(false)
+const showAyahDropdown = ref(false)
+let ayahSearchTimer = null
+
+const ibuSuggestions = ref([])
+const isSearchingIbu = ref(false)
+const ibuSelected = ref(false)
+const showIbuDropdown = ref(false)
+let ibuSearchTimer = null
+
 // Preview scale — fit 794px A4 content into the container
 const previewContainerRef = ref(null)
 const previewInnerRef = ref(null)
@@ -85,6 +98,11 @@ const form = reactive({
   agama: '',
   namaAyah: '',
   namaIbu: '',
+  ayah_id: '',
+  ibu_id: '',
+  dusun: '',
+  kode_keluarga: '',
+  nama_kepala_keluarga: '',
   alamat: '',
   alamatAsal: '',
   alamatDomisili: '',
@@ -261,6 +279,11 @@ const applyPendudukToForm = (p) => {
   pendudukSearchError.value = ''
 }
 
+const toTitleCase = (str) => {
+  if (!str) return str
+  return String(str).replace(/\S+/g, word => word.charAt(0).toUpperCase() + word.slice(1))
+}
+
 const searchPendudukByName = async (keyword) => {
   const q = String(keyword || '').trim()
 
@@ -343,6 +366,89 @@ const validatePendudukSelectionBeforePrint = () => {
   }
 
   return true
+}
+
+const searchOrangTuaByName = async (keyword) => {
+  const q = String(keyword || '').trim()
+  if (q.length < 2) return []
+  try {
+    const res = await fetch(`/penduduk/search-by-name?q=${encodeURIComponent(q)}`, {
+      headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'include',
+    })
+    const data = await res.json().catch(() => null)
+    if (!res.ok) return []
+    return Array.isArray(data) ? data : []
+  } catch {
+    return []
+  }
+}
+
+const applyAyahToForm = (p) => {
+  form.namaAyah = p.nama ?? ''
+  form.ayah_id = p.id ?? ''
+  ayahSelected.value = true
+  showAyahDropdown.value = false
+  ayahSuggestions.value = []
+  form.kode_keluarga = p.kode_keluarga ?? ''
+  form.nama_kepala_keluarga = p.nama_kepala_keluarga ?? p.nama ?? ''
+  form.alamat = p.alamat ?? ''
+  form.rt = p.rt ?? ''
+  form.rw = p.rw ?? ''
+  form.dusun = p.dusun ?? ''
+}
+
+const applyIbuToForm = (p) => {
+  form.namaIbu = p.nama ?? ''
+  form.ibu_id = p.id ?? ''
+  ibuSelected.value = true
+  showIbuDropdown.value = false
+  ibuSuggestions.value = []
+  // Auto-fill data keluarga dari ibu hanya jika ayah belum dipilih
+  if (!ayahSelected.value) {
+    form.kode_keluarga = p.kode_keluarga ?? ''
+    form.nama_kepala_keluarga = p.nama_kepala_keluarga ?? p.nama ?? ''
+    form.alamat = p.alamat ?? ''
+    form.rt = p.rt ?? ''
+    form.rw = p.rw ?? ''
+    form.dusun = p.dusun ?? ''
+  }
+}
+
+const onNamaAyahInput = (value) => {
+  form.namaAyah = value
+  form.ayah_id = ''
+  ayahSelected.value = false
+  clearTimeout(ayahSearchTimer)
+  if (!value || String(value).trim().length < 2) {
+    ayahSuggestions.value = []
+    showAyahDropdown.value = false
+    return
+  }
+  ayahSearchTimer = setTimeout(async () => {
+    isSearchingAyah.value = true
+    ayahSuggestions.value = await searchOrangTuaByName(value)
+    showAyahDropdown.value = ayahSuggestions.value.length > 0
+    isSearchingAyah.value = false
+  }, 300)
+}
+
+const onNamaIbuInput = (value) => {
+  form.namaIbu = value
+  form.ibu_id = ''
+  ibuSelected.value = false
+  clearTimeout(ibuSearchTimer)
+  if (!value || String(value).trim().length < 2) {
+    ibuSuggestions.value = []
+    showIbuDropdown.value = false
+    return
+  }
+  ibuSearchTimer = setTimeout(async () => {
+    isSearchingIbu.value = true
+    ibuSuggestions.value = await searchOrangTuaByName(value)
+    showIbuDropdown.value = ibuSuggestions.value.length > 0
+    isSearchingIbu.value = false
+  }, 300)
 }
 
 const filteredIndexItems = computed(() => {
@@ -815,24 +921,66 @@ const confirmFinalize = async (confirmed) => {
                 />
               </div>
 
-              <div>
+              <!-- Nama Ayah dengan autocomplete -->
+              <div class="relative">
                 <label class="text-xs font-semibold text-gray-700">Nama Ayah</label>
                 <input
-                  v-model="form.namaAyah"
+                  :value="form.namaAyah"
+                  @input="onNamaAyahInput($event.target.value)"
                   type="text"
+                  autocomplete="off"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  placeholder="Masukkan nama ayah"
+                  placeholder="Ketik nama ayah (cari dari database)"
                 />
+                <div
+                  v-if="showAyahDropdown && ayahSuggestions.length > 0"
+                  class="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg"
+                >
+                  <button
+                    v-for="item in ayahSuggestions"
+                    :key="item.id"
+                    type="button"
+                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-purple-50"
+                    @click="applyAyahToForm(item)"
+                  >
+                    <div class="font-semibold text-gray-900">{{ item.nama }}</div>
+                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} &bull; RT {{ item.rt }}/RW {{ item.rw }}</div>
+                  </button>
+                </div>
+                <p v-if="isSearchingAyah" class="mt-1 text-xs text-gray-500">Mencari...</p>
+                <p v-else-if="ayahSelected" class="mt-1 text-xs text-green-600">&#x2713; Ayah ditemukan di database penduduk</p>
+                <p v-else class="mt-1 text-xs text-gray-400">Jika hanya ada ibu, kosongkan kolom ini</p>
               </div>
 
-              <div>
+              <!-- Nama Ibu dengan autocomplete -->
+              <div class="relative">
                 <label class="text-xs font-semibold text-gray-700">Nama Ibu</label>
                 <input
-                  v-model="form.namaIbu"
+                  :value="form.namaIbu"
+                  @input="onNamaIbuInput($event.target.value)"
                   type="text"
+                  autocomplete="off"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  placeholder="Masukkan nama ibu"
+                  placeholder="Ketik nama ibu (cari dari database)"
                 />
+                <div
+                  v-if="showIbuDropdown && ibuSuggestions.length > 0"
+                  class="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg"
+                >
+                  <button
+                    v-for="item in ibuSuggestions"
+                    :key="item.id"
+                    type="button"
+                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-purple-50"
+                    @click="applyIbuToForm(item)"
+                  >
+                    <div class="font-semibold text-gray-900">{{ item.nama }}</div>
+                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} &bull; RT {{ item.rt }}/RW {{ item.rw }}</div>
+                  </button>
+                </div>
+                <p v-if="isSearchingIbu" class="mt-1 text-xs text-gray-500">Mencari...</p>
+                <p v-else-if="ibuSelected" class="mt-1 text-xs text-green-600">&#x2713; Ibu ditemukan di database penduduk</p>
+                <p v-else class="mt-1 text-xs text-gray-400">Jika hanya ada ayah, kosongkan kolom ini</p>
               </div>
 
               <div class="sm:col-span-2">
@@ -892,6 +1040,27 @@ const confirmFinalize = async (confirmed) => {
                   type="text"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Kota Lama"
+                  @blur="form.kecamatan = toTitleCase(form.kecamatan)"
+                />
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-700">Dusun</label>
+                <input
+                  v-model="form.dusun"
+                  type="text"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Otomatis dari data orang tua"
+                />
+              </div>
+
+              <div v-if="form.kode_keluarga" class="sm:col-span-2">
+                <label class="text-xs font-semibold text-gray-700">No. KK (otomatis dari orang tua)</label>
+                <input
+                  :value="form.kode_keluarga"
+                  type="text"
+                  readonly
+                  class="mt-1 w-full rounded-xl border-gray-200 bg-gray-50 text-gray-600"
                 />
               </div>
             </template>
@@ -1204,6 +1373,7 @@ const confirmFinalize = async (confirmed) => {
                   type="text"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan kecamatan tujuan"
+                  @blur="form.kecamatanTujuan = toTitleCase(form.kecamatanTujuan)"
                 />
               </div>
 

@@ -127,12 +127,132 @@ class LetterController extends Controller
             }
         }
 
+        // Jika surat pindah → hapus kepala keluarga + pengikut dari database
+        if ($templateSlug === 'keterangan-pindah') {
+            $pendudukId = $validated['payload']['penduduk_id'] ?? null;
+            if ($pendudukId) {
+                Penduduk::where('id', $pendudukId)->delete();
+            }
+
+            $pengikut = $validated['payload']['pengikut'] ?? [];
+            foreach ($pengikut as $p) {
+                $nik = trim((string) ($p['nik'] ?? ''));
+                if ($nik !== '') {
+                    Penduduk::where('nik', $nik)->delete();
+                }
+            }
+        }
+
+        // Jika surat kelahiran → otomatis daftarkan bayi ke database penduduk
+        $pendudukCreated = false;
+        if ($templateSlug === 'keterangan-kelahiran') {
+            $payload  = $validated['payload'];
+            $namaBayi = trim((string) ($payload['nama'] ?? ''));
+
+            if ($namaBayi !== '') {
+                try {
+                    // Ambil data keluarga dari ayah (prioritas) atau ibu
+                    $ayahId   = $payload['ayah_id'] ?? null;
+                    $ibuId    = $payload['ibu_id']  ?? null;
+                    $orangTua = null;
+
+                    if ($ayahId) {
+                        $orangTua = Penduduk::find($ayahId);
+                    } elseif ($ibuId) {
+                        $orangTua = Penduduk::find($ibuId);
+                    }
+
+                    if ($orangTua) {
+                        $familyData = [
+                            'kode_keluarga'   => $orangTua->kode_keluarga ?? '',
+                            'alamat'          => $orangTua->alamat,
+                            'rt'              => $orangTua->rt,
+                            'rw'              => $orangTua->rw,
+                            'dusun'           => $orangTua->dusun,
+                            'kewarganegaraan' => $orangTua->kewarganegaraan,
+                        ];
+                    } else {
+                        // Fallback: gunakan data yang diisi manual di form
+                        $familyData = [
+                            'kode_keluarga'   => $payload['kode_keluarga'] ?? '',
+                            'alamat'          => $payload['alamat']        ?? '',
+                            'rt'              => $payload['rt']            ?? '',
+                            'rw'              => $payload['rw']            ?? '',
+                            'dusun'           => $payload['dusun']         ?? '',
+                            'kewarganegaraan' => $payload['kewarganegaraan'] ?? 'Warga Negara Indonesia',
+                        ];
+                    }
+
+                    // Cari kepala keluarga sebenarnya dari kode_keluarga yang sudah ditentukan
+                    $namaKepala = $payload['nama_kepala_keluarga'] ?? '';
+                    if (!empty($familyData['kode_keluarga'])) {
+                        $kepala = Penduduk::where('kode_keluarga', $familyData['kode_keluarga'])
+                            ->where(function ($q) {
+                                $q->where('hubungan', 'like', '%Kepala%')
+                                  ->orWhere('no_urut', 1);
+                            })
+                            ->orderBy('no_urut')
+                            ->first();
+
+                        if ($kepala) {
+                            $namaKepala = $kepala->nama;
+                        } elseif ($orangTua) {
+                            // Tidak ada baris kepala keluarga, gunakan nama_kepala_keluarga dari record orang tua
+                            $namaKepala = $orangTua->nama_kepala_keluarga ?? $orangTua->nama;
+                        }
+                    }
+                    $familyData['nama_kepala_keluarga'] = $namaKepala;
+
+                    // Hitung no_urut: jumlah anggota keluarga saat ini + 1
+                    $noUrut = 1;
+                    if (!empty($familyData['kode_keluarga'])) {
+                        $maxUrut = Penduduk::where('kode_keluarga', $familyData['kode_keluarga'])->max('no_urut');
+                        $noUrut  = ($maxUrut ?? 0) + 1;
+                    }
+
+                    // Normalize jenis kelamin ke L/P
+                    $jkRaw = (string) ($payload['jenisKelamin'] ?? '');
+                    $jkDb  = null;
+                    if (stripos($jkRaw, 'l') === 0) $jkDb = 'L';
+                    elseif (stripos($jkRaw, 'p') === 0) $jkDb = 'P';
+
+                    // Parse tanggal lahir
+                    $tglLahir = null;
+                    if (!empty($payload['tanggalLahir'])) {
+                        try {
+                            $tglLahir = \Carbon\Carbon::parse($payload['tanggalLahir'])->format('Y-m-d');
+                        } catch (\Throwable $e) {}
+                    }
+                    $usia = $tglLahir ? (int) \Carbon\Carbon::parse($tglLahir)->age : null;
+
+                    Penduduk::create(array_merge($familyData, [
+                        'no_urut'           => $noUrut,
+                        'nik'               => null,
+                        'nama'              => $namaBayi,
+                        'jenis_kelamin'     => $jkDb,
+                        'hubungan'          => 'Anak Kandung',
+                        'tempat_lahir'      => $payload['tempatLahir'] ?? null,
+                        'tanggal_lahir'     => $tglLahir,
+                        'usia'              => $usia,
+                        'status_perkawinan' => 'Belum Kawin',
+                        'agama'             => $payload['agama'] ?? null,
+                        'status_kehidupan'  => 'Hidup',
+                    ]));
+
+                    $pendudukCreated = true;
+                } catch (\Throwable $e) {
+                    \Log::warning('Gagal mendaftarkan bayi ke database penduduk: ' . $e->getMessage());
+                }
+            }
+        }
+
         return response()->json([
-            'id' => $letter->id,
-            'noSurat' => $letter->no_surat,
-            'urut' => $letter->urut,
-            'monthRoman' => $letter->month_roman,
-            'year' => $letter->year,
+            'id'              => $letter->id,
+            'noSurat'         => $letter->no_surat,
+            'urut'            => $letter->urut,
+            'monthRoman'      => $letter->month_roman,
+            'year'            => $letter->year,
+            'pendudukCreated' => $pendudukCreated,
         ]);
     }
 }
