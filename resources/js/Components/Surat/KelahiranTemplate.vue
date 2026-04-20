@@ -26,7 +26,6 @@ const formatTanggalSurat = () => {
 <template>
   <!-- Area print (template asli) -->
   <div class="print-area mt-4 rounded-xl border border-gray-200 bg-white p-6">
-  </div>
     <!-- KOP -->
     <table class="kop" cellspacing="0" cellpadding="0">
       <tbody>
@@ -92,14 +91,9 @@ const formatTanggalSurat = () => {
           <td class="lbl">Alamat</td><td class="sep">:</td>
           <td class="val">
             <span v-if="form.alamat || form.rt || form.rw || form.kelurahan || form.kecamatan">
-              <span v-if="form.alamat">{{ form.alamat }}, </span>RT.{{ form.rt || '___' }}/RW.{{ form.rw || '___' }} Kelurahan {{ form.kelurahan || '______' }}
-              <div>Kec. {{ form.kecamatan || '______' }}</div>
-              <div>Kota Kupang</div>
+              <span v-if="form.alamat">{{ form.alamat }}, </span>RT.{{ form.rt || '___' }}/RW.{{ form.rw || '___' }} Kelurahan {{ form.kelurahan || '______' }} Kec. {{ form.kecamatan || '______' }} Kota Kupang
             </span>
-            <span v-else>RT.___/RW.___ Kelurahan ______
-              <div>Kec. ______</div>
-              <div>Kota Kupang</div>
-            </span>
+            <span v-else>RT.___/RW.___ Kelurahan ______ Kec. ______ Kota Kupang</span>
           </td>
         </tr>
 
@@ -140,7 +134,8 @@ const formatTanggalSurat = () => {
       <div class="ttd-nama">Hubertus Berek, S.Sos</div>
       <div class="ttd-nip">NIP. 19670222 200604 1 006</div>
     </div>
-</div>
+  </div>
+  </div>
 </template>
 
 <style>
@@ -205,10 +200,10 @@ const formatTanggalSurat = () => {
 .paragraf{ margin-top:14px; line-height:1.6; }
 
 /* Data */
-.data{ width:100%; margin-top:14px; line-height:1.7; }
+.data{ width:100%; table-layout:fixed; margin-top:14px; line-height:1.7; }
 .lbl{ width:170px; padding-left:48px; vertical-align:top; }
 .sep{ width:12px; vertical-align:top; }
-.val{ vertical-align:top; }
+.val{ vertical-align:top; word-wrap:break-word; overflow-wrap:break-word; }
 .subline{ margin-left:0; }
 .spasi{ height:10px; }
 

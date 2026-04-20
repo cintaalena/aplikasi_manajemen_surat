@@ -26,7 +26,6 @@ const formatTanggalSurat = () => {
 <template>
   <!-- Area print (template asli) -->
   <div class="print-area mt-4 rounded-xl border border-gray-200 bg-white p-6">
-  </div>
     <!-- KOP -->
     <table class="kop" cellspacing="0" cellpadding="0">
       <tbody>
@@ -62,49 +61,48 @@ const formatTanggalSurat = () => {
     </div>
 
     <!-- DATA -->
-    <table class="data" cellspacing="0" cellpadding="0">
-      <tbody>
-        <tr>
-          <td class="lbl">Nama</td><td class="sep">:</td>
-          <td class="val">{{ form.nama || '____________________' }}</td>
-        </tr>
-        <tr>
-          <td class="lbl">NIK</td><td class="sep">:</td>
-          <td class="val">{{ form.nik || '____________________' }}</td>
-        </tr>
-        <tr>
-          <td class="lbl">Kelahiran</td><td class="sep">:</td>
-          <td class="val">
-            {{ form.tempatLahir || '________' }}{{ form.tanggalLahir ? ', ' + tanggalIndo(form.tanggalLahir) : '' }}
-          </td>
-        </tr>
-        <tr>
-          <td class="lbl">Jenis Kelamin</td><td class="sep">:</td>
-          <td class="val">{{ form.jenisKelamin || '________' }}</td>
-        </tr>
-        <tr>
-          <td class="lbl">Pekerjaan</td><td class="sep">:</td>
-          <td class="val">{{ form.pekerjaan || '________' }}</td>
-        </tr>
-        <tr>
-          <td class="lbl">Alamat</td><td class="sep">:</td>
-          <td class="val">
-            {{ form.alamatAsal || 'RT.___/RW.___ Kelurahan ______ Kec. ______' }}
-            <div class="subline">Kota Kupang</div>
-          </td>
-        </tr>
+    <div class="data-rows">
+      <div class="data-row">
+        <div class="data-lbl">Nama</div><div class="data-sep">:</div>
+        <div class="data-val">{{ form.nama || '____________________' }}</div>
+      </div>
+      <div class="data-row">
+        <div class="data-lbl">NIK</div><div class="data-sep">:</div>
+        <div class="data-val">{{ form.nik || '____________________' }}</div>
+      </div>
+      <div class="data-row">
+        <div class="data-lbl">Kelahiran</div><div class="data-sep">:</div>
+        <div class="data-val">
+          {{ form.tempatLahir || '________' }}{{ form.tanggalLahir ? ', ' + tanggalIndo(form.tanggalLahir) : '' }}
+        </div>
+      </div>
+      <div class="data-row">
+        <div class="data-lbl">Jenis Kelamin</div><div class="data-sep">:</div>
+        <div class="data-val">{{ form.jenisKelamin || '________' }}</div>
+      </div>
+      <div class="data-row">
+        <div class="data-lbl">Pekerjaan</div><div class="data-sep">:</div>
+        <div class="data-val">{{ form.pekerjaan || '________' }}</div>
+      </div>
+      <div class="data-row">
+        <div class="data-lbl">Alamat</div><div class="data-sep">:</div>
+        <div class="data-val">
+          <span v-if="form.alamatAsalJalan || form.alamatAsalRt || form.alamatAsalRw || form.alamatAsalKelurahan || form.alamatAsalKecamatan">
+            <span v-if="form.alamatAsalJalan">{{ form.alamatAsalJalan }}, </span>RT.{{ form.alamatAsalRt || '___' }}/RW.{{ form.alamatAsalRw || '___' }} Kelurahan {{ form.alamatAsalKelurahan || '______' }} Kec. {{ form.alamatAsalKecamatan || '______' }} Kota Kupang
+          </span>
+          <span v-else>RT.___/RW.___ Kelurahan ______ Kec. ______ Kota Kupang</span>
+        </div>
+      </div>
 
-        <tr><td colspan="3" class="spasi"></td></tr>
+      <div class="data-spasi"></div>
 
-        <tr>
-          <td class="lbl">A l a m a t Domisili</td><td class="sep">:</td>
-          <td class="val">
-            RT.{{ form.rt || '___' }}/RW.{{ form.rw || '___' }} Kel. Fatubesi Kec. Kota Lama
-            <div class="subline">Kota Kupang</div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+      <div class="data-row">
+        <div class="data-lbl">A l a m a t Domisili</div><div class="data-sep">:</div>
+        <div class="data-val">
+          RT.{{ form.rt || '___' }}/RW.{{ form.rw || '___' }} Kel. Fatubesi Kec. Kota Lama Kota Kupang
+        </div>
+      </div>
+    </div>
 
     <!-- ISI -->
     <div class="paragraf paragraf-isi">
@@ -128,7 +126,8 @@ const formatTanggalSurat = () => {
       <div class="ttd-nama">YERRY AGUSTINUS BALLU, SH</div>
       <div class="ttd-nip">NIP. 19840803 201001 1 006</div>
     </div>
-</div>
+  </div>
+  </div>
 </template>
 
 <style>
@@ -192,13 +191,28 @@ const formatTanggalSurat = () => {
 /* Paragraf */
 .paragraf{ margin-top:14px; line-height:1.6; }
 
-/* Data */
-.data{ width:100%; margin-top:14px; line-height:1.7; }
-.lbl{ width:170px; padding-left:48px; vertical-align:top; }
-.sep{ width:12px; vertical-align:top; }
-.val{ vertical-align:top; }
-.subline{ margin-left:0; }
-.spasi{ height:10px; }
+/* Data - flexbox rows (reliable wrapping) */
+.data-rows{ margin-top:14px; }
+.data-row{
+  display: flex;
+  align-items: flex-start;
+  line-height: 1.7;
+}
+.data-lbl{
+  flex: 0 0 190px;
+  padding-left: 48px;
+  word-break: keep-all;
+}
+.data-sep{
+  flex: 0 0 12px;
+}
+.data-val{
+  flex: 1 1 0;
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.data-spasi{ height: 10px; }
 
 /* TTD */
 .ttd-wrapper{
