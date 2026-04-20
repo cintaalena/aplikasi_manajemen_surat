@@ -105,6 +105,11 @@ const form = reactive({
   nama_kepala_keluarga: '',
   alamat: '',
   alamatAsal: '',
+  alamatAsalJalan: '',
+  alamatAsalRt: '',
+  alamatAsalRw: '',
+  alamatAsalKelurahan: '',
+  alamatAsalKecamatan: '',
   alamatDomisili: '',
   rt: '',
   rw: '',
@@ -266,6 +271,11 @@ const applyPendudukToForm = (p) => {
 
   if (isDomisili.value) {
     form.alamatAsal = p.alamat ?? ''
+    form.alamatAsalJalan = p.alamat ?? ''
+    form.alamatAsalRt = p.rt ?? ''
+    form.alamatAsalRw = p.rw ?? ''
+    form.alamatAsalKelurahan = ''
+    form.alamatAsalKecamatan = ''
     form.alamatDomisili = p.alamat ?? ''
   }
 
@@ -835,20 +845,42 @@ const confirmFinalize = async (confirmed) => {
 
               <div class="sm:col-span-2">
                 <label class="text-xs font-semibold text-gray-700">Alamat Asal (sesuai KTP)</label>
-                <textarea
-                  v-model="form.alamatAsal"
-                  rows="2"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                ></textarea>
-              </div>
-
-              <div class="sm:col-span-2">
-                <label class="text-xs font-semibold text-gray-700">Alamat Domisili</label>
-                <textarea
-                  v-model="form.alamatDomisili"
-                  rows="2"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                ></textarea>
+                <div class="mt-1 grid grid-cols-1 gap-2">
+                  <input
+                    v-model="form.alamatAsalJalan"
+                    type="text"
+                    class="w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                    placeholder="Jalan / Alamat"
+                  />
+                  <div class="grid grid-cols-2 gap-2">
+                    <input
+                      v-model="form.alamatAsalRt"
+                      type="text"
+                      class="w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                      placeholder="RT (mis: 001)"
+                    />
+                    <input
+                      v-model="form.alamatAsalRw"
+                      type="text"
+                      class="w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                      placeholder="RW (mis: 002)"
+                    />
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <input
+                      v-model="form.alamatAsalKelurahan"
+                      type="text"
+                      class="w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                      placeholder="Kelurahan"
+                    />
+                    <input
+                      v-model="form.alamatAsalKecamatan"
+                      type="text"
+                      class="w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                      placeholder="Kecamatan"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div>

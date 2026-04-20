@@ -26,7 +26,6 @@ const formatTanggalSurat = () => {
 <template>
   <!-- Area print (template asli) -->
   <div class="print-area mt-4 rounded-xl border border-gray-200 bg-white p-6">
-  </div>
     <!-- KOP -->
     <table class="kop" cellspacing="0" cellpadding="0">
       <tbody>
@@ -89,8 +88,10 @@ const formatTanggalSurat = () => {
         <tr>
           <td class="lbl">Alamat</td><td class="sep">:</td>
           <td class="val">
-            {{ form.alamatAsal || 'RT.___/RW.___ Kelurahan ______ Kec. ______' }}
-            <div class="subline">Kota Kupang</div>
+            <span v-if="form.alamatAsalJalan || form.alamatAsalRt || form.alamatAsalRw || form.alamatAsalKelurahan || form.alamatAsalKecamatan">
+              <span v-if="form.alamatAsalJalan">{{ form.alamatAsalJalan }}, </span>RT.{{ form.alamatAsalRt || '___' }}/RW.{{ form.alamatAsalRw || '___' }} Kelurahan {{ form.alamatAsalKelurahan || '______' }} Kec. {{ form.alamatAsalKecamatan || '______' }} Kota Kupang
+            </span>
+            <span v-else>RT.___/RW.___ Kelurahan ______ Kec. ______ Kota Kupang</span>
           </td>
         </tr>
 
@@ -99,8 +100,7 @@ const formatTanggalSurat = () => {
         <tr>
           <td class="lbl">A l a m a t Domisili</td><td class="sep">:</td>
           <td class="val">
-            RT.{{ form.rt || '___' }}/RW.{{ form.rw || '___' }} Kel. Fatubesi Kec. Kota Lama
-            <div class="subline">Kota Kupang</div>
+            RT.{{ form.rt || '___' }}/RW.{{ form.rw || '___' }} Kel. Fatubesi Kec. Kota Lama Kota Kupang
           </td>
         </tr>
       </tbody>
@@ -128,7 +128,8 @@ const formatTanggalSurat = () => {
       <div class="ttd-nama">YERRY AGUSTINUS BALLU, SH</div>
       <div class="ttd-nip">NIP. 19840803 201001 1 006</div>
     </div>
-</div>
+  </div>
+  </div>
 </template>
 
 <style>
@@ -193,10 +194,10 @@ const formatTanggalSurat = () => {
 .paragraf{ margin-top:14px; line-height:1.6; }
 
 /* Data */
-.data{ width:100%; margin-top:14px; line-height:1.7; }
+.data{ width:100%; table-layout:fixed; margin-top:14px; line-height:1.7; }
 .lbl{ width:170px; padding-left:48px; vertical-align:top; }
 .sep{ width:12px; vertical-align:top; }
-.val{ vertical-align:top; }
+.val{ vertical-align:top; word-wrap:break-word; overflow-wrap:break-word; }
 .subline{ margin-left:0; }
 .spasi{ height:10px; }
 
