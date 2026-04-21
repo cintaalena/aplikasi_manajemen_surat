@@ -123,7 +123,7 @@ const formatTanggalSurat = () => {
     <div class="ttd">
       <div class="ttd-tanggal">Kupang, {{ formatTanggalSurat() || '1 Oktober 2025' }}</div>
       <div class="ttd-jabatan">An.Lurah Fatubesi,</div>
-      <div class="ttd-jabatan">Kasie PEM &amp; Trantibum</div>
+      <div class="ttd-jabatan" style="margin-bottom: 65px;">Kasie PEM &amp; Trantibum</div>
 
       <div class="ttd-nama">YERRY AGUSTINUS BALLU, SH</div>
       <div class="ttd-nip">NIP. 19840803 201001 1 006</div>
@@ -209,7 +209,7 @@ const formatTanggalSurat = () => {
   margin-top: 40px;
 }
 .ttd{
-  width: 260px;
+  width: 320px;
   text-align: center;
   line-height: 1.6;
 }
@@ -222,13 +222,14 @@ const formatTanggalSurat = () => {
 
 /* jika ada dua baris jabatan berturut-turut, beri jarak besar sebelum nama */
 .ttd-jabatan + .ttd-jabatan{
-  margin-bottom: 60px; /* jarak ke nama (ruang tanda tangan) */
+  margin-bottom: 65px; /* jarak ke nama (ruang tanda tangan) */
 }
 
 .ttd-nama{
   font-weight: bold;
   text-decoration: underline;
   margin-bottom: 4px;
+  white-space: nowrap;
 }
 .ttd-nip{
   font-size: 12pt;
