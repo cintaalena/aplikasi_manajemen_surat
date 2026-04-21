@@ -1,4 +1,7 @@
 <script setup>
+import { computed } from 'vue'
+import { usePage } from '@inertiajs/vue3'
+
 const { form, tanggalIndo } = defineProps({
   form: { type: Object, required: true },
   tanggalIndo: { type: Function, required: true },
@@ -10,17 +13,32 @@ const pad3 = (v) => {
   return s.padStart(3, '0').slice(-3)
 }
 
-// Jika `form.tanggalSurat` tidak diberikan, gunakan tanggal sekarang otomatis
 const formatTanggalSurat = () => {
   try {
     const t = (form && form.tanggalSurat) ? form.tanggalSurat : null
     if (t) return tanggalIndo(t)
-    const nowIso = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+    const nowIso = new Date().toISOString().split('T')[0]
     return tanggalIndo(nowIso)
   } catch (e) {
     return ''
   }
 }
+
+const jabatanLabel = {
+  lurah:                             'Lurah Fatubesi',
+  sekretaris:                        'Sekretaris',
+  kasie_pelayanan_masyarakat:        'Kasie Pelayanan Masyarakat',
+  kasie_pem_trantib_umum:            'Kasie PEM & Trantibum',
+  pengelola_pemberdayaan_masyarakat: 'Pengelola Pember. Masy. & Kelembagaan',
+  pengadministrasi_perkantoran:      'Pengadministrasi Perkantoran',
+  penata_layanan_operasional:        'Penata Layanan Operasional',
+}
+
+const authUser = computed(() => usePage().props.auth?.user ?? {})
+const isLurah  = computed(() => authUser.value.jabatan === 'lurah')
+const ttdNama  = computed(() => authUser.value.name ?? '')
+const ttdNip   = computed(() => authUser.value.nip  ?? '')
+const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? authUser.value.jabatan ?? '')
 </script>
 
 <template>
@@ -120,11 +138,15 @@ const formatTanggalSurat = () => {
 <div class="ttd-wrapper">
     <div class="ttd">
       <div class="ttd-tanggal">Kupang, {{ formatTanggalSurat() || '1 Oktober 2025' }}</div>
-      <div class="ttd-jabatan">An.Lurah Fatubesi,</div>
-      <div class="ttd-jabatan">Kasie PEM &amp; Trantibum</div>
-
-      <div class="ttd-nama">YERRY AGUSTINUS BALLU, SH</div>
-      <div class="ttd-nip">NIP. 19840803 201001 1 006</div>
+      <template v-if="isLurah">
+        <div class="ttd-jabatan" style="margin-bottom: 65px;">Lurah Fatubesi,</div>
+      </template>
+      <template v-else>
+        <div class="ttd-jabatan">An. Lurah Fatubesi,</div>
+        <div class="ttd-jabatan" style="margin-bottom: 65px;">{{ ttdJabatanLabel }}</div>
+      </template>
+      <div class="ttd-nama">{{ ttdNama }}</div>
+      <div class="ttd-nip" v-if="ttdNip">NIP. {{ ttdNip }}</div>
     </div>
   </div>
   </div>
@@ -222,7 +244,7 @@ const formatTanggalSurat = () => {
   margin-top: 40px;
 }
 .ttd{
-  width: 260px;
+  width: 320px;
   text-align: center;
   line-height: 1.6;
 }
@@ -235,13 +257,14 @@ const formatTanggalSurat = () => {
 
 /* jika ada dua baris jabatan berturut-turut, beri jarak besar sebelum nama */
 .ttd-jabatan + .ttd-jabatan{
-  margin-bottom: 60px; /* jarak ke nama (ruang tanda tangan) */
+  margin-bottom: 65px; /* jarak ke nama (ruang tanda tangan) */
 }
 
 .ttd-nama{
   font-weight: bold;
   text-decoration: underline;
   margin-bottom: 4px;
+  white-space: nowrap;
 }
 .ttd-nip{
   font-size: 12pt;

@@ -14,10 +14,14 @@ defineProps({
     status: {
         type: String,
     },
+    staffNames: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const form = useForm({
-    email: '',
+    name: '',
     credential_code: '',
     password: '',
     remember: false,
@@ -35,57 +39,60 @@ const submit = () => {
         <Head title="Log in" />
 
         <div
-    v-if="$page.props.flash?.credential"
-    class="mb-4 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
-  >
-    <div class="font-semibold">Credential Anda:</div>
-    <div class="mt-1 font-mono text-base">
-      {{ $page.props.flash.credential }}
-    </div>
-    <div class="mt-1 text-xs text-emerald-700">
-      Simpan credential ini. Credential hanya ditampilkan sekali.
-    </div>
-  </div>
+            v-if="$page.props.flash?.credential"
+            class="mb-4 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+        >
+            <div class="font-semibold">Credential Anda:</div>
+            <div class="mt-1 font-mono text-base">
+                {{ $page.props.flash.credential }}
+            </div>
+            <div class="mt-1 text-xs text-emerald-700">
+                Simpan credential ini. Credential hanya ditampilkan sekali.
+            </div>
+        </div>
 
         <div
-        v-if="status"
-        class="mb-4 rounded-xl border border-purple-100 bg-purple-50 px-4 py-3 text-sm text-purple-800"
+            v-if="status"
+            class="mb-4 rounded-xl border border-purple-100 bg-purple-50 px-4 py-3 text-sm text-purple-800"
         >
-        {{ status }}
+            {{ status }}
         </div>
 
         <form @submit.prevent="submit">
             <div>
-                <InputLabel for="email" value="Email" />
+                <InputLabel for="name" value="Nama" />
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
+                <select
+                    id="name"
+                    v-model="form.name"
                     required
                     autofocus
-                    autocomplete="off"
-                />
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                    <option value="" disabled>-- Pilih Nama --</option>
+                    <option v-for="staffName in staffNames" :key="staffName" :value="staffName">
+                        {{ staffName }}
+                    </option>
+                </select>
 
-                <InputError class="mt-2" :message="form.errors.email" />
+                <InputError class="mt-2" :message="form.errors.name" />
             </div>
 
             <div class="mt-4">
-            <InputLabel for="credential_code" value="Credential Code" />
+                <InputLabel for="credential_code" value="Credential Code" />
 
-            <TextInput
-                id="credential_code"
-                type="text"
-                class="mt-1 block w-full"
-                v-model="form.credential_code"
-                required
-                placeholder="Contoh: A-001"
-                autocomplete="off"
-            />
+                <TextInput
+                    id="credential_code"
+                    type="text"
+                    class="mt-1 block w-full"
+                    v-model="form.credential_code"
+                    required
+                    placeholder="Contoh: A-001"
+                    autocomplete="off"
+                />
 
-            <InputError class="mt-2" :message="form.errors.credential_code" />
-        </div>
+                <InputError class="mt-2" :message="form.errors.credential_code" />
+            </div>
 
             <div class="mt-4">
                 <InputLabel for="password" value="Password" />
@@ -105,21 +112,11 @@ const submit = () => {
             <div class="mt-4 block">
                 <label class="flex items-center">
                     <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600"
-                        >Remember me</span
-                    >
+                    <span class="ms-2 text-sm text-gray-600">Remember me</span>
                 </label>
             </div>
 
             <div class="mt-4 flex items-center justify-end">
-                <Link
-                    v-if="canResetPassword"
-                    :href="route('password.request')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                    Forgot your password?
-                </Link>
-
                 <PrimaryButton
                     class="ms-4"
                     :class="{ 'opacity-25': form.processing }"
@@ -127,7 +124,6 @@ const submit = () => {
                 >
                     Log in
                 </PrimaryButton>
-            
             </div>
         </form>
     </GuestLayout>

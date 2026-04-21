@@ -1,4 +1,7 @@
 <script setup>
+import { computed } from 'vue'
+import { usePage } from '@inertiajs/vue3'
+
 const { form, tanggalIndo } = defineProps({
   form: { type: Object, required: true },
   tanggalIndo: { type: Function, required: true },
@@ -15,11 +18,26 @@ const formatTanggalSurat = () => {
   }
 }
 
-// optional: ubah angka jadi teks sederhana
 const terbilang = (n) => {
   const map = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh']
   return map[n] || n
 }
+
+const jabatanLabel = {
+  lurah:                             'Lurah Fatubesi',
+  sekretaris:                        'Sekretaris',
+  kasie_pelayanan_masyarakat:        'Kasie Pelayanan Masyarakat',
+  kasie_pem_trantib_umum:            'Kasie PEM & Trantibum',
+  pengelola_pemberdayaan_masyarakat: 'Pengelola Pember. Masy. & Kelembagaan',
+  pengadministrasi_perkantoran:      'Pengadministrasi Perkantoran',
+  penata_layanan_operasional:        'Penata Layanan Operasional',
+}
+
+const authUser = computed(() => usePage().props.auth?.user ?? {})
+const isLurah  = computed(() => authUser.value.jabatan === 'lurah')
+const ttdNama  = computed(() => authUser.value.name ?? '')
+const ttdNip   = computed(() => authUser.value.nip  ?? '')
+const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? authUser.value.jabatan ?? '')
 </script>
 
 <template>
@@ -213,24 +231,42 @@ const terbilang = (n) => {
       </p>
 
       <!-- TTD -->
-      <div class="mt-10 flex justify-between">
-        <div class="text-center">
-          Mengetahui,<br />
-          Camat Kota Lama
-          <br /><br /><br />
-          ______________________
+      <div class="mt-10 flex justify-between items-stretch">
+        <div class="ttd" style="display:flex; flex-direction:column;">
+          <div class="ttd-tanggal">Mengetahui,</div>
+          <div class="ttd-jabatan">Camat Kota Lama</div>
+          <div style="flex:1;"></div>
+          <div>______________________</div>
+          <div class="ttd-nip">&nbsp;</div>
         </div>
 
-        <div class="text-center">
-          Kupang, {{ formatTanggalSurat() }}<br />
-          An. Lurah Fatubesi<br />
-          Kasi Pem & Trantibum
-          <br /><br /><br />
-          <b>Yerry Agustinus Balu, SH</b><br />
-          NIP. 19840803 201001 1 006
+        <div class="ttd" style="display:flex; flex-direction:column;">
+          <div class="ttd-tanggal">Kupang, {{ formatTanggalSurat() }}</div>
+          <template v-if="isLurah">
+            <div class="ttd-jabatan" style="margin-bottom: 65px;">Lurah Fatubesi,</div>
+          </template>
+          <template v-else>
+            <div class="ttd-jabatan">An. Lurah Fatubesi,</div>
+            <div class="ttd-jabatan" style="margin-bottom: 65px;">{{ ttdJabatanLabel }}</div>
+          </template>
+          <div class="ttd-nama">{{ ttdNama }}</div>
+          <div class="ttd-nip" v-if="ttdNip">NIP. {{ ttdNip }}</div>
         </div>
       </div>
 
     </div>
   </div>
 </template>
+
+<style>
+.ttd {
+  width: 320px;
+  text-align: center;
+  line-height: 1.6;
+}
+.ttd-tanggal { margin-bottom: 4px; }
+.ttd-jabatan { margin-bottom: 6px; }
+.ttd-jabatan + .ttd-jabatan { margin-bottom: 0; }
+.ttd-nama { font-weight: bold; text-decoration: underline; margin-bottom: 4px; white-space: nowrap; }
+.ttd-nip { font-size: 12pt; }
+</style>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,9 +19,14 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): Response
     {
+        $staffNames = User::where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name');
+
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
-            'status' => session('status'),
+            'status'           => session('status'),
+            'staffNames'       => $staffNames,
         ]);
     }
 
@@ -35,7 +41,7 @@ class AuthenticatedSessionController extends Controller
             Auth::logout();
 
             return back()->withErrors([
-                'email' => 'Akun belum diverifikasi. Silakan cek email untuk OTP.',
+                'name' => 'Akun belum diverifikasi.',
             ]);
         }
 

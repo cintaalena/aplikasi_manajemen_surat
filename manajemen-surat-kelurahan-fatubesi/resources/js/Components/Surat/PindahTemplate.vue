@@ -213,24 +213,37 @@ const terbilang = (n) => {
       </p>
 
       <!-- TTD -->
-      <div class="mt-10 flex justify-between">
-        <div class="text-center">
-          Mengetahui,<br />
-          Camat Kota Lama
-          <br /><br /><br />
-          ______________________
+      <div class="mt-10 flex justify-between items-stretch">
+        <div class="ttd" style="display:flex; flex-direction:column;">
+          <div class="ttd-tanggal">Mengetahui,</div>
+          <div class="ttd-jabatan">Camat Kota Lama</div>
+          <div style="flex:1;"></div>
+          <div>______________________</div>
+          <div class="ttd-nip">&nbsp;</div>
         </div>
 
-        <div class="text-center">
-          Kupang, {{ formatTanggalSurat() }}<br />
-          An. Lurah Fatubesi<br />
-          Kasi Pem & Trantibum
-          <br /><br /><br />
-          <b>Yerry Agustinus Balu, SH</b><br />
-          NIP. 19840803 201001 1 006
+        <div class="ttd" style="display:flex; flex-direction:column;">
+          <div class="ttd-tanggal">Kupang, {{ formatTanggalSurat() }}</div>
+          <div class="ttd-jabatan">An.Lurah Fatubesi,</div>
+          <div class="ttd-jabatan" style="margin-bottom: 65px;">Kasi Pem &amp; Trantibum</div>
+          <div class="ttd-nama">YERRY AGUSTINUS BALLU, SH</div>
+          <div class="ttd-nip">NIP. 19840803 201001 1 006</div>
         </div>
       </div>
 
     </div>
   </div>
 </template>
+
+<style>
+.ttd {
+  width: 320px;
+  text-align: center;
+  line-height: 1.6;
+}
+.ttd-tanggal { margin-bottom: 4px; }
+.ttd-jabatan { margin-bottom: 6px; }
+.ttd-jabatan + .ttd-jabatan { margin-bottom: 0; }
+.ttd-nama { font-weight: bold; text-decoration: underline; margin-bottom: 4px; white-space: nowrap; }
+.ttd-nip { font-size: 12pt; }
+</style>
