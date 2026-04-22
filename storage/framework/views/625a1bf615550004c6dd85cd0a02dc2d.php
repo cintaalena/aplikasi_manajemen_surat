@@ -2,8 +2,31 @@
 <html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+
+        <!-- PWA Meta -->
+        <meta name="application-name" content="Surat Fatubesi">
+        <meta name="description" content="Sistem manajemen surat keterangan Kelurahan Fatubesi">
+        <meta name="theme-color" content="#7c3aed">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="Surat Fatubesi">
+        <meta name="msapplication-TileColor" content="#7c3aed">
+        <meta name="msapplication-TileImage" content="/images/icons/icon-144x144.png">
+
+        <!-- Manifest -->
+        <link rel="manifest" href="/manifest.json">
+
+        <!-- Apple Touch Icons -->
+        <link rel="apple-touch-icon" href="/images/icons/icon-152x152.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="/images/icons/icon-152x152.png">
+        <link rel="apple-touch-icon" sizes="192x192" href="/images/icons/icon-192x192.png">
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/png" sizes="32x32" href="/images/icons/icon-96x96.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/images/icons/icon-72x72.png">
 
         <title inertia><?php echo e(config('app.name', 'Laravel')); ?></title>
 

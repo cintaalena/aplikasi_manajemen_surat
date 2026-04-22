@@ -16,6 +16,22 @@ router.on('invalid', (event) => {
     window.location.reload();
 });
 
+// Register Service Worker untuk PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker
+            .register('/sw.js', { scope: '/' })
+            .then((reg) => {
+                console.log('[PWA] Service Worker registered:', reg.scope);
+                // Cek update SW setiap kali halaman dimuat
+                reg.update();
+            })
+            .catch((err) => {
+                console.warn('[PWA] Service Worker registration failed:', err);
+            });
+    });
+}
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) =>

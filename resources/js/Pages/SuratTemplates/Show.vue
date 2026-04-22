@@ -131,6 +131,139 @@ const form = reactive({
   pengikut: [],
 })
 
+// ===== Cascading Wilayah untuk tujuan pindah =====
+const WIL_BASE = '/api/wilayah'
+
+// Data 38 provinsi diembedded langsung agar tidak bergantung API eksternal
+const PROVINSI_STATIC = [
+  { id: '11', name: 'ACEH' },
+  { id: '12', name: 'SUMATERA UTARA' },
+  { id: '13', name: 'SUMATERA BARAT' },
+  { id: '14', name: 'RIAU' },
+  { id: '15', name: 'JAMBI' },
+  { id: '16', name: 'SUMATERA SELATAN' },
+  { id: '17', name: 'BENGKULU' },
+  { id: '18', name: 'LAMPUNG' },
+  { id: '19', name: 'KEPULAUAN BANGKA BELITUNG' },
+  { id: '21', name: 'KEPULAUAN RIAU' },
+  { id: '31', name: 'DKI JAKARTA' },
+  { id: '32', name: 'JAWA BARAT' },
+  { id: '33', name: 'JAWA TENGAH' },
+  { id: '34', name: 'DI YOGYAKARTA' },
+  { id: '35', name: 'JAWA TIMUR' },
+  { id: '36', name: 'BANTEN' },
+  { id: '51', name: 'BALI' },
+  { id: '52', name: 'NUSA TENGGARA BARAT' },
+  { id: '53', name: 'NUSA TENGGARA TIMUR' },
+  { id: '61', name: 'KALIMANTAN BARAT' },
+  { id: '62', name: 'KALIMANTAN TENGAH' },
+  { id: '63', name: 'KALIMANTAN SELATAN' },
+  { id: '64', name: 'KALIMANTAN TIMUR' },
+  { id: '65', name: 'KALIMANTAN UTARA' },
+  { id: '71', name: 'SULAWESI UTARA' },
+  { id: '72', name: 'SULAWESI TENGAH' },
+  { id: '73', name: 'SULAWESI SELATAN' },
+  { id: '74', name: 'SULAWESI TENGGARA' },
+  { id: '75', name: 'GORONTALO' },
+  { id: '76', name: 'SULAWESI BARAT' },
+  { id: '81', name: 'MALUKU' },
+  { id: '82', name: 'MALUKU UTARA' },
+  { id: '91', name: 'PAPUA BARAT' },
+  { id: '92', name: 'PAPUA' },
+  { id: '93', name: 'PAPUA SELATAN' },
+  { id: '94', name: 'PAPUA TENGAH' },
+  { id: '95', name: 'PAPUA PEGUNUNGAN' },
+  { id: '96', name: 'PAPUA BARAT DAYA' },
+]
+
+const provinsiList   = ref(PROVINSI_STATIC)
+const kabupatenList  = ref([])
+const kecamatanList  = ref([])
+const desaList       = ref([])
+
+const selectedProvinsiId  = ref('')
+const selectedKabupatenId = ref('')
+const selectedKecamatanId = ref('')
+
+const loadingKabupaten = ref(false)
+const loadingKecamatan = ref(false)
+const loadingDesa      = ref(false)
+const wilayahApiError  = ref('')
+
+const onProvinsiChange = async () => {
+  kabupatenList.value = []
+  kecamatanList.value = []
+  desaList.value = []
+  selectedKabupatenId.value = ''
+  selectedKecamatanId.value = ''
+  form.kabupatenTujuan = ''
+  form.kecamatanTujuan = ''
+  form.desaTujuan = ''
+  wilayahApiError.value = ''
+  if (!selectedProvinsiId.value) return
+  const prov = provinsiList.value.find(p => p.id === selectedProvinsiId.value)
+  form.provinsiTujuan = prov ? prov.name : ''
+  loadingKabupaten.value = true
+  try {
+    const res = await fetch(`${WIL_BASE}/regencies/${selectedProvinsiId.value}`)
+    if (!res.ok) throw new Error('Gagal memuat data')
+    kabupatenList.value = await res.json()
+  } catch (e) {
+    kabupatenList.value = []
+    wilayahApiError.value = 'Gagal memuat kabupaten/kota. Isi manual di bawah.'
+  } finally {
+    loadingKabupaten.value = false
+  }
+}
+
+const onKabupatenChange = async () => {
+  kecamatanList.value = []
+  desaList.value = []
+  selectedKecamatanId.value = ''
+  form.kecamatanTujuan = ''
+  form.desaTujuan = ''
+  wilayahApiError.value = ''
+  if (!selectedKabupatenId.value) return
+  const kab = kabupatenList.value.find(k => String(k.id) === String(selectedKabupatenId.value))
+  form.kabupatenTujuan = kab ? kab.nama : ''
+  loadingKecamatan.value = true
+  try {
+    const res = await fetch(`${WIL_BASE}/districts/${selectedKabupatenId.value}`)
+    if (!res.ok) throw new Error('Gagal memuat data')
+    kecamatanList.value = await res.json()
+  } catch (e) {
+    kecamatanList.value = []
+    wilayahApiError.value = 'Gagal memuat kecamatan. Isi manual di bawah.'
+  } finally {
+    loadingKecamatan.value = false
+  }
+}
+
+const onKecamatanChange = async () => {
+  desaList.value = []
+  form.desaTujuan = ''
+  wilayahApiError.value = ''
+  if (!selectedKecamatanId.value) return
+  const kec = kecamatanList.value.find(k => String(k.id) === String(selectedKecamatanId.value))
+  form.kecamatanTujuan = kec ? kec.nama : ''
+  loadingDesa.value = true
+  try {
+    const res = await fetch(`${WIL_BASE}/villages/${selectedKecamatanId.value}`)
+    if (!res.ok) throw new Error('Gagal memuat data')
+    desaList.value = await res.json()
+  } catch (e) {
+    desaList.value = []
+    wilayahApiError.value = 'Gagal memuat desa/kelurahan. Isi manual di bawah.'
+  } finally {
+    loadingDesa.value = false
+  }
+}
+
+const onDesaChange = () => {
+  const desa = desaList.value.find(d => d.nama === form.desaTujuan)
+  if (desa) form.desaTujuan = desa.nama
+}
+
 // Auto-isi umur saat tanggal meninggal atau tanggal lahir berubah
 watch(
   () => [form.tanggalMeninggal, form.tanggalLahir],
@@ -406,6 +539,7 @@ const applyAyahToForm = (p) => {
   form.rt = p.rt ?? ''
   form.rw = p.rw ?? ''
   form.dusun = p.dusun ?? ''
+  form.pekerjaan = p.pekerjaan ?? ''
 }
 
 const applyIbuToForm = (p) => {
@@ -1021,8 +1155,10 @@ const confirmFinalize = async (confirmed) => {
                   v-model="form.pekerjaan"
                   type="text"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  placeholder="Masukkan pekerjaan"
+                  placeholder="Masukkan pekerjaan (otomatis dari data ayah)"
                 />
+                <p v-if="ayahSelected && form.pekerjaan" class="mt-1 text-xs text-green-600">&#x2713; Diisi otomatis dari data ayah &mdash; dapat diubah jika perlu</p>
+                <p v-else-if="!ayahSelected" class="mt-1 text-xs text-gray-400">Isi manual jika ayah tidak ada di database</p>
               </div>
 
               <div class="sm:col-span-2">
@@ -1378,55 +1514,105 @@ const confirmFinalize = async (confirmed) => {
                 ></textarea>
               </div>
 
-              <div>
-                <label class="text-xs font-semibold text-gray-700">Alamat Tujuan</label>
-                <textarea
-                  v-model="form.alamatTujuan"
-                  rows="2"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  placeholder="Masukkan alamat tujuan"
-                ></textarea>
-              </div>
+              <!-- ===== TUJUAN PINDAH (cascading wilayah) ===== -->
+              <div class="rounded-xl border border-purple-100 bg-purple-50/40 p-3 space-y-3">
+                <p class="text-xs font-bold text-purple-700 uppercase tracking-wide">Lokasi Tujuan Pindah</p>
 
-              <div>
-                <label class="text-xs font-semibold text-gray-700">Desa/Kelurahan Tujuan</label>
-                <input
-                  v-model="form.desaTujuan"
-                  type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  placeholder="Masukkan desa/kelurahan tujuan"
-                />
-              </div>
+                <!-- Provinsi -->
+                <div>
+                  <label class="text-xs font-semibold text-gray-700">Provinsi</label>
+                  <select
+                    v-model="selectedProvinsiId"
+                    @change="onProvinsiChange"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  >
+                    <option value="">-- Pilih Provinsi --</option>
+                    <option v-for="p in provinsiList" :key="p.id" :value="p.id">{{ toTitleCase(p.name) }}</option>
+                  </select>
+                </div>
 
-              <div>
-                <label class="text-xs font-semibold text-gray-700">Kecamatan Tujuan</label>
-                <input
-                  v-model="form.kecamatanTujuan"
-                  type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  placeholder="Masukkan kecamatan tujuan"
-                  @blur="form.kecamatanTujuan = toTitleCase(form.kecamatanTujuan)"
-                />
-              </div>
+                <!-- Kabupaten/Kota -->
+                <div>
+                  <label class="text-xs font-semibold text-gray-700">Kabupaten / Kota</label>
+                  <select
+                    v-if="kabupatenList.length > 0 || loadingKabupaten"
+                    v-model="selectedKabupatenId"
+                    @change="onKabupatenChange"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                    :disabled="loadingKabupaten"
+                  >
+                    <option value="">{{ loadingKabupaten ? 'Memuat...' : '-- Pilih Kabupaten/Kota --' }}</option>
+                    <option v-for="k in kabupatenList" :key="k.id" :value="String(k.id)">{{ toTitleCase(k.nama) }}</option>
+                  </select>
+                  <input
+                    v-else
+                    v-model="form.kabupatenTujuan"
+                    type="text"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                    :placeholder="selectedProvinsiId ? 'Ketik nama kabupaten/kota' : 'Pilih provinsi dahulu'"
+                    :disabled="!selectedProvinsiId"
+                  />
+                </div>
 
-              <div>
-                <label class="text-xs font-semibold text-gray-700">Kabupaten/Kota Tujuan</label>
-                <input
-                  v-model="form.kabupatenTujuan"
-                  type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  placeholder="Masukkan kabupaten/kota tujuan"
-                />
-              </div>
+                <!-- Kecamatan -->
+                <div>
+                  <label class="text-xs font-semibold text-gray-700">Kecamatan</label>
+                  <select
+                    v-if="kecamatanList.length > 0 || loadingKecamatan"
+                    v-model="selectedKecamatanId"
+                    @change="onKecamatanChange"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                    :disabled="loadingKecamatan"
+                  >
+                    <option value="">{{ loadingKecamatan ? 'Memuat...' : '-- Pilih Kecamatan --' }}</option>
+                    <option v-for="k in kecamatanList" :key="k.id" :value="String(k.id)">{{ toTitleCase(k.nama) }}</option>
+                  </select>
+                  <input
+                    v-else
+                    v-model="form.kecamatanTujuan"
+                    type="text"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                    :placeholder="selectedKabupatenId || form.kabupatenTujuan ? 'Ketik nama kecamatan' : 'Pilih kabupaten/kota dahulu'"
+                    :disabled="!selectedKabupatenId && !form.kabupatenTujuan"
+                  />
+                </div>
 
-              <div>
-                <label class="text-xs font-semibold text-gray-700">Provinsi Tujuan</label>
-                <input
-                  v-model="form.provinsiTujuan"
-                  type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  placeholder="Masukkan provinsi tujuan"
-                />
+                <!-- Desa/Kelurahan -->
+                <div>
+                  <label class="text-xs font-semibold text-gray-700">Desa / Kelurahan</label>
+                  <select
+                    v-if="desaList.length > 0 || loadingDesa"
+                    v-model="form.desaTujuan"
+                    @change="onDesaChange"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                    :disabled="loadingDesa"
+                  >
+                    <option value="">{{ loadingDesa ? 'Memuat...' : '-- Pilih Desa/Kelurahan --' }}</option>
+                    <option v-for="d in desaList" :key="d.id" :value="d.nama">{{ toTitleCase(d.nama) }}</option>
+                  </select>
+                  <input
+                    v-else
+                    v-model="form.desaTujuan"
+                    type="text"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                    :placeholder="selectedKecamatanId || form.kecamatanTujuan ? 'Ketik nama desa/kelurahan' : 'Pilih kecamatan dahulu'"
+                    :disabled="!selectedKecamatanId && !form.kecamatanTujuan"
+                  />
+                </div>
+
+                <!-- Notifikasi error API -->
+                <p v-if="wilayahApiError" class="text-xs text-orange-500">&#9888; {{ wilayahApiError }}</p>
+
+                <!-- Alamat detail (jalan + RT/RW) -->
+                <div>
+                  <label class="text-xs font-semibold text-gray-700">Alamat Tujuan <span class="font-normal text-gray-400">(Jalan, RT/RW — opsional)</span></label>
+                  <input
+                    v-model="form.alamatTujuan"
+                    type="text"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                    placeholder="Contoh: Jl. Merdeka No.5, RT.01/RW.03"
+                  />
+                </div>
               </div>
 
               <div>
