@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
+import { toTitleCase } from '@/utils/textFormat'
 
 const { form, tanggalIndo } = defineProps({
   form: { type: Object, required: true },
@@ -82,7 +83,7 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
     <div class="data-rows">
       <div class="data-row">
         <div class="data-lbl">Nama</div><div class="data-sep">:</div>
-        <div class="data-val">{{ form.nama || '____________________' }}</div>
+        <div class="data-val">{{ toTitleCase(form.nama) || '____________________' }}</div>
       </div>
       <div class="data-row">
         <div class="data-lbl">NIK</div><div class="data-sep">:</div>
