@@ -19,6 +19,7 @@ class LetterArchiveController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $letters = Letter::query()
+            ->with('printedBy:id,name,jabatan,nip')
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
                     $sub->where('no_surat', 'like', "%{$q}%")
@@ -72,5 +73,35 @@ class LetterArchiveController extends Controller
         ]);
 
         return back()->with('success', 'Surat berhasil ditambahkan ke arsip.');
+    }
+
+    public function show(Letter $letter)
+    {
+        $letter->load('printedBy');
+
+        return Inertia::render('ArsipSurat/Show', [
+            'letter' => [
+                'id'            => $letter->id,
+                'template_slug' => $letter->template_slug,
+                'title'         => $letter->title,
+                'no_surat'      => $letter->no_surat,
+                'payload'       => $letter->payload ?? [],
+                'printed_at'    => $letter->printed_at,
+                'is_manual'     => (bool) $letter->is_manual,
+                'printed_by'    => $letter->printedBy ? [
+                    'id'      => $letter->printedBy->id,
+                    'name'    => $letter->printedBy->name,
+                    'jabatan' => $letter->printedBy->jabatan,
+                    'nip'     => $letter->printedBy->nip,
+                ] : null,
+            ],
+        ]);
+    }
+
+    public function pratinjau(Letter $letter)
+    {
+        $letter->load('printedBy');
+
+        return view('letters.pratinjau', compact('letter'));
     }
 }
