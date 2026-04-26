@@ -13,7 +13,14 @@ use App\Http\Controllers\PendudukController;
 Route::get('/letter-index-groups', [LetterIndexController::class, 'groups']);
 Route::get('/letter-counters/{templateSlug}', [LetterCounterController::class, 'show']);
 
-// Proxy wilayah Indonesia (kabupaten, kecamatan, desa)
+// Proxy wilayah Indonesia (provinsi, kabupaten, kecamatan, desa)
+Route::get('/wilayah/provinces', function () {
+    return Cache::remember('wilayah_provinces', 86400, function () {
+        $res = Http::timeout(10)->get('https://ibnux.github.io/data-indonesia/provinsi.json');
+        return $res->successful() ? $res->json() : [];
+    });
+});
+
 Route::get('/wilayah/regencies/{provinsiId}', function (string $provinsiId) {
     $provinsiId = preg_replace('/\D/', '', $provinsiId);
     if (!$provinsiId) return response()->json([], 400);

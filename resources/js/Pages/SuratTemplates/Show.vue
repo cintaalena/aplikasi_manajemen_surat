@@ -35,19 +35,6 @@ const showPendudukDropdown = ref(false)
 const pendudukSelected = ref(false)
 let pendudukSearchTimer = null
 
-// Kelahiran: pencarian ayah dan ibu dari database penduduk
-const ayahSuggestions = ref([])
-const isSearchingAyah = ref(false)
-const ayahSelected = ref(false)
-const showAyahDropdown = ref(false)
-let ayahSearchTimer = null
-
-const ibuSuggestions = ref([])
-const isSearchingIbu = ref(false)
-const ibuSelected = ref(false)
-const showIbuDropdown = ref(false)
-let ibuSearchTimer = null
-
 // Preview scale — fit 794px A4 content into the container
 const previewContainerRef = ref(null)
 const previewInnerRef = ref(null)
@@ -98,18 +85,8 @@ const form = reactive({
   agama: '',
   namaAyah: '',
   namaIbu: '',
-  ayah_id: '',
-  ibu_id: '',
-  dusun: '',
-  kode_keluarga: '',
-  nama_kepala_keluarga: '',
   alamat: '',
   alamatAsal: '',
-  alamatAsalJalan: '',
-  alamatAsalRt: '',
-  alamatAsalRw: '',
-  alamatAsalKelurahan: '',
-  alamatAsalKecamatan: '',
   alamatDomisili: '',
   rt: '',
   rw: '',
@@ -123,146 +100,17 @@ const form = reactive({
   kewarganegaraan: 'Indonesia',
   alamatTujuan: '',
   desaTujuan: '',
+  desaTujuanId: '',
   kecamatanTujuan: '',
+  kecamatanTujuanId: '',
   kabupatenTujuan: '',
+  kabupatenTujuanId: '',
   provinsiTujuan: '',
+  provinsiTujuanId: '',
   tanggalPindah: '',
   alasanPindah: '',
   pengikut: [],
 })
-
-// ===== Cascading Wilayah untuk tujuan pindah =====
-const WIL_BASE = '/api/wilayah'
-
-// Data 38 provinsi diembedded langsung agar tidak bergantung API eksternal
-const PROVINSI_STATIC = [
-  { id: '11', name: 'ACEH' },
-  { id: '12', name: 'SUMATERA UTARA' },
-  { id: '13', name: 'SUMATERA BARAT' },
-  { id: '14', name: 'RIAU' },
-  { id: '15', name: 'JAMBI' },
-  { id: '16', name: 'SUMATERA SELATAN' },
-  { id: '17', name: 'BENGKULU' },
-  { id: '18', name: 'LAMPUNG' },
-  { id: '19', name: 'KEPULAUAN BANGKA BELITUNG' },
-  { id: '21', name: 'KEPULAUAN RIAU' },
-  { id: '31', name: 'DKI JAKARTA' },
-  { id: '32', name: 'JAWA BARAT' },
-  { id: '33', name: 'JAWA TENGAH' },
-  { id: '34', name: 'DI YOGYAKARTA' },
-  { id: '35', name: 'JAWA TIMUR' },
-  { id: '36', name: 'BANTEN' },
-  { id: '51', name: 'BALI' },
-  { id: '52', name: 'NUSA TENGGARA BARAT' },
-  { id: '53', name: 'NUSA TENGGARA TIMUR' },
-  { id: '61', name: 'KALIMANTAN BARAT' },
-  { id: '62', name: 'KALIMANTAN TENGAH' },
-  { id: '63', name: 'KALIMANTAN SELATAN' },
-  { id: '64', name: 'KALIMANTAN TIMUR' },
-  { id: '65', name: 'KALIMANTAN UTARA' },
-  { id: '71', name: 'SULAWESI UTARA' },
-  { id: '72', name: 'SULAWESI TENGAH' },
-  { id: '73', name: 'SULAWESI SELATAN' },
-  { id: '74', name: 'SULAWESI TENGGARA' },
-  { id: '75', name: 'GORONTALO' },
-  { id: '76', name: 'SULAWESI BARAT' },
-  { id: '81', name: 'MALUKU' },
-  { id: '82', name: 'MALUKU UTARA' },
-  { id: '91', name: 'PAPUA BARAT' },
-  { id: '92', name: 'PAPUA' },
-  { id: '93', name: 'PAPUA SELATAN' },
-  { id: '94', name: 'PAPUA TENGAH' },
-  { id: '95', name: 'PAPUA PEGUNUNGAN' },
-  { id: '96', name: 'PAPUA BARAT DAYA' },
-]
-
-const provinsiList   = ref(PROVINSI_STATIC)
-const kabupatenList  = ref([])
-const kecamatanList  = ref([])
-const desaList       = ref([])
-
-const selectedProvinsiId  = ref('')
-const selectedKabupatenId = ref('')
-const selectedKecamatanId = ref('')
-
-const loadingKabupaten = ref(false)
-const loadingKecamatan = ref(false)
-const loadingDesa      = ref(false)
-const wilayahApiError  = ref('')
-
-const onProvinsiChange = async () => {
-  kabupatenList.value = []
-  kecamatanList.value = []
-  desaList.value = []
-  selectedKabupatenId.value = ''
-  selectedKecamatanId.value = ''
-  form.kabupatenTujuan = ''
-  form.kecamatanTujuan = ''
-  form.desaTujuan = ''
-  wilayahApiError.value = ''
-  if (!selectedProvinsiId.value) return
-  const prov = provinsiList.value.find(p => p.id === selectedProvinsiId.value)
-  form.provinsiTujuan = prov ? prov.name : ''
-  loadingKabupaten.value = true
-  try {
-    const res = await fetch(`${WIL_BASE}/regencies/${selectedProvinsiId.value}`)
-    if (!res.ok) throw new Error('Gagal memuat data')
-    kabupatenList.value = await res.json()
-  } catch (e) {
-    kabupatenList.value = []
-    wilayahApiError.value = 'Gagal memuat kabupaten/kota. Isi manual di bawah.'
-  } finally {
-    loadingKabupaten.value = false
-  }
-}
-
-const onKabupatenChange = async () => {
-  kecamatanList.value = []
-  desaList.value = []
-  selectedKecamatanId.value = ''
-  form.kecamatanTujuan = ''
-  form.desaTujuan = ''
-  wilayahApiError.value = ''
-  if (!selectedKabupatenId.value) return
-  const kab = kabupatenList.value.find(k => String(k.id) === String(selectedKabupatenId.value))
-  form.kabupatenTujuan = kab ? kab.nama : ''
-  loadingKecamatan.value = true
-  try {
-    const res = await fetch(`${WIL_BASE}/districts/${selectedKabupatenId.value}`)
-    if (!res.ok) throw new Error('Gagal memuat data')
-    kecamatanList.value = await res.json()
-  } catch (e) {
-    kecamatanList.value = []
-    wilayahApiError.value = 'Gagal memuat kecamatan. Isi manual di bawah.'
-  } finally {
-    loadingKecamatan.value = false
-  }
-}
-
-const onKecamatanChange = async () => {
-  desaList.value = []
-  form.desaTujuan = ''
-  wilayahApiError.value = ''
-  if (!selectedKecamatanId.value) return
-  const kec = kecamatanList.value.find(k => String(k.id) === String(selectedKecamatanId.value))
-  form.kecamatanTujuan = kec ? kec.nama : ''
-  loadingDesa.value = true
-  try {
-    const res = await fetch(`${WIL_BASE}/villages/${selectedKecamatanId.value}`)
-    if (!res.ok) throw new Error('Gagal memuat data')
-    desaList.value = await res.json()
-  } catch (e) {
-    desaList.value = []
-    wilayahApiError.value = 'Gagal memuat desa/kelurahan. Isi manual di bawah.'
-  } finally {
-    loadingDesa.value = false
-  }
-}
-
-const onDesaChange = () => {
-  const desa = desaList.value.find(d => d.nama === form.desaTujuan)
-  if (desa) form.desaTujuan = desa.nama
-}
 
 // Auto-isi umur saat tanggal meninggal atau tanggal lahir berubah
 watch(
@@ -338,7 +186,88 @@ const removePengikut = (index) => {
   form.pengikut.splice(index, 1)
 }
 
-const indexGroups = ref([])        // [{key,label,items:[{code,name}]}]
+// ── Cascading Wilayah (untuk Surat Pindah) ──────────────────────────────────
+const provinsiList   = ref([])
+const kabupatenList  = ref([])
+const kecamatanList  = ref([])
+const desaList       = ref([])
+const isLoadingProv  = ref(false)
+const isLoadingKab   = ref(false)
+const isLoadingKec   = ref(false)
+const isLoadingDesa  = ref(false)
+
+const fetchWilayah = async (url) => {
+  const res = await fetch(url, {
+    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+    credentials: 'include',
+  })
+  if (!res.ok) return []
+  return await res.json()
+}
+
+const loadProvinsi = async () => {
+  if (provinsiList.value.length > 0) return
+  isLoadingProv.value = true
+  provinsiList.value = await fetchWilayah('/api/wilayah/provinces')
+  isLoadingProv.value = false
+}
+
+const onProvinsiChange = async (id) => {
+  const prov = provinsiList.value.find(p => p.id === id)
+  form.provinsiTujuanId  = id
+  form.provinsiTujuan    = prov?.nama ?? ''
+  form.kabupatenTujuanId = ''
+  form.kabupatenTujuan   = ''
+  form.kecamatanTujuanId = ''
+  form.kecamatanTujuan   = ''
+  form.desaTujuanId      = ''
+  form.desaTujuan        = ''
+  kabupatenList.value    = []
+  kecamatanList.value    = []
+  desaList.value         = []
+  if (!id) return
+  isLoadingKab.value = true
+  kabupatenList.value = await fetchWilayah(`/api/wilayah/regencies/${id}`)
+  isLoadingKab.value = false
+}
+
+const onKabupatenChange = async (id) => {
+  const kab = kabupatenList.value.find(k => k.id === id)
+  form.kabupatenTujuanId = id
+  form.kabupatenTujuan   = kab?.nama ?? ''
+  form.kecamatanTujuanId = ''
+  form.kecamatanTujuan   = ''
+  form.desaTujuanId      = ''
+  form.desaTujuan        = ''
+  kecamatanList.value    = []
+  desaList.value         = []
+  if (!id) return
+  isLoadingKec.value = true
+  kecamatanList.value = await fetchWilayah(`/api/wilayah/districts/${id}`)
+  isLoadingKec.value = false
+}
+
+const onKecamatanChange = async (id) => {
+  const kec = kecamatanList.value.find(k => k.id === id)
+  form.kecamatanTujuanId = id
+  form.kecamatanTujuan   = kec?.nama ?? ''
+  form.desaTujuanId      = ''
+  form.desaTujuan        = ''
+  desaList.value         = []
+  if (!id) return
+  isLoadingDesa.value = true
+  desaList.value = await fetchWilayah(`/api/wilayah/villages/${id}`)
+  isLoadingDesa.value = false
+}
+
+const onDesaChange = (id) => {
+  const desa = desaList.value.find(d => d.id === id)
+  form.desaTujuanId = id
+  form.desaTujuan   = desa?.nama ?? ''
+}
+
+        // [{key,label,items:[{code,name}]}]
+const indexGroups = ref([])
 const selectedGroupKey = ref('')
 const selectedIndexCode = ref('')
 const isLoadingIndexes = ref(true)
@@ -404,11 +333,6 @@ const applyPendudukToForm = (p) => {
 
   if (isDomisili.value) {
     form.alamatAsal = p.alamat ?? ''
-    form.alamatAsalJalan = p.alamat ?? ''
-    form.alamatAsalRt = p.rt ?? ''
-    form.alamatAsalRw = p.rw ?? ''
-    form.alamatAsalKelurahan = ''
-    form.alamatAsalKecamatan = ''
     form.alamatDomisili = p.alamat ?? ''
   }
 
@@ -420,11 +344,6 @@ const applyPendudukToForm = (p) => {
   showPendudukDropdown.value = false
   pendudukSuggestions.value = []
   pendudukSearchError.value = ''
-}
-
-const toTitleCase = (str) => {
-  if (!str) return str
-  return String(str).replace(/\S+/g, word => word.charAt(0).toUpperCase() + word.slice(1))
 }
 
 const searchPendudukByName = async (keyword) => {
@@ -511,90 +430,6 @@ const validatePendudukSelectionBeforePrint = () => {
   return true
 }
 
-const searchOrangTuaByName = async (keyword) => {
-  const q = String(keyword || '').trim()
-  if (q.length < 2) return []
-  try {
-    const res = await fetch(`/penduduk/search-by-name?q=${encodeURIComponent(q)}`, {
-      headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-      credentials: 'include',
-    })
-    const data = await res.json().catch(() => null)
-    if (!res.ok) return []
-    return Array.isArray(data) ? data : []
-  } catch {
-    return []
-  }
-}
-
-const applyAyahToForm = (p) => {
-  form.namaAyah = p.nama ?? ''
-  form.ayah_id = p.id ?? ''
-  ayahSelected.value = true
-  showAyahDropdown.value = false
-  ayahSuggestions.value = []
-  form.kode_keluarga = p.kode_keluarga ?? ''
-  form.nama_kepala_keluarga = p.nama_kepala_keluarga ?? p.nama ?? ''
-  form.alamat = p.alamat ?? ''
-  form.rt = p.rt ?? ''
-  form.rw = p.rw ?? ''
-  form.dusun = p.dusun ?? ''
-  form.pekerjaan = p.pekerjaan ?? ''
-}
-
-const applyIbuToForm = (p) => {
-  form.namaIbu = p.nama ?? ''
-  form.ibu_id = p.id ?? ''
-  ibuSelected.value = true
-  showIbuDropdown.value = false
-  ibuSuggestions.value = []
-  // Auto-fill data keluarga dari ibu hanya jika ayah belum dipilih
-  if (!ayahSelected.value) {
-    form.kode_keluarga = p.kode_keluarga ?? ''
-    form.nama_kepala_keluarga = p.nama_kepala_keluarga ?? p.nama ?? ''
-    form.alamat = p.alamat ?? ''
-    form.rt = p.rt ?? ''
-    form.rw = p.rw ?? ''
-    form.dusun = p.dusun ?? ''
-  }
-}
-
-const onNamaAyahInput = (value) => {
-  form.namaAyah = value
-  form.ayah_id = ''
-  ayahSelected.value = false
-  clearTimeout(ayahSearchTimer)
-  if (!value || String(value).trim().length < 2) {
-    ayahSuggestions.value = []
-    showAyahDropdown.value = false
-    return
-  }
-  ayahSearchTimer = setTimeout(async () => {
-    isSearchingAyah.value = true
-    ayahSuggestions.value = await searchOrangTuaByName(value)
-    showAyahDropdown.value = ayahSuggestions.value.length > 0
-    isSearchingAyah.value = false
-  }, 300)
-}
-
-const onNamaIbuInput = (value) => {
-  form.namaIbu = value
-  form.ibu_id = ''
-  ibuSelected.value = false
-  clearTimeout(ibuSearchTimer)
-  if (!value || String(value).trim().length < 2) {
-    ibuSuggestions.value = []
-    showIbuDropdown.value = false
-    return
-  }
-  ibuSearchTimer = setTimeout(async () => {
-    isSearchingIbu.value = true
-    ibuSuggestions.value = await searchOrangTuaByName(value)
-    showIbuDropdown.value = ibuSuggestions.value.length > 0
-    isSearchingIbu.value = false
-  }, 300)
-}
-
 const filteredIndexItems = computed(() => {
   const g = indexGroups.value.find(x => x.key === selectedGroupKey.value)
   const items = g?.items ?? []
@@ -656,6 +491,7 @@ onMounted(async () => {
       form.judulSurat = 'Surat Keterangan Kematian'
     } else if (isPindah.value) {
       form.judulSurat = 'Surat Keterangan Pindah'
+      loadProvinsi() // pre-load provinsi di background
     }
     console.log('Letter title set to:', form.judulSurat)
 
@@ -681,7 +517,7 @@ onMounted(async () => {
   }
 })
 
-// reset setelah print selesai — tampilkan konfirmasi sebelum finalize
+// Tampilkan dialog konfirmasi setelah print selesai
 const showPrintConfirm = ref(false)
 
 const handleAfterPrint = () => {
@@ -755,6 +591,10 @@ const printNow = async () => {
   window.print()
 }
 
+// Modal sukses setelah finalize berhasil
+const showSuccessModal = ref(false)
+const savedLetter = ref(null) // {id, noSurat}
+
 const confirmFinalize = async (confirmed) => {
   showPrintConfirm.value = false
 
@@ -767,11 +607,11 @@ const confirmFinalize = async (confirmed) => {
   isPrinting.value = true
   try {
     await finalizeLetter(props.slug)
-    // Berhasil disimpan: kembali ke dashboard dengan form bersih
     router.visit('/dashboard')
   } catch (e) {
     console.error('finalize error:', e)
     alert(e.message || 'Gagal menyimpan data surat ke arsip. Silakan coba lagi.')
+  } finally {
     isPrinting.value = false
   }
 }
@@ -979,42 +819,20 @@ const confirmFinalize = async (confirmed) => {
 
               <div class="sm:col-span-2">
                 <label class="text-xs font-semibold text-gray-700">Alamat Asal (sesuai KTP)</label>
-                <div class="mt-1 grid grid-cols-1 gap-2">
-                  <input
-                    v-model="form.alamatAsalJalan"
-                    type="text"
-                    class="w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                    placeholder="Jalan / Alamat"
-                  />
-                  <div class="grid grid-cols-2 gap-2">
-                    <input
-                      v-model="form.alamatAsalRt"
-                      type="text"
-                      class="w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                      placeholder="RT (mis: 001)"
-                    />
-                    <input
-                      v-model="form.alamatAsalRw"
-                      type="text"
-                      class="w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                      placeholder="RW (mis: 002)"
-                    />
-                  </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <input
-                      v-model="form.alamatAsalKelurahan"
-                      type="text"
-                      class="w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                      placeholder="Kelurahan"
-                    />
-                    <input
-                      v-model="form.alamatAsalKecamatan"
-                      type="text"
-                      class="w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                      placeholder="Kecamatan"
-                    />
-                  </div>
-                </div>
+                <textarea
+                  v-model="form.alamatAsal"
+                  rows="2"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                ></textarea>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="text-xs font-semibold text-gray-700">Alamat Domisili</label>
+                <textarea
+                  v-model="form.alamatDomisili"
+                  rows="2"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                ></textarea>
               </div>
 
               <div>
@@ -1087,66 +905,24 @@ const confirmFinalize = async (confirmed) => {
                 />
               </div>
 
-              <!-- Nama Ayah dengan autocomplete -->
-              <div class="relative">
+              <div>
                 <label class="text-xs font-semibold text-gray-700">Nama Ayah</label>
                 <input
-                  :value="form.namaAyah"
-                  @input="onNamaAyahInput($event.target.value)"
+                  v-model="form.namaAyah"
                   type="text"
-                  autocomplete="off"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  placeholder="Ketik nama ayah (cari dari database)"
+                  placeholder="Masukkan nama ayah"
                 />
-                <div
-                  v-if="showAyahDropdown && ayahSuggestions.length > 0"
-                  class="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg"
-                >
-                  <button
-                    v-for="item in ayahSuggestions"
-                    :key="item.id"
-                    type="button"
-                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-purple-50"
-                    @click="applyAyahToForm(item)"
-                  >
-                    <div class="font-semibold text-gray-900">{{ item.nama }}</div>
-                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} &bull; RT {{ item.rt }}/RW {{ item.rw }}</div>
-                  </button>
-                </div>
-                <p v-if="isSearchingAyah" class="mt-1 text-xs text-gray-500">Mencari...</p>
-                <p v-else-if="ayahSelected" class="mt-1 text-xs text-green-600">&#x2713; Ayah ditemukan di database penduduk</p>
-                <p v-else class="mt-1 text-xs text-gray-400">Jika hanya ada ibu, kosongkan kolom ini</p>
               </div>
 
-              <!-- Nama Ibu dengan autocomplete -->
-              <div class="relative">
+              <div>
                 <label class="text-xs font-semibold text-gray-700">Nama Ibu</label>
                 <input
-                  :value="form.namaIbu"
-                  @input="onNamaIbuInput($event.target.value)"
+                  v-model="form.namaIbu"
                   type="text"
-                  autocomplete="off"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  placeholder="Ketik nama ibu (cari dari database)"
+                  placeholder="Masukkan nama ibu"
                 />
-                <div
-                  v-if="showIbuDropdown && ibuSuggestions.length > 0"
-                  class="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg"
-                >
-                  <button
-                    v-for="item in ibuSuggestions"
-                    :key="item.id"
-                    type="button"
-                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-purple-50"
-                    @click="applyIbuToForm(item)"
-                  >
-                    <div class="font-semibold text-gray-900">{{ item.nama }}</div>
-                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} &bull; RT {{ item.rt }}/RW {{ item.rw }}</div>
-                  </button>
-                </div>
-                <p v-if="isSearchingIbu" class="mt-1 text-xs text-gray-500">Mencari...</p>
-                <p v-else-if="ibuSelected" class="mt-1 text-xs text-green-600">&#x2713; Ibu ditemukan di database penduduk</p>
-                <p v-else class="mt-1 text-xs text-gray-400">Jika hanya ada ayah, kosongkan kolom ini</p>
               </div>
 
               <div class="sm:col-span-2">
@@ -1155,10 +931,8 @@ const confirmFinalize = async (confirmed) => {
                   v-model="form.pekerjaan"
                   type="text"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  placeholder="Masukkan pekerjaan (otomatis dari data ayah)"
+                  placeholder="Masukkan pekerjaan"
                 />
-                <p v-if="ayahSelected && form.pekerjaan" class="mt-1 text-xs text-green-600">&#x2713; Diisi otomatis dari data ayah &mdash; dapat diubah jika perlu</p>
-                <p v-else-if="!ayahSelected" class="mt-1 text-xs text-gray-400">Isi manual jika ayah tidak ada di database</p>
               </div>
 
               <div class="sm:col-span-2">
@@ -1208,27 +982,6 @@ const confirmFinalize = async (confirmed) => {
                   type="text"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Kota Lama"
-                  @blur="form.kecamatan = toTitleCase(form.kecamatan)"
-                />
-              </div>
-
-              <div>
-                <label class="text-xs font-semibold text-gray-700">Dusun</label>
-                <input
-                  v-model="form.dusun"
-                  type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  placeholder="Otomatis dari data orang tua"
-                />
-              </div>
-
-              <div v-if="form.kode_keluarga" class="sm:col-span-2">
-                <label class="text-xs font-semibold text-gray-700">No. KK (otomatis dari orang tua)</label>
-                <input
-                  :value="form.kode_keluarga"
-                  type="text"
-                  readonly
-                  class="mt-1 w-full rounded-xl border-gray-200 bg-gray-50 text-gray-600"
                 />
               </div>
             </template>
@@ -1514,106 +1267,84 @@ const confirmFinalize = async (confirmed) => {
                 ></textarea>
               </div>
 
-              <!-- ===== TUJUAN PINDAH (cascading wilayah) ===== -->
-              <div class="rounded-xl border border-purple-100 bg-purple-50/40 p-3 space-y-3">
-                <p class="text-xs font-bold text-purple-700 uppercase tracking-wide">Lokasi Tujuan Pindah</p>
-
-                <!-- Provinsi -->
-                <div>
-                  <label class="text-xs font-semibold text-gray-700">Provinsi</label>
-                  <select
-                    v-model="selectedProvinsiId"
-                    @change="onProvinsiChange"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  >
-                    <option value="">-- Pilih Provinsi --</option>
-                    <option v-for="p in provinsiList" :key="p.id" :value="p.id">{{ toTitleCase(p.name) }}</option>
-                  </select>
-                </div>
-
-                <!-- Kabupaten/Kota -->
-                <div>
-                  <label class="text-xs font-semibold text-gray-700">Kabupaten / Kota</label>
-                  <select
-                    v-if="kabupatenList.length > 0 || loadingKabupaten"
-                    v-model="selectedKabupatenId"
-                    @change="onKabupatenChange"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                    :disabled="loadingKabupaten"
-                  >
-                    <option value="">{{ loadingKabupaten ? 'Memuat...' : '-- Pilih Kabupaten/Kota --' }}</option>
-                    <option v-for="k in kabupatenList" :key="k.id" :value="String(k.id)">{{ toTitleCase(k.nama) }}</option>
-                  </select>
-                  <input
-                    v-else
-                    v-model="form.kabupatenTujuan"
-                    type="text"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                    :placeholder="selectedProvinsiId ? 'Ketik nama kabupaten/kota' : 'Pilih provinsi dahulu'"
-                    :disabled="!selectedProvinsiId"
-                  />
-                </div>
-
-                <!-- Kecamatan -->
-                <div>
-                  <label class="text-xs font-semibold text-gray-700">Kecamatan</label>
-                  <select
-                    v-if="kecamatanList.length > 0 || loadingKecamatan"
-                    v-model="selectedKecamatanId"
-                    @change="onKecamatanChange"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                    :disabled="loadingKecamatan"
-                  >
-                    <option value="">{{ loadingKecamatan ? 'Memuat...' : '-- Pilih Kecamatan --' }}</option>
-                    <option v-for="k in kecamatanList" :key="k.id" :value="String(k.id)">{{ toTitleCase(k.nama) }}</option>
-                  </select>
-                  <input
-                    v-else
-                    v-model="form.kecamatanTujuan"
-                    type="text"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                    :placeholder="selectedKabupatenId || form.kabupatenTujuan ? 'Ketik nama kecamatan' : 'Pilih kabupaten/kota dahulu'"
-                    :disabled="!selectedKabupatenId && !form.kabupatenTujuan"
-                  />
-                </div>
-
-                <!-- Desa/Kelurahan -->
-                <div>
-                  <label class="text-xs font-semibold text-gray-700">Desa / Kelurahan</label>
-                  <select
-                    v-if="desaList.length > 0 || loadingDesa"
-                    v-model="form.desaTujuan"
-                    @change="onDesaChange"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                    :disabled="loadingDesa"
-                  >
-                    <option value="">{{ loadingDesa ? 'Memuat...' : '-- Pilih Desa/Kelurahan --' }}</option>
-                    <option v-for="d in desaList" :key="d.id" :value="d.nama">{{ toTitleCase(d.nama) }}</option>
-                  </select>
-                  <input
-                    v-else
-                    v-model="form.desaTujuan"
-                    type="text"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                    :placeholder="selectedKecamatanId || form.kecamatanTujuan ? 'Ketik nama desa/kelurahan' : 'Pilih kecamatan dahulu'"
-                    :disabled="!selectedKecamatanId && !form.kecamatanTujuan"
-                  />
-                </div>
-
-                <!-- Notifikasi error API -->
-                <p v-if="wilayahApiError" class="text-xs text-orange-500">&#9888; {{ wilayahApiError }}</p>
-
-                <!-- Alamat detail (jalan + RT/RW) -->
-                <div>
-                  <label class="text-xs font-semibold text-gray-700">Alamat Tujuan <span class="font-normal text-gray-400">(Jalan, RT/RW — opsional)</span></label>
-                  <input
-                    v-model="form.alamatTujuan"
-                    type="text"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                    placeholder="Contoh: Jl. Merdeka No.5, RT.01/RW.03"
-                  />
-                </div>
+              <!-- ── ALAMAT TUJUAN (Cascading Wilayah) ── -->
+              <div class="sm:col-span-2">
+                <p class="text-xs font-bold text-purple-700 mb-2 mt-1">Alamat Tujuan Pindah</p>
               </div>
+
+              <!-- Provinsi -->
+              <div class="sm:col-span-2">
+                <label class="text-xs font-semibold text-gray-700">Provinsi Tujuan</label>
+                <select
+                  :value="form.provinsiTujuanId"
+                  @change="onProvinsiChange($event.target.value)"
+                  :disabled="isLoadingProv"
+                  class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="">{{ isLoadingProv ? 'Memuat provinsi...' : 'Pilih Provinsi' }}</option>
+                  <option v-for="p in provinsiList" :key="p.id" :value="p.id">{{ p.nama }}</option>
+                </select>
+              </div>
+
+              <!-- Kabupaten/Kota -->
+              <div class="sm:col-span-2">
+                <label class="text-xs font-semibold text-gray-700">Kabupaten/Kota Tujuan</label>
+                <select
+                  :value="form.kabupatenTujuanId"
+                  @change="onKabupatenChange($event.target.value)"
+                  :disabled="isLoadingKab || !form.provinsiTujuanId"
+                  class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    {{ isLoadingKab ? 'Memuat...' : (!form.provinsiTujuanId ? 'Pilih provinsi dulu' : 'Pilih Kabupaten/Kota') }}
+                  </option>
+                  <option v-for="k in kabupatenList" :key="k.id" :value="k.id">{{ k.nama }}</option>
+                </select>
+              </div>
+
+              <!-- Kecamatan -->
+              <div class="sm:col-span-2">
+                <label class="text-xs font-semibold text-gray-700">Kecamatan Tujuan</label>
+                <select
+                  :value="form.kecamatanTujuanId"
+                  @change="onKecamatanChange($event.target.value)"
+                  :disabled="isLoadingKec || !form.kabupatenTujuanId"
+                  class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    {{ isLoadingKec ? 'Memuat...' : (!form.kabupatenTujuanId ? 'Pilih kabupaten dulu' : 'Pilih Kecamatan') }}
+                  </option>
+                  <option v-for="k in kecamatanList" :key="k.id" :value="k.id">{{ k.nama }}</option>
+                </select>
+              </div>
+
+              <!-- Desa/Kelurahan -->
+              <div class="sm:col-span-2">
+                <label class="text-xs font-semibold text-gray-700">Desa/Kelurahan Tujuan</label>
+                <select
+                  :value="form.desaTujuanId"
+                  @change="onDesaChange($event.target.value)"
+                  :disabled="isLoadingDesa || !form.kecamatanTujuanId"
+                  class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    {{ isLoadingDesa ? 'Memuat...' : (!form.kecamatanTujuanId ? 'Pilih kecamatan dulu' : 'Pilih Desa/Kelurahan') }}
+                  </option>
+                  <option v-for="d in desaList" :key="d.id" :value="d.id">{{ d.nama }}</option>
+                </select>
+              </div>
+
+              <!-- Alamat detail (RT/RW, Jalan) -->
+              <div class="sm:col-span-2">
+                <label class="text-xs font-semibold text-gray-700">Detail Alamat Tujuan <span class="font-normal text-gray-400">(RT/RW, nama jalan, dll)</span></label>
+                <textarea
+                  v-model="form.alamatTujuan"
+                  rows="2"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  placeholder="Contoh: RT 005/RW 002, Jl. Soekarno No. 10"
+                ></textarea>
+              </div>
+
 
               <div>
                 <label class="text-xs font-semibold text-gray-700">Tanggal Pindah</label>
@@ -1792,7 +1523,7 @@ const confirmFinalize = async (confirmed) => {
     </div>
   </Teleport>
 
-  <!-- Γ£à KONFIRMASI setelah print dialog ditutup -->
+  <!-- ✅ KONFIRMASI setelah print dialog ditutup -->
   <Teleport to="body">
     <div v-if="showPrintConfirm" class="fixed inset-0 z-[999998] flex items-center justify-center bg-black/50">
       <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
@@ -1800,7 +1531,7 @@ const confirmFinalize = async (confirmed) => {
         <p class="mt-2 text-sm text-gray-600">
           Apakah surat berhasil dicetak atau disimpan sebagai PDF?
           <br />
-          <span class="text-xs text-gray-400 mt-1 block">Jika Ya, nomor surat akan dicatat dan masuk ke arsip.</span>
+          <span class="text-xs text-gray-400 mt-1 block">Jika Ya, nomor surat akan dicatat dan salinan digital masuk ke arsip.</span>
         </p>
         <div class="mt-5 flex gap-3 justify-end">
           <button
@@ -1812,10 +1543,11 @@ const confirmFinalize = async (confirmed) => {
           </button>
           <button
             type="button"
-            class="rounded-xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:from-purple-700 hover:to-fuchsia-600 transition"
+            :disabled="isPrinting"
+            class="rounded-xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:from-purple-700 hover:to-fuchsia-600 transition disabled:opacity-60"
             @click="confirmFinalize(true)"
           >
-            Ya, Berhasil Dicetak
+            {{ isPrinting ? 'Menyimpan...' : 'Ya, Berhasil Dicetak' }}
           </button>
         </div>
       </div>

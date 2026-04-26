@@ -3,10 +3,12 @@ import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { toTitleCase } from '@/utils/textFormat'
 
-const { form, tanggalIndo } = defineProps({
+const props = defineProps({
   form: { type: Object, required: true },
   tanggalIndo: { type: Function, required: true },
+  signer: { type: Object, default: null },
 })
+const { form, tanggalIndo } = props
 
 const pad3 = (v) => {
   const s = String(v ?? '').replace(/\D/g, '')
@@ -35,7 +37,7 @@ const jabatanLabel = {
   penata_layanan_operasional:        'Penata Layanan Operasional',
 }
 
-const authUser = computed(() => usePage().props.auth?.user ?? {})
+const authUser = computed(() => props.signer ?? usePage().props.auth?.user ?? {})
 const isLurah  = computed(() => authUser.value.jabatan === 'lurah')
 const ttdNama  = computed(() => authUser.value.name ?? '')
 const ttdNip   = computed(() => authUser.value.nip  ?? '')

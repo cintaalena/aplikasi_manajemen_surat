@@ -260,7 +260,9 @@ const formatDate = (raw) => {
               <th class="p-3 text-left font-semibold whitespace-nowrap">Waktu</th>
               <th class="p-3 text-left font-semibold whitespace-nowrap">Nomor Surat</th>
               <th class="p-3 text-left font-semibold">Judul</th>
+              <th class="p-3 text-left font-semibold whitespace-nowrap">Dibuat Oleh</th>
               <th class="p-3 text-left font-semibold whitespace-nowrap">Sumber</th>
+              <th class="p-3 text-left font-semibold whitespace-nowrap">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -279,6 +281,9 @@ const formatDate = (raw) => {
               <td class="p-3 text-gray-700 max-w-xs">
                 {{ row.title ?? '-' }}
               </td>
+              <td class="p-3 text-gray-700 text-xs whitespace-nowrap">
+                {{ row.printed_by?.name ?? '-' }}
+              </td>
               <td class="p-3">
                 <span
                   v-if="row.is_manual"
@@ -293,10 +298,22 @@ const formatDate = (raw) => {
                   Dicetak
                 </span>
               </td>
+              <td class="p-3">
+                <a
+                  v-if="!row.is_manual && row.template_slug"
+                  :href="`/arsip-surat/${row.id}/pratinjau`"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-block rounded-lg bg-purple-600 px-3 py-1 text-xs font-semibold text-white hover:bg-purple-700 transition whitespace-nowrap"
+                >
+                  Lihat Surat
+                </a>
+                <span v-else class="text-gray-300 text-xs">—</span>
+              </td>
             </tr>
 
             <tr v-if="!letters.data.length">
-              <td class="p-4 text-gray-500 italic" colspan="4">
+              <td class="p-4 text-gray-500 italic" colspan="6">
                 Tidak ada arsip surat yang sesuai dengan filter.
               </td>
             </tr>
