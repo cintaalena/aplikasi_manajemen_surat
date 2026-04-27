@@ -23,98 +23,49 @@ class PendudukController extends Controller
             return response()->json([]);
         }
 
-        $fields = [
-                'id', 'nik', 'nama', 'nama_kepala_keluarga', 'kode_keluarga',
-                'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir',
-                'agama', 'pekerjaan', 'alamat', 'rt', 'rw', 'dusun',
-                'status_perkawinan', 'kewarganegaraan',
-            ];
-
-            $mapRow = function ($p, $overrideName = null) {
+        $penduduks = Penduduk::query()
+            ->select([
+                'id',
+                'nik',
+                'nama',
+                'jenis_kelamin',
+                'tempat_lahir',
+                'tanggal_lahir',
+                'agama',
+                'pekerjaan',
+                'alamat',
+                'rt',
+                'rw',
+                'status_perkawinan',
+                'kewarganegaraan',
+            ])
+            ->where('status_kehidupan', '!=', 'Meninggal')
+            ->where('nama', 'like', '%' . $q . '%')
+            ->orderBy('nama', 'asc')
+            ->limit(10)
+            ->get()
+            ->map(function ($p) {
                 return [
-                    'id'                   => $p->id,
-                    'nik'                  => $p->nik,
-                    'nama'                 => $overrideName ?? $p->nama,
-                    'nama_kepala_keluarga' => $p->nama_kepala_keluarga,
-                    'kode_keluarga'        => $p->kode_keluarga,
-                    'jenis_kelamin'        => $p->jenis_kelamin,
-                    'tempat_lahir'         => $p->tempat_lahir,
-                    'tanggal_lahir'        => $p->tanggal_lahir
-                        ? (is_string($p->tanggal_lahir) ? $p->tanggal_lahir : $p->tanggal_lahir->format('Y-m-d'))
+                    'id' => $p->id,
+                    'nik' => $p->nik,
+                    'nama' => $p->nama,
+                    'jenis_kelamin' => $p->jenis_kelamin,
+                    'tempat_lahir' => $p->tempat_lahir,
+                    'tanggal_lahir' => $p->tanggal_lahir
+                        ? (is_string($p->tanggal_lahir)
+                            ? $p->tanggal_lahir
+                            : $p->tanggal_lahir->format('Y-m-d'))
                         : '',
-                    'agama'                => $p->agama,
-                    'pekerjaan'            => $p->pekerjaan,
-                    'alamat'               => $p->alamat,
-                    'rt'                   => $p->rt,
-                    'rw'                   => $p->rw,
-                    'dusun'                => $p->dusun,
-                    'status_perkawinan'    => $p->status_perkawinan,
-                    'kewarganegaraan'      => $p->kewarganegaraan,
+                    'agama' => $p->agama,
+                    'pekerjaan' => $p->pekerjaan,
+                    'alamat' => $p->alamat,
+                    'rt' => $p->rt,
+                    'rw' => $p->rw,
+                    'status_perkawinan' => $p->status_perkawinan,
+                    'kewarganegaraan' => $p->kewarganegaraan,
                 ];
-            };
-
-            // 1. Cari berdasarkan nama individu
-            $byNama = Penduduk::query()
-                ->select($fields)
-                ->where('status_kehidupan', '!=', 'Meninggal')
-                ->where('nama', 'like', '%' . $q . '%')
-                ->orderBy('nama')
-                ->limit(8)
-                ->get();
-
-            $namaFound = $byNama->pluck('nama')
-                ->map(fn($n) => mb_strtolower(trim((string) $n)))
-                ->toArray();
-
-            // 2. Cari berdasarkan nama_kepala_keluarga — ambil satu perwakilan per keluarga
-            //    Kepala keluarga yang tidak punya baris data sendiri tetap bisa ditemukan.
-            $kepalaGroups = Penduduk::query()
-                ->selectRaw('MIN(id) as id, kode_keluarga,
-                    MAX(nama_kepala_keluarga) as nama_kepala_keluarga,
-                    MAX(rt)               as rt,
-                    MAX(rw)               as rw,
-                    MAX(dusun)            as dusun,
-                    MAX(alamat)           as alamat,
-                    MAX(kewarganegaraan)  as kewarganegaraan')
-                ->where('status_kehidupan', '!=', 'Meninggal')
-                ->where('nama_kepala_keluarga', 'like', '%' . $q . '%')
-                ->whereNotNull('nama_kepala_keluarga')
-                ->where('nama_kepala_keluarga', '!=', '')
-                ->groupBy('kode_keluarga')
-                ->limit(5)
-                ->get();
-
-            $synthetic = [];
-            foreach ($kepalaGroups as $row) {
-                $namaKepala = trim((string) $row->nama_kepala_keluarga);
-                // Lewati jika nama kepala sudah muncul di hasil pencarian nama individu
-                if (in_array(mb_strtolower($namaKepala), $namaFound, true)) {
-                    continue;
-                }
-                $synthetic[] = [
-                    'id'                   => null, // tidak ada baris individu → backend pakai data form
-                    'nik'                  => null,
-                    'nama'                 => $namaKepala,
-                    'nama_kepala_keluarga' => $namaKepala,
-                    'kode_keluarga'        => $row->kode_keluarga,
-                    'jenis_kelamin'        => null,
-                    'tempat_lahir'         => null,
-                    'tanggal_lahir'        => '',
-                    'agama'                => null,
-                    'pekerjaan'            => null,
-                    'alamat'               => $row->alamat,
-                    'rt'                   => $row->rt,
-                    'rw'                   => $row->rw,
-                    'dusun'                => $row->dusun,
-                    'status_perkawinan'    => null,
-                    'kewarganegaraan'      => $row->kewarganegaraan,
-                ];
-            }
-
-            $penduduks = $byNama->map(fn($p) => $mapRow($p))
-                ->values()
-                ->concat($synthetic)
-                ->take(10);
+            })
+            ->values();
 
         return response()->json($penduduks);
     } catch (\Throwable $e) {
@@ -541,11 +492,6 @@ class PendudukController extends Controller
                 $existing = null;
                 if (!empty($data['nik'])) {
                     $existing = Penduduk::where('nik', $data['nik'])->first();
-                    // Jika NIK sudah ada tapi untuk orang berbeda, nullkan NIK agar bisa diinsert
-                    if ($existing && !(strtolower($existing->nama) === strtolower($data['nama']) && $existing->kode_keluarga === $data['kode_keluarga'])) {
-                        $data['nik'] = null;
-                        $existing = null;
-                    }
                 }
 
                 if (!$existing && !empty($data['kode_keluarga']) && !empty($data['nama'])) {
@@ -878,9 +824,6 @@ class PendudukController extends Controller
 
     // Kalau kosong atau terlalu panjang, anggap tidak valid
     if ($nik === '' || strlen($nik) > 20) {
-        $data[$field] = null;
-    } elseif (preg_match('/^9+$/', $nik)) {
-        // NIK yang semua angka 9 adalah nilai placeholder (tidak valid)
         $data[$field] = null;
     } else {
         $data[$field] = $nik;

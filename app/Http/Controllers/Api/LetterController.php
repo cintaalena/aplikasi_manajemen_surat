@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Letter;
 use App\Models\LetterCounter;
+use App\Models\LetterDocument;
 use App\Models\Penduduk;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
@@ -46,9 +47,11 @@ class LetterController extends Controller
     public function finalize(Request $request, string $templateSlug)
     {
         $validated = $request->validate([
-            'title' => ['required', 'string', 'max:150'],
+            'title'    => ['required', 'string', 'max:150'],
             'index_code' => ['required', 'string', 'max:50'],
-            'payload' => ['required', 'array'],
+            'payload'  => ['required', 'array'],
+            'doc_ids'  => ['sometimes', 'array'],
+            'doc_ids.*' => ['integer', 'exists:letter_documents,id'],
         ]);
 
         if ($this->mustExistInPenduduk($templateSlug)) {
@@ -131,6 +134,14 @@ class LetterController extends Controller
             return response()->json([
                 'message' => 'Nomor surat ini sudah ada di arsip. Kemungkinan surat sudah pernah disimpan sebelumnya.',
             ], 409);
+        }
+
+        // Hubungkan dokumen pendukung yang sudah di-upload sebelumnya
+        $docIds = $validated['doc_ids'] ?? [];
+        if (!empty($docIds)) {
+            LetterDocument::whereIn('id', $docIds)
+                ->whereNull('letter_id')
+                ->update(['letter_id' => $letter->id]);
         }
 
         // Jika surat kematian → otomatis tandai penduduk sebagai Meninggal

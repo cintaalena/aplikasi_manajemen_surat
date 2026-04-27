@@ -519,21 +519,226 @@ onMounted(async () => {
 
 // Tampilkan dialog konfirmasi setelah print selesai
 const showPrintConfirm = ref(false)
+const isSavingDraft = ref(false)   // true saat simpan PDF sementara (tanpa arsip)
+const isCapturing = ref(false)     // true saat mengambil HTML untuk Word export
+const printSheetRef = ref(null)
+const showExportMenu = ref(false)
 
 const handleAfterPrint = () => {
   printMode.value = false
+  if (isSavingDraft.value) {
+    isSavingDraft.value = false
+    return // skip konfirmasi & arsip untuk simpan sementara
+  }
   showPrintConfirm.value = true
 }
 
-onMounted(() => window.addEventListener('afterprint', handleAfterPrint))
+const closeExportMenu = () => { showExportMenu.value = false }
+
+onMounted(() => {
+  window.addEventListener('afterprint', handleAfterPrint)
+  document.addEventListener('click', closeExportMenu)
+})
 onBeforeUnmount(() => {
   window.removeEventListener('afterprint', handleAfterPrint)
+  document.removeEventListener('click', closeExportMenu)
   previewResizeObserver?.disconnect()
 })
+
+// Simpan sementara sebagai PDF — cetak ke PDF tanpa masuk arsip
+const saveAsPdfDraft = async () => {
+  showExportMenu.value = false
+  isSavingDraft.value = true
+  showPreview.value = true
+  printMode.value = true
+  await nextTick()
+  window.print()
+}
+
+// Simpan sementara sebagai Word — download .doc tanpa masuk arsip
+const saveAsWord = async () => {
+  showExportMenu.value = false
+  isCapturing.value = true
+  await nextTick()
+  await nextTick()
+  const el = printSheetRef.value
+  if (!el) {
+    isCapturing.value = false
+    alert('Gagal mengambil konten surat. Silakan coba lagi.')
+    return
+  }
+  const styles = Array.from(document.querySelectorAll('style'))
+    .map(s => s.textContent)
+    .join('\n')
+  const html = `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta charset="UTF-8">
+  <meta name="ProgId" content="Word.Document">
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+  <style>
+    @page { size: A4 portrait; margin: 20mm 22mm; }
+    body { font-family: "Bookman Old Style", serif; font-size: 12pt; margin: 0; padding: 0; }
+    ${styles}
+  </style>
+</head>
+<body>${el.innerHTML}</body>
+</html>`
+  const blob = new Blob(['\ufeff', html], { type: 'application/msword' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  const safeName = (form.judulSurat || 'surat').replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_')
+  a.download = `${safeName}_draft.doc`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+  isCapturing.value = false
+}
+
+// ── Dokumen Persyaratan Surat Kematian ───────────────────────────────────────
+
+// Jenis surat kematian yang dipilih user: 'dokter' | 'saksi' | ''
+const jenisSuratKematian = ref('')
+
+// Daftar dokumen pendukung (urut tampilan)
+const KEMATIAN_DOCS = [
+  { key: 'suratPengantarRtRw',     label: 'Surat Pengantar RT/RW',                                       wajib: true  },
+  { key: 'suratKetKematian',       label: '', /* diisi dinamis berdasarkan jenisSuratKematian */          wajib: true  },
+  { key: 'fotoKtpAlmarhum',        label: 'Fotocopy KTP Almarhum/Almarhumah',                            wajib: true  },
+  { key: 'fotoKkAlmarhum',         label: 'Fotocopy Kartu Keluarga Almarhum/Almarhumah',                 wajib: true  },
+  { key: 'fotoKtpPemohon',         label: 'Fotocopy KTP Pemohon (Pelapor)',                              wajib: true  },
+  { key: 'suratPernyataanPelapor', label: 'Surat Pernyataan dari Pelapor (ditandatangani 2 saksi & RT)', wajib: true  },
+]
+
+const labelKetKematian = computed(() =>
+  jenisSuratKematian.value === 'dokter'
+    ? 'Surat Keterangan Kematian dari Dokter/Bidan/Puskesmas'
+    : jenisSuratKematian.value === 'saksi'
+      ? 'Surat Pernyataan dari 2 Orang Saksi'
+      : 'Dokumen Keterangan Kematian'
+)
+
+// State per dokumen: { id: number|null, url: string|null, isUploading: boolean, error: string }
+const dokState = reactive(
+  Object.fromEntries(KEMATIAN_DOCS.map(d => [d.key, { id: null, url: null, isUploading: false, error: '' }]))
+)
+
+// Ambil CSRF token dari meta tag (sudah disediakan Laravel di blade)
+const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? ''
+
+const uploadDokumen = async (key, file) => {
+  const label = key === 'suratKetKematian' ? labelKetKematian.value : (KEMATIAN_DOCS.find(d => d.key === key)?.label ?? key)
+
+  dokState[key].isUploading = true
+  dokState[key].error = ''
+
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('doc_key', key)
+    fd.append('doc_label', label)
+
+    const res = await fetch('/surat/dokumen/upload', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': getCsrfToken(),
+      },
+      credentials: 'include',
+      body: fd,
+    })
+
+    const data = await res.json().catch(() => null)
+    if (!res.ok) {
+      throw new Error(data?.message ?? `Upload gagal (${res.status})`)
+    }
+
+    dokState[key].id  = data.id
+    dokState[key].url = data.url
+  } catch (e) {
+    dokState[key].error = e.message ?? 'Gagal upload'
+  } finally {
+    dokState[key].isUploading = false
+  }
+}
+
+const handleDokUpload = async (key, event) => {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+
+  if (file.size > 5 * 1024 * 1024) {
+    dokState[key].error = 'Ukuran file terlalu besar. Maksimal 5 MB.'
+    return
+  }
+
+  await uploadDokumen(key, file)
+}
+
+const removeDok = async (key) => {
+  const id = dokState[key].id
+  if (id) {
+    try {
+      await fetch(`/surat/dokumen/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': getCsrfToken(),
+        },
+        credentials: 'include',
+      })
+    } catch { /* abaikan, dokumen tetap dihapus dari state */ }
+  }
+  dokState[key].id  = null
+  dokState[key].url = null
+  dokState[key].error = ''
+  // Jika menghapus dokumen keterangan kematian, reset juga pilihan jenis
+  if (key === 'suratKetKematian') {
+    jenisSuratKematian.value = ''
+  }
+}
+
+const validateDokKematianBeforePrint = () => {
+  if (!isKematian.value) return true
+
+  if (!jenisSuratKematian.value) {
+    throw new Error('Silakan pilih jenis dokumen keterangan kematian (dokter/bidan atau pernyataan saksi).')
+  }
+
+  const missing = []
+  for (const d of KEMATIAN_DOCS) {
+    if (d.wajib && !dokState[d.key].id) {
+      const label = d.key === 'suratKetKematian' ? labelKetKematian.value : d.label
+      missing.push(label)
+    }
+  }
+
+  if (missing.length > 0) {
+    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
+  }
+  return true
+}
+
+const getDokIds = () => KEMATIAN_DOCS.map(d => dokState[d.key].id).filter(Boolean)
+// ─────────────────────────────────────────────────────────────────────────────
 
 const finalizeLetter = async (templateSlug) => {
   if (!selectedIndexCode.value) {
     throw new Error('Silakan pilih kategori dan nomor index terlebih dahulu!')
+  }
+
+  const body = {
+    title: form.judulSurat,
+    index_code: selectedIndexCode.value,
+    payload: { ...form },
+  }
+
+  if (isKematian.value) {
+    body.doc_ids = getDokIds()
   }
 
   const res = await fetch(`/surat/${templateSlug}/finalize`, {
@@ -542,13 +747,10 @@ const finalizeLetter = async (templateSlug) => {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRF-TOKEN': getCsrfToken(),
     },
     credentials: 'include',
-    body: JSON.stringify({
-      title: form.judulSurat,
-      index_code: selectedIndexCode.value,
-      payload: { ...form },
-    }),
+    body: JSON.stringify(body),
   })
 
   if (!res.ok) {
@@ -582,6 +784,13 @@ const printNow = async () => {
     validatePendudukSelectionBeforePrint()
   } catch (e) {
     alert(e.message || 'nama ini tidak terdaftar di database penduduk kelurahan fatubesi')
+    return
+  }
+
+  try {
+    validateDokKematianBeforePrint()
+  } catch (e) {
+    alert(e.message)
     return
   }
 
@@ -629,11 +838,11 @@ const confirmFinalize = async (confirmed) => {
         <div>
           <h1 class="text-xl font-bold text-gray-900">{{ form.judulSurat }}</h1>
           <p class="mt-1 text-sm text-gray-600">
-            Isi form → klik <b>View</b> untuk preview → klik <b>Cetak</b> untuk print.
+            Isi form → <b>View</b> untuk preview → <b>Simpan Sementara</b> untuk draft → <b>Cetak</b> untuk arsip.
           </p>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           <button
             type="button"
             class="rounded-xl border border-purple-200 bg-white px-4 py-2 text-sm font-semibold text-purple-800 hover:bg-purple-50 transition"
@@ -641,6 +850,37 @@ const confirmFinalize = async (confirmed) => {
           >
             {{ showPreview ? 'Tutup View' : 'View' }}
           </button>
+
+          <!-- Dropdown: Simpan Sementara -->
+          <div class="relative" @click.stop>
+            <button
+              type="button"
+              class="rounded-xl border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 transition flex items-center gap-1"
+              @click.stop="showExportMenu = !showExportMenu"
+            >
+              Simpan Sementara
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            <div
+              v-if="showExportMenu"
+              class="absolute right-0 top-full mt-1 min-w-[190px] rounded-xl border border-gray-200 bg-white shadow-lg z-50 overflow-hidden"
+            >
+              <button
+                type="button"
+                class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-indigo-50 transition"
+                @click.stop="saveAsPdfDraft"
+              >
+                <span class="text-base">📄</span> Simpan sebagai PDF
+              </button>
+              <button
+                type="button"
+                class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-indigo-50 transition"
+                @click.stop="saveAsWord"
+              >
+                <span class="text-base">📝</span> Simpan sebagai Word
+              </button>
+            </div>
+          </div>
 
           <button
             type="button"
@@ -1127,6 +1367,209 @@ const confirmFinalize = async (confirmed) => {
                   placeholder="Contoh: Kupang"
                 />
               </div>
+
+              <!-- ══ DOKUMEN PERSYARATAN SURAT KEMATIAN ══ -->
+              <div class="sm:col-span-2 mt-1">
+                <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-4">
+                  <div class="flex items-start gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <div>
+                      <div class="text-sm font-semibold text-amber-800">Dokumen Persyaratan</div>
+                      <p class="text-xs text-amber-700 mt-0.5">Semua dokumen <span class="font-semibold">Wajib</span> harus diupload sebelum surat dapat dicetak dan masuk arsip.</p>
+                    </div>
+                  </div>
+
+                  <!-- helper reusable: kartu upload per dokumen -->
+                  <!-- 1. Surat Pengantar RT/RW -->
+                  <div class="rounded-lg bg-white border border-amber-100 p-3">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
+                        <span class="text-xs font-medium text-gray-700">1. Surat Pengantar RT/RW</span>
+                      </div>
+                      <div v-if="dokState.suratPengantarRtRw.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
+                      <div v-else-if="!dokState.suratPengantarRtRw.id" class="flex-shrink-0">
+                        <label class="cursor-pointer rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition">
+                          Pilih File
+                          <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDokUpload('suratPengantarRtRw', $event)" />
+                        </label>
+                      </div>
+                      <div v-else class="flex items-center gap-2 flex-shrink-0">
+                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                        <button type="button" @click="removeDok('suratPengantarRtRw')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+                      </div>
+                    </div>
+                    <p v-if="dokState.suratPengantarRtRw.error" class="mt-1 text-xs text-red-600">{{ dokState.suratPengantarRtRw.error }}</p>
+                    <div v-if="dokState.suratPengantarRtRw.url" class="mt-2">
+                      <img v-if="!dokState.suratPengantarRtRw.url.endsWith('.pdf')" :src="dokState.suratPengantarRtRw.url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
+                      <a v-else :href="dokState.suratPengantarRtRw.url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
+                    </div>
+                  </div>
+
+                  <!-- 2. Pilih jenis surat keterangan kematian (radio) lalu upload -->
+                  <div class="rounded-lg bg-white border border-amber-100 p-3 space-y-3">
+                    <div class="flex items-center gap-2">
+                      <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Wajib</span>
+                      <span class="text-xs font-medium text-gray-700">2. Keterangan Kematian</span>
+                    </div>
+
+                    <!-- Radio pilihan jenis -->
+                    <div v-if="!dokState.suratKetKematian.id" class="flex flex-col gap-2 pl-1">
+                      <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="radio"
+                          name="jenisSuratKematian"
+                          value="dokter"
+                          v-model="jenisSuratKematian"
+                          class="accent-amber-600 h-4 w-4"
+                        />
+                        <span class="text-xs text-gray-700">Surat Keterangan Kematian dari <strong>Dokter / Bidan / Puskesmas</strong></span>
+                      </label>
+                      <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="radio"
+                          name="jenisSuratKematian"
+                          value="saksi"
+                          v-model="jenisSuratKematian"
+                          class="accent-amber-600 h-4 w-4"
+                        />
+                        <span class="text-xs text-gray-700">Surat Pernyataan dari <strong>2 Orang Saksi</strong> (pengganti surat dokter)</span>
+                      </label>
+                    </div>
+                    <p v-if="!jenisSuratKematian && !dokState.suratKetKematian.id" class="text-xs text-amber-700 font-medium pl-1">⚠ Pilih salah satu di atas, lalu upload file.</p>
+
+                    <!-- Upload setelah dipilih -->
+                    <div v-if="jenisSuratKematian || dokState.suratKetKematian.id" class="pl-2 border-l-2 border-amber-300">
+                      <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <span class="text-xs text-gray-600 italic">{{ labelKetKematian }}</span>
+                        <div v-if="dokState.suratKetKematian.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
+                        <div v-else-if="!dokState.suratKetKematian.id" class="flex-shrink-0">
+                          <label class="cursor-pointer rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition">
+                            Pilih File
+                            <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDokUpload('suratKetKematian', $event)" />
+                          </label>
+                        </div>
+                        <div v-else class="flex items-center gap-2 flex-shrink-0">
+                          <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                          <button type="button" @click="removeDok('suratKetKematian')" class="text-xs text-red-500 hover:text-red-700">Hapus / Ganti</button>
+                        </div>
+                      </div>
+                      <p v-if="dokState.suratKetKematian.error" class="mt-1 text-xs text-red-600">{{ dokState.suratKetKematian.error }}</p>
+                      <div v-if="dokState.suratKetKematian.url" class="mt-2">
+                        <img v-if="!dokState.suratKetKematian.url.endsWith('.pdf')" :src="dokState.suratKetKematian.url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
+                        <a v-else :href="dokState.suratKetKematian.url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 3. Fotocopy KTP Almarhum -->
+                  <div class="rounded-lg bg-white border border-amber-100 p-3">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
+                        <span class="text-xs font-medium text-gray-700">3. Fotocopy KTP Almarhum/Almarhumah</span>
+                      </div>
+                      <div v-if="dokState.fotoKtpAlmarhum.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
+                      <div v-else-if="!dokState.fotoKtpAlmarhum.id" class="flex-shrink-0">
+                        <label class="cursor-pointer rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition">
+                          Pilih File
+                          <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDokUpload('fotoKtpAlmarhum', $event)" />
+                        </label>
+                      </div>
+                      <div v-else class="flex items-center gap-2 flex-shrink-0">
+                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                        <button type="button" @click="removeDok('fotoKtpAlmarhum')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+                      </div>
+                    </div>
+                    <p v-if="dokState.fotoKtpAlmarhum.error" class="mt-1 text-xs text-red-600">{{ dokState.fotoKtpAlmarhum.error }}</p>
+                    <div v-if="dokState.fotoKtpAlmarhum.url" class="mt-2">
+                      <img v-if="!dokState.fotoKtpAlmarhum.url.endsWith('.pdf')" :src="dokState.fotoKtpAlmarhum.url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
+                      <a v-else :href="dokState.fotoKtpAlmarhum.url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
+                    </div>
+                  </div>
+
+                  <!-- 4. Fotocopy KK Almarhum -->
+                  <div class="rounded-lg bg-white border border-amber-100 p-3">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
+                        <span class="text-xs font-medium text-gray-700">4. Fotocopy Kartu Keluarga Almarhum/Almarhumah</span>
+                      </div>
+                      <div v-if="dokState.fotoKkAlmarhum.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
+                      <div v-else-if="!dokState.fotoKkAlmarhum.id" class="flex-shrink-0">
+                        <label class="cursor-pointer rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition">
+                          Pilih File
+                          <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDokUpload('fotoKkAlmarhum', $event)" />
+                        </label>
+                      </div>
+                      <div v-else class="flex items-center gap-2 flex-shrink-0">
+                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                        <button type="button" @click="removeDok('fotoKkAlmarhum')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+                      </div>
+                    </div>
+                    <p v-if="dokState.fotoKkAlmarhum.error" class="mt-1 text-xs text-red-600">{{ dokState.fotoKkAlmarhum.error }}</p>
+                    <div v-if="dokState.fotoKkAlmarhum.url" class="mt-2">
+                      <img v-if="!dokState.fotoKkAlmarhum.url.endsWith('.pdf')" :src="dokState.fotoKkAlmarhum.url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
+                      <a v-else :href="dokState.fotoKkAlmarhum.url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
+                    </div>
+                  </div>
+
+                  <!-- 5. Fotocopy KTP Pemohon -->
+                  <div class="rounded-lg bg-white border border-amber-100 p-3">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
+                        <span class="text-xs font-medium text-gray-700">5. Fotocopy KTP Pemohon (Pelapor)</span>
+                      </div>
+                      <div v-if="dokState.fotoKtpPemohon.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
+                      <div v-else-if="!dokState.fotoKtpPemohon.id" class="flex-shrink-0">
+                        <label class="cursor-pointer rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition">
+                          Pilih File
+                          <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDokUpload('fotoKtpPemohon', $event)" />
+                        </label>
+                      </div>
+                      <div v-else class="flex items-center gap-2 flex-shrink-0">
+                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                        <button type="button" @click="removeDok('fotoKtpPemohon')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+                      </div>
+                    </div>
+                    <p v-if="dokState.fotoKtpPemohon.error" class="mt-1 text-xs text-red-600">{{ dokState.fotoKtpPemohon.error }}</p>
+                    <div v-if="dokState.fotoKtpPemohon.url" class="mt-2">
+                      <img v-if="!dokState.fotoKtpPemohon.url.endsWith('.pdf')" :src="dokState.fotoKtpPemohon.url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
+                      <a v-else :href="dokState.fotoKtpPemohon.url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
+                    </div>
+                  </div>
+
+                  <!-- 6. Surat Pernyataan Pelapor -->
+                  <div class="rounded-lg bg-white border border-amber-100 p-3">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
+                        <span class="text-xs font-medium text-gray-700">6. Surat Pernyataan dari Pelapor (2 saksi &amp; RT)</span>
+                      </div>
+                      <div v-if="dokState.suratPernyataanPelapor.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
+                      <div v-else-if="!dokState.suratPernyataanPelapor.id" class="flex-shrink-0">
+                        <label class="cursor-pointer rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition">
+                          Pilih File
+                          <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDokUpload('suratPernyataanPelapor', $event)" />
+                        </label>
+                      </div>
+                      <div v-else class="flex items-center gap-2 flex-shrink-0">
+                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                        <button type="button" @click="removeDok('suratPernyataanPelapor')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+                      </div>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Pernyataan bahwa almarhum benar-benar telah meninggal, ditandatangani oleh 2 saksi dan ketua RT.</p>
+                    <p v-if="dokState.suratPernyataanPelapor.error" class="mt-1 text-xs text-red-600">{{ dokState.suratPernyataanPelapor.error }}</p>
+                    <div v-if="dokState.suratPernyataanPelapor.url" class="mt-2">
+                      <img v-if="!dokState.suratPernyataanPelapor.url.endsWith('.pdf')" :src="dokState.suratPernyataanPelapor.url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
+                      <a v-else :href="dokState.suratPernyataanPelapor.url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+              <!-- ══ AKHIR DOKUMEN PERSYARATAN ══ -->
             </template>
 
             <!-- Pindahan Fields -->
@@ -1511,10 +1954,10 @@ const confirmFinalize = async (confirmed) => {
     </div>
   </AppLayout>
 
-  <!-- Γ£à PRINT OVERLAY: keluar dari AppLayout -->
+  <!-- PRINT OVERLAY (cetak) / CAPTURE OVERLAY (export Word) -->
   <Teleport to="body">
-    <div v-if="printMode" class="print-overlay">
-      <div class="print-sheet">
+    <div v-if="printMode || isCapturing" :class="printMode ? 'print-overlay' : 'capture-overlay'">
+      <div ref="printSheetRef" class="print-sheet">
         <DomisiliTemplate v-if="isDomisili" :form="form" :tanggalIndo="tanggalIndo" />
         <KelahiranTemplate v-else-if="isKelahiran" :form="form" :tanggalIndo="tanggalIndo" />
         <KematianTemplate v-else-if="isKematian" :form="form" :tanggalIndo="tanggalIndo" />
@@ -1561,6 +2004,14 @@ const confirmFinalize = async (confirmed) => {
   inset: 0;
   background: #fff;
   z-index: 999999;
+}
+
+.capture-overlay{
+  position: fixed;
+  left: -99999px;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .print-sheet{

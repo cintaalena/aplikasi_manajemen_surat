@@ -63,7 +63,25 @@ const formatDate = (raw) => {
     hour: '2-digit', minute: '2-digit',
   })
 }
-</script>
+// ── Dokumen Pendukung — expandable row + modal viewer ─────────────
+const expandedId = ref(null)
+const viewDoc    = ref(null)
+
+function toggleRow(id) {
+  expandedId.value = expandedId.value === id ? null : id
+}
+function openViewer(doc) {
+  viewDoc.value = doc
+}
+function closeViewer() {
+  viewDoc.value = null
+}
+function isImage(mime) {
+  return mime && mime.startsWith('image/')
+}
+function isPdf(mime) {
+  return mime === 'application/pdf'
+}</script>
 
 <template>
   <AppLayout>
@@ -299,18 +317,75 @@ const formatDate = (raw) => {
                 </span>
               </td>
               <td class="p-3">
-                <a
-                  v-if="!row.is_manual && row.template_slug"
-                  :href="`/arsip-surat/${row.id}/pratinjau`"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-block rounded-lg bg-purple-600 px-3 py-1 text-xs font-semibold text-white hover:bg-purple-700 transition whitespace-nowrap"
-                >
-                  Lihat Surat
-                </a>
-                <span v-else class="text-gray-300 text-xs">—</span>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <a
+                    v-if="!row.is_manual && row.template_slug"
+                    :href="`/arsip-surat/${row.id}/pratinjau`"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-block rounded-lg bg-gradient-to-r from-purple-600 to-fuchsia-500 px-3 py-1.5 text-xs font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition whitespace-nowrap"
+                  >
+                    Lihat Surat
+                  </a>
+                  <!-- Tombol Dokumen Pendukung -->
+                  <button
+                    v-if="row.documents && row.documents.length > 0"
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition whitespace-nowrap"
+                    @click="toggleRow(row.id)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Dokumen
+                    <span class="rounded-full bg-amber-200 px-1.5">{{ row.documents.length }}</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-3 w-3 transition-transform duration-150"
+                      :class="{ 'rotate-180': expandedId === row.id }"
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  </button>
+                  <span v-else-if="row.is_manual" class="text-gray-300 text-xs">—</span>
+                </div>
               </td>
             </tr>
+
+            <!-- Expandable row: dokumen pendukung -->
+            <template v-for="row in letters.data" :key="'dok-' + row.id">
+              <tr
+                v-if="expandedId === row.id && row.documents && row.documents.length > 0"
+                class="bg-amber-50 border-t border-amber-100"
+              >
+                <td colspan="6" class="px-5 py-3">
+                  <p class="text-xs font-semibold text-amber-700 mb-2">Dokumen Pendukung Surat</p>
+                  <ul class="divide-y divide-amber-100 rounded-xl border border-amber-200 bg-white overflow-hidden">
+                    <li
+                      v-for="doc in row.documents"
+                      :key="doc.id"
+                      class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition"
+                    >
+                      <div
+                        class="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center"
+                        :class="isImage(doc.mime_type) ? 'bg-blue-50' : 'bg-red-50'"
+                      >
+                        <svg v-if="isImage(doc.mime_type)" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-xs font-medium text-gray-800 truncate">{{ doc.doc_label }}</p>
+                        <p v-if="doc.original_name" class="text-xs text-gray-400 truncate">{{ doc.original_name }}</p>
+                      </div>
+                      <button
+                        type="button"
+                        class="flex-shrink-0 rounded-lg bg-gradient-to-r from-purple-600 to-fuchsia-500 px-3 py-1.5 text-xs font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition"
+                        @click="openViewer(doc)"
+                      >
+                        Lihat
+                      </button>
+                    </li>
+                  </ul>
+                </td>
+              </tr>
+            </template>
 
             <tr v-if="!letters.data.length">
               <td class="p-4 text-gray-500 italic" colspan="6">
@@ -366,5 +441,64 @@ const formatDate = (raw) => {
         </div>
       </div>
     </div>
+
+    <!-- ── Modal Viewer Dokumen ──────────────────────────────────────── -->
+    <Teleport to="body">
+      <div
+        v-if="viewDoc"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
+        @click.self="closeViewer"
+      >
+        <div class="relative bg-white rounded-2xl shadow-2xl flex flex-col max-w-4xl w-full max-h-[90vh]">
+          <!-- Header modal -->
+          <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 flex-shrink-0">
+            <span class="text-sm font-semibold text-gray-800 truncate pr-4">{{ viewDoc.doc_label }}</span>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a
+                :href="viewDoc.url"
+                target="_blank"
+                download
+                class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 transition"
+              >
+                Unduh
+              </a>
+              <button
+                type="button"
+                class="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50 transition"
+                @click="closeViewer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <!-- Konten -->
+          <div class="flex-1 overflow-auto flex items-center justify-center p-4 bg-gray-50 min-h-0">
+            <img
+              v-if="isImage(viewDoc.mime_type)"
+              :src="viewDoc.url"
+              :alt="viewDoc.doc_label"
+              class="max-w-full max-h-full object-contain rounded-lg shadow"
+            />
+            <iframe
+              v-else-if="isPdf(viewDoc.mime_type)"
+              :src="viewDoc.url"
+              class="w-full h-[70vh] rounded-lg border-0"
+              title="PDF Viewer"
+            />
+            <div v-else class="text-center space-y-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+              </svg>
+              <p class="text-sm text-gray-500">Pratinjau tidak tersedia</p>
+              <a :href="viewDoc.url" target="_blank" class="inline-block rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600 transition">
+                Buka / Unduh File
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </AppLayout>
 </template>
