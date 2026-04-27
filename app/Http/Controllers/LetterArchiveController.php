@@ -19,7 +19,7 @@ class LetterArchiveController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $letters = Letter::query()
-            ->with('printedBy:id,name,jabatan,nip')
+            ->with(['printedBy:id,name,jabatan,nip', 'documents'])
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
                     $sub->where('no_surat', 'like', "%{$q}%")
@@ -77,7 +77,7 @@ class LetterArchiveController extends Controller
 
     public function show(Letter $letter)
     {
-        $letter->load('printedBy');
+        $letter->load(['printedBy', 'documents']);
 
         return Inertia::render('ArsipSurat/Show', [
             'letter' => [
@@ -94,6 +94,14 @@ class LetterArchiveController extends Controller
                     'jabatan' => $letter->printedBy->jabatan,
                     'nip'     => $letter->printedBy->nip,
                 ] : null,
+                'documents'     => $letter->documents->map(fn($d) => [
+                    'id'            => $d->id,
+                    'doc_key'       => $d->doc_key,
+                    'doc_label'     => $d->doc_label,
+                    'url'           => $d->url,
+                    'mime_type'     => $d->mime_type,
+                    'original_name' => $d->original_name,
+                ])->values()->all(),
             ],
         ]);
     }

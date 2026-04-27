@@ -6,6 +6,7 @@ use App\Http\Controllers\LetterArchiveController;
 use App\Http\Controllers\PendudukController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Api\LetterController;
+use App\Http\Controllers\Api\LetterDocumentController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -73,6 +74,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/surat/{templateSlug}/finalize', [LetterController::class, 'finalize'])
         ->middleware('throttle:10,1')
         ->name('surat.finalize');
+
+    // Upload dokumen pendukung surat
+    Route::post('/surat/dokumen/upload', [LetterDocumentController::class, 'upload'])
+        ->middleware('throttle:30,1')
+        ->name('surat.dokumen.upload');
+
+    Route::delete('/surat/dokumen/{document}', [LetterDocumentController::class, 'destroy'])
+        ->name('surat.dokumen.destroy');
 });
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])

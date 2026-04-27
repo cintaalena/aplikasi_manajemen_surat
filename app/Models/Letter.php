@@ -39,4 +39,9 @@ class Letter extends Model
     {
         return $this->belongsTo(User::class, 'printed_by');
     }
+
+    public function documents()
+    {
+        return $this->hasMany(LetterDocument::class);
+    }
 }
