@@ -139,11 +139,15 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
     <div class="ttd-wrapper">
       <div class="ttd">
         <div class="ttd-tanggal">Kupang, {{ formatTanggalSurat() || '1 Oktober 2025' }}</div>
-        <div class="ttd-jabatan">An.Lurah Fatubesi,</div>
-        <div class="ttd-jabatan" style="margin-bottom: 65px;">Kasie PEM &amp; Trantibum</div>
-
-        <div class="ttd-nama">YERRY AGUSTINUS BALLU, SH</div>
-        <div class="ttd-nip">NIP. 19840803 201001 1 006</div>
+        <template v-if="isLurah">
+          <div class="ttd-jabatan" style="margin-bottom: 65px;">Lurah Fatubesi,</div>
+        </template>
+        <template v-else>
+          <div class="ttd-jabatan">An. Lurah Fatubesi,</div>
+          <div class="ttd-jabatan" style="margin-bottom: 65px;">{{ ttdJabatanLabel }}</div>
+        </template>
+        <div class="ttd-nama">{{ ttdNama }}</div>
+        <div class="ttd-nip" v-if="ttdNip">NIP. {{ ttdNip }}</div>
       </div>
     </div>
   </div>

@@ -88,6 +88,42 @@ class LetterDocumentController extends Controller
     }
 
     /**
+     * Stream file dokumen langsung dari disk — bypass symlink & APP_URL.
+     * Hanya user yang login yang bisa mengakses.
+     */
+    public function file(LetterDocument $document)
+    {
+        $disk = Storage::disk('public');
+        $path = $document->file_path;
+
+        if (!$disk->exists($path)) {
+            abort(404, 'File tidak ditemukan di server.');
+        }
+
+        $mime     = $document->mime_type ?: 'application/octet-stream';
+        $filename = $document->original_name ?? 'dokumen';
+        $size     = $disk->size($path);
+
+        return response()->stream(
+            function () use ($disk, $path) {
+                $stream = $disk->readStream($path);
+                fpassthru($stream);
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
+            },
+            200,
+            [
+                'Content-Type'        => $mime,
+                'Content-Length'      => $size,
+                'Content-Disposition' => 'inline; filename="' . rawurlencode($filename) . '"',
+                'Cache-Control'       => 'private, max-age=3600',
+                'X-Accel-Buffering'   => 'no',
+            ]
+        );
+    }
+
+    /**
      * Hapus dokumen (hanya jika belum ter-link ke letter).
      */
     public function destroy(LetterDocument $document)

@@ -24,10 +24,11 @@ class LetterDocument extends Model
     }
 
     /**
-     * URL publik untuk diakses dari browser.
+     * URL untuk mengakses file — stream langsung via PHP route,
+     * tidak bergantung pada APP_URL atau symlink Apache.
      */
     public function getUrlAttribute(): string
     {
-        return asset('storage/' . $this->file_path);
+        return route('surat.dokumen.file', ['document' => $this->id]);
     }
 }
