@@ -109,7 +109,7 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
         <div class="data-lbl">Alamat</div><div class="data-sep">:</div>
         <div class="data-val">
           <span v-if="form.alamatAsalJalan || form.alamatAsalRt || form.alamatAsalRw || form.alamatAsalKelurahan || form.alamatAsalKecamatan">
-            <span v-if="form.alamatAsalJalan">{{ form.alamatAsalJalan }}, </span>RT.{{ form.alamatAsalRt || '___' }}/RW.{{ form.alamatAsalRw || '___' }} Kelurahan {{ form.alamatAsalKelurahan || '______' }} Kec. {{ form.alamatAsalKecamatan || '______' }} Kota Kupang
+            <span v-if="form.alamatAsalJalan">{{ form.alamatAsalJalan }}, </span>RT.{{ form.alamatAsalRt || '___' }}/RW.{{ form.alamatAsalRw || '___' }} Kelurahan {{ form.alamatAsalKelurahan || '______' }} Kec. {{ form.alamatAsalKecamatan || '______' }}{{ form.alamatAsalKota ? ' ' + form.alamatAsalKota : ' Kota Kupang' }}{{ form.alamatAsalProvinsi ? ' Prov. ' + form.alamatAsalProvinsi : '' }}
           </span>
           <span v-else>RT.___/RW.___ Kelurahan ______ Kec. ______ Kota Kupang</span>
         </div>

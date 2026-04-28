@@ -144,42 +144,65 @@ function isPdf(mime) {
             Tidak ada dokumen pendukung untuk surat ini.
           </div>
 
-          <!-- Daftar dokumen -->
-          <ul v-else class="divide-y divide-gray-100">
-            <li
-              v-for="(doc, idx) in documents"
-              :key="doc.id"
-              class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition"
-            >
-              <!-- Ikon tipe -->
-              <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
-                   :class="isImage(doc.mime_type) ? 'bg-blue-50' : 'bg-red-50'">
-                <!-- Ikon gambar -->
-                <svg v-if="isImage(doc.mime_type)" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                <!-- Ikon PDF / file -->
-                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                </svg>
-              </div>
-
-              <!-- Label + nama file -->
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-800 truncate">{{ doc.doc_label }}</p>
-                <p v-if="doc.original_name" class="text-xs text-gray-400 truncate">{{ doc.original_name }}</p>
-              </div>
-
-              <!-- Tombol Lihat -->
-              <button
-                type="button"
-                class="flex-shrink-0 rounded-lg bg-gradient-to-r from-purple-600 to-fuchsia-500 px-3 py-1.5 text-xs font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition"
-                @click="openViewer(doc)"
+          <!-- Daftar dokumen — grid gambar langsung -->
+          <div v-else class="p-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div
+                v-for="(doc, idx) in documents"
+                :key="doc.id"
+                class="flex flex-col rounded-xl border border-amber-200 bg-white overflow-hidden shadow-sm"
               >
-                Lihat
-              </button>
-            </li>
-          </ul>
+                <!-- Nomor + label -->
+                <div class="px-2 py-1.5 bg-amber-50 border-b border-amber-100">
+                  <p class="text-xs font-semibold text-amber-800 leading-tight truncate" :title="doc.doc_label">
+                    {{ idx + 1 }}. {{ doc.doc_label }}
+                  </p>
+                </div>
+
+                <!-- Preview -->
+                <div class="bg-gray-100 flex items-center justify-center" style="min-height: 140px;">
+                  <template v-if="isImage(doc.mime_type)">
+                    <img
+                      :src="doc.url"
+                      :alt="doc.doc_label"
+                      class="w-full object-contain"
+                      style="max-height: 200px;"
+                      loading="lazy"
+                    />
+                  </template>
+                  <template v-else-if="isPdf(doc.mime_type)">
+                    <div class="flex flex-col items-center justify-center gap-2 py-4 text-red-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                      </svg>
+                      <span class="text-xs font-bold text-red-500">PDF</span>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div class="flex flex-col items-center justify-center gap-1 py-4 text-gray-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      </svg>
+                      <span class="text-xs">File</span>
+                    </div>
+                  </template>
+                </div>
+
+                <!-- Nama file + tombol buka -->
+                <div class="px-2 py-2 bg-white flex items-center justify-between gap-1">
+                  <p class="text-xs text-gray-400 truncate flex-1" :title="doc.original_name">{{ doc.original_name ?? '—' }}</p>
+                  <a
+                    :href="doc.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex-shrink-0 rounded-lg bg-amber-500 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-600 transition"
+                  >
+                    Buka
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

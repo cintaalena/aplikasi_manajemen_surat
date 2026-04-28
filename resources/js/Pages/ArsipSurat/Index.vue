@@ -284,105 +284,129 @@ function isPdf(mime) {
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="(row, idx) in letters.data"
-              :key="row.id"
-              :class="idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'"
-              class="border-t border-gray-100 hover:bg-purple-50 transition-colors"
-            >
-              <td class="p-3 text-gray-600 whitespace-nowrap text-xs">
-                {{ formatDate(row.printed_at) }}
-              </td>
-              <td class="p-3 font-mono font-semibold text-gray-900 text-xs whitespace-nowrap">
-                {{ row.no_surat ?? '-' }}
-              </td>
-              <td class="p-3 text-gray-700 max-w-xs">
-                {{ row.title ?? '-' }}
-              </td>
-              <td class="p-3 text-gray-700 text-xs whitespace-nowrap">
-                {{ row.printed_by?.name ?? '-' }}
-              </td>
-              <td class="p-3">
-                <span
-                  v-if="row.is_manual"
-                  class="inline-block rounded-full bg-amber-100 text-amber-700 text-xs font-medium px-2.5 py-0.5 whitespace-nowrap"
-                >
-                  Surat Masuk
-                </span>
-                <span
-                  v-else
-                  class="inline-block rounded-full bg-purple-100 text-purple-700 text-xs font-medium px-2.5 py-0.5 whitespace-nowrap"
-                >
-                  Dicetak
-                </span>
-              </td>
-              <td class="p-3">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <a
-                    v-if="!row.is_manual && row.template_slug"
-                    :href="`/arsip-surat/${row.id}/pratinjau`"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-block rounded-lg bg-gradient-to-r from-purple-600 to-fuchsia-500 px-3 py-1.5 text-xs font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition whitespace-nowrap"
+            <template v-for="(row, idx) in letters.data" :key="row.id">
+              <!-- Baris utama arsip surat -->
+              <tr
+                :class="idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'"
+                class="border-t border-gray-100 hover:bg-purple-50 transition-colors"
+              >
+                <td class="p-3 text-gray-600 whitespace-nowrap text-xs">
+                  {{ formatDate(row.printed_at) }}
+                </td>
+                <td class="p-3 font-mono font-semibold text-gray-900 text-xs whitespace-nowrap">
+                  {{ row.no_surat ?? '-' }}
+                </td>
+                <td class="p-3 text-gray-700 max-w-xs">
+                  {{ row.title ?? '-' }}
+                </td>
+                <td class="p-3 text-gray-700 text-xs whitespace-nowrap">
+                  {{ row.printed_by?.name ?? '-' }}
+                </td>
+                <td class="p-3">
+                  <span
+                    v-if="row.is_manual"
+                    class="inline-block rounded-full bg-amber-100 text-amber-700 text-xs font-medium px-2.5 py-0.5 whitespace-nowrap"
                   >
-                    Lihat Surat
-                  </a>
-                  <!-- Tombol Dokumen Pendukung -->
-                  <button
-                    v-if="row.documents && row.documents.length > 0"
-                    type="button"
-                    class="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition whitespace-nowrap"
-                    @click="toggleRow(row.id)"
+                    Surat Masuk
+                  </span>
+                  <span
+                    v-else
+                    class="inline-block rounded-full bg-purple-100 text-purple-700 text-xs font-medium px-2.5 py-0.5 whitespace-nowrap"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    Dokumen
-                    <span class="rounded-full bg-amber-200 px-1.5">{{ row.documents.length }}</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-3 w-3 transition-transform duration-150"
-                      :class="{ 'rotate-180': expandedId === row.id }"
-                      fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                    ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                  </button>
-                  <span v-else-if="row.is_manual" class="text-gray-300 text-xs">—</span>
-                </div>
-              </td>
-            </tr>
+                    Dicetak
+                  </span>
+                </td>
+                <td class="p-3">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <a
+                      v-if="!row.is_manual && row.template_slug"
+                      :href="`/arsip-surat/${row.id}/pratinjau`"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-block rounded-lg bg-gradient-to-r from-purple-600 to-fuchsia-500 px-3 py-1.5 text-xs font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition whitespace-nowrap"
+                    >
+                      Lihat Surat
+                    </a>
+                    <!-- Tombol Dokumen Pendukung -->
+                    <button
+                      v-if="row.documents && row.documents.length > 0"
+                      type="button"
+                      class="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition whitespace-nowrap"
+                      @click="toggleRow(row.id)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                      Dokumen
+                      <span class="rounded-full bg-amber-200 px-1.5">{{ row.documents.length }}</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-3 w-3 transition-transform duration-150"
+                        :class="{ 'rotate-180': expandedId === row.id }"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                      ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <span v-else-if="row.is_manual" class="text-gray-300 text-xs">—</span>
+                  </div>
+                </td>
+              </tr>
 
-            <!-- Expandable row: dokumen pendukung -->
-            <template v-for="row in letters.data" :key="'dok-' + row.id">
+              <!-- Expandable row: langsung di bawah baris surat ini -->
               <tr
                 v-if="expandedId === row.id && row.documents && row.documents.length > 0"
-                class="bg-amber-50 border-t border-amber-100"
+                class="border-t border-amber-100"
               >
-                <td colspan="6" class="px-5 py-3">
-                  <p class="text-xs font-semibold text-amber-700 mb-2">Dokumen Pendukung Surat</p>
-                  <ul class="divide-y divide-amber-100 rounded-xl border border-amber-200 bg-white overflow-hidden">
-                    <li
-                      v-for="doc in row.documents"
+                <td colspan="6" class="px-5 py-4 bg-amber-50">
+                  <p class="text-xs font-semibold text-amber-700 mb-3">Dokumen Pendukung Surat</p>
+                  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    <div
+                      v-for="(doc, dIdx) in row.documents"
                       :key="doc.id"
-                      class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition"
+                      class="flex flex-col rounded-xl border border-amber-200 bg-white overflow-hidden shadow-sm"
                     >
-                      <div
-                        class="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center"
-                        :class="isImage(doc.mime_type) ? 'bg-blue-50' : 'bg-red-50'"
-                      >
-                        <svg v-if="isImage(doc.mime_type)" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                      <div class="px-2 py-1.5 bg-amber-50 border-b border-amber-100">
+                        <p class="text-xs font-semibold text-amber-800 leading-tight truncate" :title="doc.doc_label">
+                          {{ dIdx + 1 }}. {{ doc.doc_label }}
+                        </p>
                       </div>
-                      <div class="flex-1 min-w-0">
-                        <p class="text-xs font-medium text-gray-800 truncate">{{ doc.doc_label }}</p>
-                        <p v-if="doc.original_name" class="text-xs text-gray-400 truncate">{{ doc.original_name }}</p>
+                      <div class="bg-gray-100 flex items-center justify-center" style="min-height: 140px;">
+                        <template v-if="isImage(doc.mime_type)">
+                          <img
+                            :src="doc.url"
+                            :alt="doc.doc_label"
+                            class="w-full object-contain"
+                            style="max-height: 200px;"
+                            loading="lazy"
+                          />
+                        </template>
+                        <template v-else-if="isPdf(doc.mime_type)">
+                          <div class="flex flex-col items-center justify-center gap-2 py-4 text-red-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="text-xs font-bold text-red-500">PDF</span>
+                          </div>
+                        </template>
+                        <template v-else>
+                          <div class="flex flex-col items-center justify-center gap-1 py-4 text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span class="text-xs">File</span>
+                          </div>
+                        </template>
                       </div>
-                      <button
-                        type="button"
-                        class="flex-shrink-0 rounded-lg bg-gradient-to-r from-purple-600 to-fuchsia-500 px-3 py-1.5 text-xs font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition"
-                        @click="openViewer(doc)"
-                      >
-                        Lihat
-                      </button>
-                    </li>
-                  </ul>
+                      <div class="px-2 py-2 bg-white flex items-center justify-between gap-1">
+                        <p class="text-xs text-gray-400 truncate flex-1" :title="doc.original_name">{{ doc.original_name ?? '—' }}</p>
+                        <a
+                          :href="doc.url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="flex-shrink-0 rounded-lg bg-amber-500 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-600 transition"
+                        >
+                          Buka
+                        </a>
+                      </div>
+                    </div>
+                  </div>
                 </td>
               </tr>
             </template>

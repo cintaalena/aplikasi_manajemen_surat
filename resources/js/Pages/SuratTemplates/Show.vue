@@ -87,6 +87,13 @@ const form = reactive({
   namaIbu: '',
   alamat: '',
   alamatAsal: '',
+  alamatAsalJalan: '',
+  alamatAsalRt: '',
+  alamatAsalRw: '',
+  alamatAsalKelurahan: '',
+  alamatAsalKecamatan: '',
+  alamatAsalKota: '',
+  alamatAsalProvinsi: '',
   alamatDomisili: '',
   rt: '',
   rw: '',
@@ -332,7 +339,6 @@ const applyPendudukToForm = (p) => {
   form.kewarganegaraan = p.kewarganegaraan ?? 'Indonesia'
 
   if (isDomisili.value) {
-    form.alamatAsal = p.alamat ?? ''
     form.alamatDomisili = p.alamat ?? ''
   }
 
@@ -653,6 +659,9 @@ const uploadDokumen = async (key, file) => {
 
     const data = await res.json().catch(() => null)
     if (!res.ok) {
+      if (res.status === 419) {
+        throw new Error('Sesi Anda telah berakhir. Silakan muat ulang halaman lalu coba lagi.')
+      }
       throw new Error(data?.message ?? `Upload gagal (${res.status})`)
     }
 
@@ -1057,13 +1066,74 @@ const confirmFinalize = async (confirmed) => {
                 />
               </div>
 
+              <!-- Alamat Asal terpisah per komponen -->
               <div class="sm:col-span-2">
-                <label class="text-xs font-semibold text-gray-700">Alamat Asal (sesuai KTP)</label>
-                <textarea
-                  v-model="form.alamatAsal"
-                  rows="2"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                ></textarea>
+                <p class="text-xs font-bold text-gray-700 mb-2">Alamat Asal (sesuai KTP)</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                  <div class="sm:col-span-2">
+                    <label class="text-xs font-semibold text-gray-600">Nama Jalan / Nama Tempat</label>
+                    <input
+                      v-model="form.alamatAsalJalan"
+                      type="text"
+                      placeholder="Contoh: Jln. Alor"
+                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-gray-600">RT</label>
+                    <input
+                      v-model="form.alamatAsalRt"
+                      type="text"
+                      placeholder="001"
+                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-gray-600">RW</label>
+                    <input
+                      v-model="form.alamatAsalRw"
+                      type="text"
+                      placeholder="001"
+                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-gray-600">Kelurahan / Desa</label>
+                    <input
+                      v-model="form.alamatAsalKelurahan"
+                      type="text"
+                      placeholder="Contoh: Fatubesi"
+                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-gray-600">Kecamatan</label>
+                    <input
+                      v-model="form.alamatAsalKecamatan"
+                      type="text"
+                      placeholder="Contoh: Kota Lama"
+                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-gray-600">Kota / Kabupaten</label>
+                    <input
+                      v-model="form.alamatAsalKota"
+                      type="text"
+                      placeholder="Contoh: Kota Kupang"
+                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-gray-600">Provinsi</label>
+                    <input
+                      v-model="form.alamatAsalProvinsi"
+                      type="text"
+                      placeholder="Contoh: Nusa Tenggara Timur"
+                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div class="sm:col-span-2">

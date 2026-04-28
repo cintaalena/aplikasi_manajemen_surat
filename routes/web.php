@@ -80,6 +80,10 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:30,1')
         ->name('surat.dokumen.upload');
 
+    // Stream file dokumen langsung — bypass symlink & APP_URL
+    Route::get('/surat/dokumen/{document}/file', [LetterDocumentController::class, 'file'])
+        ->name('surat.dokumen.file');
+
     Route::delete('/surat/dokumen/{document}', [LetterDocumentController::class, 'destroy'])
         ->name('surat.dokumen.destroy');
 });
