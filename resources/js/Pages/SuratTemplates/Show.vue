@@ -420,6 +420,70 @@ const onNamaInput = (value) => {
   }, 300)
 }
 
+// ── Pencarian Ayah & Ibu untuk form Kelahiran ────────────────────────────────
+const ayahSuggestions = ref([])
+const showAyahDropdown = ref(false)
+const isSearchingAyah = ref(false)
+let ayahSearchTimer = null
+
+const ibuSuggestions = ref([])
+const showIbuDropdown = ref(false)
+const isSearchingIbu = ref(false)
+let ibuSearchTimer = null
+
+const searchOrtu = async (keyword, suggestions, showDropdown, isSearching) => {
+  const q = String(keyword || '').trim()
+  if (q.length < 2) {
+    suggestions.value = []
+    showDropdown.value = false
+    return
+  }
+  isSearching.value = true
+  try {
+    const res = await fetch(`/penduduk/search-by-name?q=${encodeURIComponent(q)}`, {
+      headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'include',
+    })
+    const data = await res.json().catch(() => null)
+    suggestions.value = Array.isArray(data) ? data : []
+    showDropdown.value = suggestions.value.length > 0
+  } catch {
+    suggestions.value = []
+    showDropdown.value = false
+  } finally {
+    isSearching.value = false
+  }
+}
+
+const onAyahInput = (value) => {
+  form.namaAyah = value
+  showAyahDropdown.value = false
+  clearTimeout(ayahSearchTimer)
+  if (!value || value.trim().length < 2) { ayahSuggestions.value = []; return }
+  ayahSearchTimer = setTimeout(() => searchOrtu(value, ayahSuggestions, showAyahDropdown, isSearchingAyah), 300)
+}
+
+const applyAyah = (p) => {
+  form.namaAyah = p.nama ?? ''
+  showAyahDropdown.value = false
+  ayahSuggestions.value = []
+}
+
+const onIbuInput = (value) => {
+  form.namaIbu = value
+  showIbuDropdown.value = false
+  clearTimeout(ibuSearchTimer)
+  if (!value || value.trim().length < 2) { ibuSuggestions.value = []; return }
+  ibuSearchTimer = setTimeout(() => searchOrtu(value, ibuSuggestions, showIbuDropdown, isSearchingIbu), 300)
+}
+
+const applyIbu = (p) => {
+  form.namaIbu = p.nama ?? ''
+  showIbuDropdown.value = false
+  ibuSuggestions.value = []
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const validatePendudukSelectionBeforePrint = () => {
   if (!requiresPendudukValidation.value) return true
 
@@ -554,6 +618,16 @@ onBeforeUnmount(() => {
 // Simpan sementara sebagai PDF — cetak ke PDF tanpa masuk arsip
 const saveAsPdfDraft = async () => {
   showExportMenu.value = false
+
+  try {
+    validateDokKematianBeforePrint()
+    validateDokKelahiranBeforePrint()
+    validateDokPindahBeforePrint()
+  } catch (e) {
+    alert(e.message)
+    return
+  }
+
   isSavingDraft.value = true
   showPreview.value = true
   printMode.value = true
@@ -564,6 +638,16 @@ const saveAsPdfDraft = async () => {
 // Simpan sementara sebagai Word — download .doc tanpa masuk arsip
 const saveAsWord = async () => {
   showExportMenu.value = false
+
+  try {
+    validateDokKematianBeforePrint()
+    validateDokKelahiranBeforePrint()
+    validateDokPindahBeforePrint()
+  } catch (e) {
+    alert(e.message)
+    return
+  }
+
   isCapturing.value = true
   await nextTick()
   await nextTick()
@@ -602,6 +686,114 @@ const saveAsWord = async () => {
   URL.revokeObjectURL(url)
   isCapturing.value = false
 }
+
+// ── Dokumen Persyaratan Surat Kelahiran ──────────────────────────────────────
+
+// Studi kasus: 'normal_0_60' | 'normal_lebih_60' | 'luar_nikah' | ''
+const jenisPendaftaranKelahiran = ref('')
+
+// Semua dokumen yang mungkin dibutuhkan untuk kelahiran
+const KELAHIRAN_DOCS_CONFIG = {
+  // ─── Kasus 1 & 2: Normal (dalam nikah) ───
+  suratKetLahir:      { label: 'Surat Keterangan Lahir dari RS/Bidan/Puskesmas',          wajib: true,  kasus: ['normal_0_60', 'normal_lebih_60'] },
+  fotoKkKelahiran:    { label: 'Kartu Keluarga (KK)',                                     wajib: true,  kasus: ['normal_0_60', 'normal_lebih_60'] },
+  fotoKtpAyahIbu:     { label: 'Fotocopy KTP Ayah dan Ibu',                               wajib: true,  kasus: ['normal_0_60', 'normal_lebih_60'] },
+  fotoBukuNikah:      { label: 'Fotocopy Buku Nikah / Akta Perkawinan',                  wajib: true,  kasus: ['normal_0_60', 'normal_lebih_60'] },
+  fotoKtp2Saksi:      { label: 'Fotocopy KTP 2 Orang Saksi',                             wajib: true,  kasus: ['normal_0_60', 'normal_lebih_60'] },
+  suratPengantarRtRwLahir: { label: 'Surat Pengantar RT/RW',                             wajib: true,  kasus: ['normal_0_60', 'normal_lebih_60'] },
+  // ─── Tambahan untuk kasus 2 (lebih 60 hari) ───
+  sptjmDataKelahiran: { label: 'SPTJM Kebenaran Data Kelahiran',                         wajib: true,  kasus: ['normal_lebih_60'] },
+  suratPernyataanBelumAkta: { label: 'Surat Pernyataan Belum Punya Akta',               wajib: true,  kasus: ['normal_lebih_60'] },
+  fotoIjazahOrtu:     { label: 'Fotocopy Ijazah Orang Tua',                              wajib: true,  kasus: ['normal_lebih_60'] },
+  // ─── Kasus 3: Luar nikah ───
+  suratKetLahirLN:    { label: 'Surat Keterangan Lahir dari RS/Bidan/Puskesmas',         wajib: true,  kasus: ['luar_nikah'] },
+  fotoKkIbu:          { label: 'KK Asli dari Ibu',                                       wajib: true,  kasus: ['luar_nikah'] },
+  fotoKtpAyahIbuLN:   { label: 'Fotocopy KTP Ayah dan Ibu',                              wajib: true,  kasus: ['luar_nikah'] },
+  fotoKtp2SaksiLN:    { label: 'KTP 2 Orang Saksi',                                     wajib: true,  kasus: ['luar_nikah'] },
+  suratPengantarRtRwLN: { label: 'Surat Pengantar RT/RW',                               wajib: true,  kasus: ['luar_nikah'] },
+  sptjmPengakuanAnak: { label: 'SPTJM Pengakuan Anak dari Ayah Biologis (opsional, jika nama ayah ingin masuk akta)', wajib: false, kasus: ['luar_nikah'] },
+}
+
+// State per dokumen kelahiran
+const kelDokState = reactive(
+  Object.fromEntries(Object.keys(KELAHIRAN_DOCS_CONFIG).map(k => [k, { id: null, url: null, isUploading: false, error: '' }]))
+)
+
+// Daftar dokumen yang aktif (sesuai kasus terpilih)
+const activeKelahiranDocs = computed(() => {
+  if (!jenisPendaftaranKelahiran.value) return []
+  return Object.entries(KELAHIRAN_DOCS_CONFIG)
+    .filter(([, cfg]) => cfg.kasus.includes(jenisPendaftaranKelahiran.value))
+    .map(([key, cfg]) => ({ key, ...cfg }))
+})
+
+const handleKelDokUpload = async (key, event) => {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  if (file.size > 5 * 1024 * 1024) {
+    kelDokState[key].error = 'Ukuran file terlalu besar. Maksimal 5 MB.'
+    return
+  }
+  const cfg = KELAHIRAN_DOCS_CONFIG[key]
+  kelDokState[key].isUploading = true
+  kelDokState[key].error = ''
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('doc_key', key)
+    fd.append('doc_label', cfg.label)
+    const res = await fetch('/surat/dokumen/upload', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
+      credentials: 'include',
+      body: fd,
+    })
+    const data = await res.json().catch(() => null)
+    if (!res.ok) {
+      if (res.status === 419) throw new Error('Sesi Anda telah berakhir. Silakan muat ulang halaman lalu coba lagi.')
+      throw new Error(data?.message ?? `Upload gagal (${res.status})`)
+    }
+    kelDokState[key].id  = data.id
+    kelDokState[key].url = data.url
+  } catch (e) {
+    kelDokState[key].error = e.message ?? 'Gagal upload'
+  } finally {
+    kelDokState[key].isUploading = false
+  }
+}
+
+const removeKelDok = async (key) => {
+  const id = kelDokState[key].id
+  if (id) {
+    try {
+      await fetch(`/surat/dokumen/${id}`, {
+        method: 'DELETE',
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
+        credentials: 'include',
+      })
+    } catch { /* abaikan */ }
+  }
+  kelDokState[key].id  = null
+  kelDokState[key].url = null
+  kelDokState[key].error = ''
+}
+
+const validateDokKelahiranBeforePrint = () => {
+  if (!isKelahiran.value) return true
+  if (!jenisPendaftaranKelahiran.value) {
+    throw new Error('Silakan pilih studi kasus pendaftaran kelahiran terlebih dahulu.')
+  }
+  const missing = activeKelahiranDocs.value
+    .filter(d => d.wajib && !kelDokState[d.key].id)
+    .map(d => d.label)
+  if (missing.length > 0) {
+    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
+  }
+  return true
+}
+
+const getKelDokIds = () => Object.values(kelDokState).map(s => s.id).filter(Boolean)
 
 // ── Dokumen Persyaratan Surat Kematian ───────────────────────────────────────
 
@@ -733,6 +925,83 @@ const validateDokKematianBeforePrint = () => {
 }
 
 const getDokIds = () => KEMATIAN_DOCS.map(d => dokState[d.key].id).filter(Boolean)
+
+// ── Dokumen Persyaratan Surat Pindah ─────────────────────────────────────────
+
+const PINDAH_DOCS = [
+  { key: 'suratPengantarRt',  label: 'Surat Pengantar dari RT',                                  wajib: true },
+  { key: 'fotoKtpPindah',     label: 'Fotocopy KTP yang akan pindah',                            wajib: true },
+  { key: 'fotoKkPindah',      label: 'Fotocopy Kartu Keluarga',                                  wajib: true },
+  { key: 'suratKetPasFoto',   label: 'Surat keterangan yang sudah ditempel pas foto',             wajib: true },
+  { key: 'pasFotoPindah',     label: 'Pas foto yang akan pindah',                                 wajib: true },
+]
+
+const pindahDokState = reactive(
+  Object.fromEntries(PINDAH_DOCS.map(d => [d.key, { id: null, url: null, isUploading: false, error: '' }]))
+)
+
+const handlePindahDokUpload = async (key, event) => {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  if (file.size > 5 * 1024 * 1024) {
+    pindahDokState[key].error = 'Ukuran file terlalu besar. Maksimal 5 MB.'
+    return
+  }
+  const label = PINDAH_DOCS.find(d => d.key === key)?.label ?? key
+  pindahDokState[key].isUploading = true
+  pindahDokState[key].error = ''
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('doc_key', key)
+    fd.append('doc_label', label)
+    const res = await fetch('/surat/dokumen/upload', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
+      credentials: 'include',
+      body: fd,
+    })
+    const data = await res.json().catch(() => null)
+    if (!res.ok) {
+      if (res.status === 419) throw new Error('Sesi Anda telah berakhir. Silakan muat ulang halaman lalu coba lagi.')
+      throw new Error(data?.message ?? `Upload gagal (${res.status})`)
+    }
+    pindahDokState[key].id  = data.id
+    pindahDokState[key].url = data.url
+  } catch (e) {
+    pindahDokState[key].error = e.message ?? 'Gagal upload'
+  } finally {
+    pindahDokState[key].isUploading = false
+  }
+}
+
+const removePindahDok = async (key) => {
+  const id = pindahDokState[key].id
+  if (id) {
+    try {
+      await fetch(`/surat/dokumen/${id}`, {
+        method: 'DELETE',
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
+        credentials: 'include',
+      })
+    } catch { /* abaikan */ }
+  }
+  pindahDokState[key].id  = null
+  pindahDokState[key].url = null
+  pindahDokState[key].error = ''
+}
+
+const validateDokPindahBeforePrint = () => {
+  if (!isPindah.value) return true
+  const missing = PINDAH_DOCS.filter(d => d.wajib && !pindahDokState[d.key].id).map(d => d.label)
+  if (missing.length > 0) {
+    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
+  }
+  return true
+}
+
+const getPindahDokIds = () => PINDAH_DOCS.map(d => pindahDokState[d.key].id).filter(Boolean)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const finalizeLetter = async (templateSlug) => {
@@ -748,6 +1017,10 @@ const finalizeLetter = async (templateSlug) => {
 
   if (isKematian.value) {
     body.doc_ids = getDokIds()
+  } else if (isKelahiran.value) {
+    body.doc_ids = getKelDokIds()
+  } else if (isPindah.value) {
+    body.doc_ids = getPindahDokIds()
   }
 
   const res = await fetch(`/surat/${templateSlug}/finalize`, {
@@ -798,6 +1071,20 @@ const printNow = async () => {
 
   try {
     validateDokKematianBeforePrint()
+  } catch (e) {
+    alert(e.message)
+    return
+  }
+
+  try {
+    validateDokKelahiranBeforePrint()
+  } catch (e) {
+    alert(e.message)
+    return
+  }
+
+  try {
+    validateDokPindahBeforePrint()
   } catch (e) {
     alert(e.message)
     return
@@ -1215,24 +1502,62 @@ const confirmFinalize = async (confirmed) => {
                 />
               </div>
 
-              <div>
+              <div class="relative">
                 <label class="text-xs font-semibold text-gray-700">Nama Ayah</label>
                 <input
-                  v-model="form.namaAyah"
+                  :value="form.namaAyah"
+                  @input="onAyahInput($event.target.value)"
+                  @focus="searchOrtu(form.namaAyah, ayahSuggestions, showAyahDropdown, isSearchingAyah)"
                   type="text"
+                  autocomplete="off"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  placeholder="Masukkan nama ayah"
+                  placeholder="Ketik nama ayah..."
                 />
+                <div
+                  v-if="showAyahDropdown && ayahSuggestions.length > 0"
+                  class="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg"
+                >
+                  <button
+                    v-for="item in ayahSuggestions"
+                    :key="item.id"
+                    type="button"
+                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-purple-50"
+                    @click="applyAyah(item)"
+                  >
+                    <div class="font-semibold text-gray-900">{{ item.nama }}</div>
+                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} • RT {{ item.rt }}/RW {{ item.rw }}</div>
+                  </button>
+                </div>
+                <p v-if="isSearchingAyah" class="mt-1 text-xs text-gray-500">Mencari...</p>
               </div>
 
-              <div>
+              <div class="relative">
                 <label class="text-xs font-semibold text-gray-700">Nama Ibu</label>
                 <input
-                  v-model="form.namaIbu"
+                  :value="form.namaIbu"
+                  @input="onIbuInput($event.target.value)"
+                  @focus="searchOrtu(form.namaIbu, ibuSuggestions, showIbuDropdown, isSearchingIbu)"
                   type="text"
+                  autocomplete="off"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                  placeholder="Masukkan nama ibu"
+                  placeholder="Ketik nama ibu..."
                 />
+                <div
+                  v-if="showIbuDropdown && ibuSuggestions.length > 0"
+                  class="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg"
+                >
+                  <button
+                    v-for="item in ibuSuggestions"
+                    :key="item.id"
+                    type="button"
+                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-purple-50"
+                    @click="applyIbu(item)"
+                  >
+                    <div class="font-semibold text-gray-900">{{ item.nama }}</div>
+                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} • RT {{ item.rt }}/RW {{ item.rw }}</div>
+                  </button>
+                </div>
+                <p v-if="isSearchingIbu" class="mt-1 text-xs text-gray-500">Mencari...</p>
               </div>
 
               <div class="sm:col-span-2">
@@ -1294,6 +1619,95 @@ const confirmFinalize = async (confirmed) => {
                   placeholder="Kota Lama"
                 />
               </div>
+
+              <!-- ══ DOKUMEN PERSYARATAN SURAT KELAHIRAN ══ -->
+              <div class="sm:col-span-2 mt-1">
+                <div class="rounded-xl border border-green-200 bg-green-50 p-4 space-y-4">
+                  <div class="flex items-start gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <div>
+                      <div class="text-sm font-semibold text-green-800">Dokumen Persyaratan</div>
+                      <p class="text-xs text-green-700 mt-0.5">Pilih studi kasus, lalu upload semua dokumen <span class="font-semibold">Wajib</span> sebelum surat dapat dicetak.</p>
+                    </div>
+                  </div>
+
+                  <!-- Pilih Studi Kasus -->
+                  <div class="rounded-lg bg-white border border-green-100 p-3 space-y-3">
+                    <div class="flex items-center gap-2">
+                      <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Wajib</span>
+                      <span class="text-xs font-medium text-gray-700">Pilih Studi Kasus Pendaftaran</span>
+                    </div>
+                    <div class="flex flex-col gap-2 pl-1">
+                      <label class="flex items-start gap-2 cursor-pointer select-none">
+                        <input type="radio" name="jenisPendaftaranKelahiran" value="normal_0_60" v-model="jenisPendaftaranKelahiran" class="accent-green-600 h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <span class="text-xs text-gray-700"><strong>Kasus 1:</strong> Bayi usia <strong>0–60 hari</strong> (didaftarkan tepat waktu, dalam pernikahan sah)</span>
+                      </label>
+                      <label class="flex items-start gap-2 cursor-pointer select-none">
+                        <input type="radio" name="jenisPendaftaranKelahiran" value="normal_lebih_60" v-model="jenisPendaftaranKelahiran" class="accent-green-600 h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <span class="text-xs text-gray-700"><strong>Kasus 2:</strong> Bayi usia <strong>lebih dari 60 hari</strong> (terlambat mendaftar, dalam pernikahan sah)</span>
+                      </label>
+                      <label class="flex items-start gap-2 cursor-pointer select-none">
+                        <input type="radio" name="jenisPendaftaranKelahiran" value="luar_nikah" v-model="jenisPendaftaranKelahiran" class="accent-green-600 h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <span class="text-xs text-gray-700"><strong>Kasus 3:</strong> Anak lahir <strong>di luar nikah</strong></span>
+                      </label>
+                    </div>
+                    <p v-if="!jenisPendaftaranKelahiran" class="text-xs text-amber-700 font-medium pl-1">⚠ Pilih salah satu studi kasus di atas untuk melihat daftar dokumen yang diperlukan.</p>
+                  </div>
+
+                  <!-- Ringkasan syarat sesuai kasus -->
+                  <div v-if="jenisPendaftaranKelahiran" class="rounded-lg bg-white border border-green-100 p-3">
+                    <p class="text-xs font-semibold text-gray-700 mb-2">Dokumen yang diperlukan untuk kasus ini:</p>
+                    <ul class="space-y-1 pl-1">
+                      <li v-for="(doc, idx) in activeKelahiranDocs" :key="doc.key" class="flex items-center gap-2 text-xs text-gray-700">
+                        <span :class="doc.wajib ? 'text-green-600' : 'text-gray-400'" class="flex-shrink-0">{{ doc.wajib ? '●' : '○' }}</span>
+                        {{ idx + 1 }}. {{ doc.label }}
+                        <span v-if="!doc.wajib" class="text-gray-400">(opsional)</span>
+                        <span v-if="kelDokState[doc.key].id" class="ml-auto text-green-700 font-semibold">✓</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <!-- Kartu upload per dokumen -->
+                  <template v-if="jenisPendaftaranKelahiran">
+                    <div
+                      v-for="(doc, idx) in activeKelahiranDocs"
+                      :key="doc.key"
+                      class="rounded-lg bg-white border border-green-100 p-3 space-y-2"
+                    >
+                      <!-- Nama dokumen -->
+                      <div class="flex items-start gap-2">
+                        <span
+                          :class="doc.wajib ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'"
+                          class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold flex-shrink-0 mt-0.5"
+                        >{{ doc.wajib ? 'Wajib' : 'Opsional' }}</span>
+                        <span class="text-xs font-medium text-gray-700 leading-snug">{{ idx + 1 }}. {{ doc.label }}</span>
+                      </div>
+                      <!-- Tombol upload -->
+                      <div v-if="kelDokState[doc.key].isUploading" class="rounded-lg border-2 border-dashed border-green-300 bg-green-50 py-2 text-center text-xs text-green-700 font-medium">
+                        Mengupload...
+                      </div>
+                      <div v-else-if="!kelDokState[doc.key].id">
+                        <label class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-green-400 bg-green-50 py-2.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                          Klik untuk Upload File
+                          <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleKelDokUpload(doc.key, $event)" />
+                        </label>
+                      </div>
+                      <div v-else class="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-3 py-2">
+                        <span class="text-xs text-green-700 font-semibold">✓ File tersimpan</span>
+                        <button type="button" @click="removeKelDok(doc.key)" class="text-xs text-red-500 hover:text-red-700 font-medium">Hapus</button>
+                      </div>
+                      <p v-if="kelDokState[doc.key].error" class="text-xs text-red-600">{{ kelDokState[doc.key].error }}</p>
+                      <div v-if="kelDokState[doc.key].url" class="mt-1">
+                        <img v-if="!kelDokState[doc.key].url.endsWith('.pdf')" :src="kelDokState[doc.key].url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
+                        <a v-else :href="kelDokState[doc.key].url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
+                      </div>
+                    </div>
+                  </template>
+
+                </div>
+              </div>
+              <!-- ══ AKHIR DOKUMEN PERSYARATAN ══ -->
             </template>
 
             <!-- Kematian Fields -->
@@ -1960,6 +2374,51 @@ const confirmFinalize = async (confirmed) => {
                   </div>
                 </div>
               </div>
+
+              <!-- ══ DOKUMEN PERSYARATAN SURAT PINDAH ══ -->
+              <div class="mt-1">
+                <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-4">
+                  <div class="flex items-start gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <div>
+                      <div class="text-sm font-semibold text-blue-800">Dokumen Persyaratan</div>
+                      <p class="text-xs text-blue-700 mt-0.5">Semua dokumen <span class="font-semibold">Wajib</span> harus diupload sebelum surat dapat dicetak dan masuk arsip.</p>
+                    </div>
+                  </div>
+
+                  <div
+                    v-for="(doc, idx) in PINDAH_DOCS"
+                    :key="doc.key"
+                    class="rounded-lg bg-white border border-blue-100 p-3"
+                  >
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
+                        <span class="text-xs font-medium text-gray-700">{{ idx + 1 }}. {{ doc.label }}</span>
+                      </div>
+                      <div v-if="pindahDokState[doc.key].isUploading" class="text-xs text-blue-600 italic">Mengupload...</div>
+                      <div v-else-if="!pindahDokState[doc.key].id" class="flex-shrink-0">
+                        <label class="cursor-pointer rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition">
+                          Pilih File
+                          <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handlePindahDokUpload(doc.key, $event)" />
+                        </label>
+                      </div>
+                      <div v-else class="flex items-center gap-2 flex-shrink-0">
+                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                        <button type="button" @click="removePindahDok(doc.key)" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+                      </div>
+                    </div>
+                    <p v-if="pindahDokState[doc.key].error" class="mt-1 text-xs text-red-600">{{ pindahDokState[doc.key].error }}</p>
+                    <div v-if="pindahDokState[doc.key].url" class="mt-2">
+                      <img v-if="!pindahDokState[doc.key].url.endsWith('.pdf')" :src="pindahDokState[doc.key].url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
+                      <a v-else :href="pindahDokState[doc.key].url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+              <!-- ══ AKHIR DOKUMEN PERSYARATAN ══ -->
+
             </div>
           </div>
         </template>
