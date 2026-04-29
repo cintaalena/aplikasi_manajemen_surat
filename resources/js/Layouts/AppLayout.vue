@@ -59,6 +59,8 @@ watchEffect(() => {
 
 const currentUrl = computed(() => page.url || '')
 
+const userRole = computed(() => page.props.auth?.user?.role ?? 'staff')
+
 const isTemplateActive = (slug) => {
   return currentUrl.value === `/template-surat/${slug}`
 }
@@ -83,6 +85,16 @@ const isTemplateActive = (slug) => {
           <div class="text-xs text-gray-600">
             {{ page.props.auth.user.jabatan }}
           </div>
+          <div class="mt-0.5">
+            <span
+              class="inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+              :class="{
+                'bg-purple-100 text-purple-700': userRole === 'lurah',
+                'bg-indigo-100 text-indigo-700': userRole === 'staff',
+                'bg-red-100 text-red-700': userRole === 'admin',
+              }"
+            >{{ userRole }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -103,8 +115,8 @@ const isTemplateActive = (slug) => {
         <span v-if="isCurrent('dashboard')" class="text-xs text-purple-700">Aktif</span>
       </Link>
 
-            <!-- TEMPLATE SURAT (EXPANDABLE) -->
-      <div class="rounded-xl border border-transparent bg-white">
+            <!-- TEMPLATE SURAT (EXPANDABLE) — hanya untuk staff & admin -->
+      <div v-if="userRole !== 'lurah'" class="rounded-xl border border-transparent bg-white">
         <button
           type="button"
           class="w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition border"
@@ -177,6 +189,22 @@ const isTemplateActive = (slug) => {
         </span>
         <span v-if="isCurrent('penduduk.index')" class="text-xs text-emerald-700">Aktif</span>
       </a>
+
+      <!-- MANAJEMEN PENGGUNA — hanya admin -->
+      <Link
+        v-if="userRole === 'admin'"
+        :href="route('admin.pengguna.index')"
+        class="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition border"
+        :class="isCurrent('admin.pengguna.index')
+          ? 'bg-rose-50 text-rose-900 border-rose-200'
+          : 'bg-white text-gray-700 border-transparent hover:bg-rose-50/60 hover:text-rose-900'"
+      >
+        <span class="flex items-center gap-2">
+          <span class="h-2.5 w-2.5 rounded-full bg-rose-500"></span>
+          Manajemen Pengguna
+        </span>
+        <span v-if="isCurrent('admin.pengguna.index')" class="text-xs text-rose-700">Aktif</span>
+      </Link>
 
       <!-- LOG OUT -->
       <button

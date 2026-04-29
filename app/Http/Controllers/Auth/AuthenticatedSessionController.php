@@ -20,6 +20,7 @@ class AuthenticatedSessionController extends Controller
     public function create(): Response
     {
         $staffNames = User::where('is_active', true)
+            ->where('role', '!=', 'admin')
             ->orderBy('name')
             ->pluck('name');
 

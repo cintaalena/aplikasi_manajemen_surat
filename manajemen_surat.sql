@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 27, 2026 at 05:06 AM
+-- Generation Time: Apr 28, 2026 at 03:48 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `manajemen_surat`
 --
-CREATE DATABASE IF NOT EXISTS `manajemen_surat` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `manajemen_surat`;
 
 -- --------------------------------------------------------
 
@@ -29,9 +27,8 @@ USE `manajemen_surat`;
 -- Table structure for table `activity_logs`
 --
 
-DROP TABLE IF EXISTS `activity_logs`;
-CREATE TABLE IF NOT EXISTS `activity_logs` (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE `activity_logs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
   `user_id` bigint(20) UNSIGNED DEFAULT NULL,
   `user_name` varchar(150) DEFAULT NULL,
   `action` varchar(20) NOT NULL,
@@ -41,25 +38,14 @@ CREATE TABLE IF NOT EXISTS `activity_logs` (
   `new_values` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`new_values`)),
   `ip_address` varchar(45) DEFAULT NULL,
   `user_agent` varchar(512) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `idx_activity_model` (`model_type`,`model_id`),
-  KEY `idx_activity_user_time` (`user_id`,`created_at`),
-  KEY `activity_logs_action_index` (`action`),
-  KEY `activity_logs_model_type_index` (`model_type`),
-  KEY `activity_logs_model_id_index` (`model_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2544 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `activity_logs`
---
-
-TRUNCATE TABLE `activity_logs`;
 --
 -- Dumping data for table `activity_logs`
 --
 
-INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
+INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
 (1, NULL, 'System', 'created', 'User', 2, NULL, NULL, '127.0.0.1', 'Symfony', '2026-04-24 00:09:16'),
 (2, NULL, 'System', 'created', 'User', 3, NULL, NULL, '127.0.0.1', 'Symfony', '2026-04-24 00:09:16'),
 (3, NULL, 'System', 'created', 'User', 4, NULL, NULL, '127.0.0.1', 'Symfony', '2026-04-24 00:09:17'),
@@ -272,7 +258,7 @@ INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `actio
 (210, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 198, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56'),
 (211, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 199, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56'),
 (212, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 200, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56');
-INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
+INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
 (213, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 201, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56'),
 (214, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 202, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56'),
 (215, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 203, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56'),
@@ -476,9 +462,9 @@ INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `actio
 (413, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 401, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56'),
 (414, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 402, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56'),
 (415, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 403, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56'),
-(416, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 404, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56');
-INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
-(417, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 405, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56'),
+(416, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 404, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56'),
+(417, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 405, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56');
+INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
 (418, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 406, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56'),
 (419, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 407, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56'),
 (420, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 408, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:56'),
@@ -681,10 +667,10 @@ INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `actio
 (617, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 605, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:57'),
 (618, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 606, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:57'),
 (619, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 607, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:57'),
-(620, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 608, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:57');
-INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
+(620, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 608, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:57'),
 (621, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 609, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:57'),
-(622, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 610, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:57'),
+(622, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 610, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:57');
+INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
 (623, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 611, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:57'),
 (624, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 612, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:57'),
 (625, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 613, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:57'),
@@ -886,11 +872,11 @@ INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `actio
 (821, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 809, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:58'),
 (822, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 810, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:58'),
 (823, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 811, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:58'),
-(824, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 812, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:58');
-INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
+(824, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 812, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:58'),
 (825, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 813, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:58'),
 (826, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 814, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:58'),
-(827, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 815, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:58'),
+(827, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 815, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:58');
+INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
 (828, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 816, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:58'),
 (829, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 817, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:58'),
 (830, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 818, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:58'),
@@ -1091,11 +1077,11 @@ INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `actio
 (1025, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1013, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:59'),
 (1026, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1014, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:59'),
 (1027, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1015, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:59'),
-(1028, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1016, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:59');
-INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
+(1028, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1016, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:59'),
 (1029, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1017, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:59'),
 (1030, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1018, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:59'),
-(1031, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1019, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:59'),
+(1031, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1019, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:59');
+INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
 (1032, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1020, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:59'),
 (1033, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1021, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:59'),
 (1034, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1022, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:22:59'),
@@ -1295,11 +1281,11 @@ INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `actio
 (1228, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1216, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
 (1229, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1217, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
 (1230, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1218, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
-(1231, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1219, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00');
-INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
+(1231, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1219, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
 (1232, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1220, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
 (1233, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1221, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
-(1234, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1222, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
+(1234, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1222, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00');
+INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
 (1235, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1223, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
 (1236, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1224, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
 (1237, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1225, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
@@ -1499,11 +1485,11 @@ INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `actio
 (1431, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1419, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
 (1432, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1420, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
 (1433, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1421, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
-(1434, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1422, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00');
-INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
+(1434, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1422, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
 (1435, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1423, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
 (1436, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1424, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
-(1437, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1425, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
+(1437, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1425, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00');
+INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
 (1438, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1426, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
 (1439, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1427, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
 (1440, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1428, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:00'),
@@ -1703,11 +1689,11 @@ INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `actio
 (1634, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1622, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:01'),
 (1635, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1623, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:01'),
 (1636, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1624, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:01'),
-(1637, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1625, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:01');
-INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
+(1637, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1625, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:01'),
 (1638, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1626, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:01'),
 (1639, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1627, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:01'),
-(1640, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1628, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:01'),
+(1640, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1628, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:01');
+INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
 (1641, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1629, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:01'),
 (1642, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1630, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:01'),
 (1643, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1631, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:01'),
@@ -1907,11 +1893,11 @@ INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `actio
 (1837, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1825, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:02'),
 (1838, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1826, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:02'),
 (1839, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1827, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:02'),
-(1840, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1828, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:02');
-INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
+(1840, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1828, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:02'),
 (1841, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1829, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:02'),
 (1842, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1830, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:02'),
-(1843, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1831, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:02'),
+(1843, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1831, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:02');
+INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
 (1844, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1832, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:02'),
 (1845, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1833, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:02'),
 (1846, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 1834, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:02'),
@@ -2111,11 +2097,11 @@ INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `actio
 (2040, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2028, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:03'),
 (2041, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2029, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:03'),
 (2042, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2030, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:03'),
-(2043, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2031, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:03');
-INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
+(2043, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2031, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:03'),
 (2044, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2032, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:03'),
 (2045, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2033, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:03'),
-(2046, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2034, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:03'),
+(2046, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2034, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:03');
+INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
 (2047, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2035, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:03'),
 (2048, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2036, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:03'),
 (2049, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2037, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:03'),
@@ -2315,11 +2301,11 @@ INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `actio
 (2243, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2231, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:04'),
 (2244, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2232, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:04'),
 (2245, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2233, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:04'),
-(2246, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2234, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:04');
-INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
+(2246, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2234, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:04'),
 (2247, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2235, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:04'),
 (2248, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2236, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:04'),
-(2249, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2237, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:04'),
+(2249, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2237, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:04');
+INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
 (2250, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2238, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:04'),
 (2251, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2239, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:04'),
 (2252, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2240, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:04'),
@@ -2519,11 +2505,11 @@ INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `actio
 (2446, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2434, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:05'),
 (2447, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2435, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:05'),
 (2448, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2436, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:05'),
-(2449, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2437, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:05');
-INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
+(2449, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2437, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:05'),
 (2450, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2438, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:05'),
 (2451, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2439, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:05'),
-(2452, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2440, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:05'),
+(2452, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2440, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:05');
+INSERT INTO `activity_logs` (`id`, `user_id`, `user_name`, `action`, `model_type`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`) VALUES
 (2453, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2441, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:05'),
 (2454, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2442, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:05'),
 (2455, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2443, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-24 00:23:05'),
@@ -2614,7 +2600,17 @@ INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `actio
 (2540, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Letter', 5, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-26 05:43:37'),
 (2541, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Letter', 6, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-26 06:09:32'),
 (2542, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Letter', 7, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-26 06:26:00'),
-(2543, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Letter', 8, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-26 06:47:40');
+(2543, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Letter', 8, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-26 06:47:40'),
+(2544, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2526, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-27 06:26:51'),
+(2545, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Letter', 9, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-27 06:28:53'),
+(2546, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2527, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-27 06:41:40'),
+(2547, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Letter', 10, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-27 06:45:28'),
+(2548, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2528, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-27 20:02:43'),
+(2549, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Letter', 11, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-27 20:17:52'),
+(2550, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Penduduk', 2529, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-27 20:39:53'),
+(2551, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Letter', 12, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-27 20:41:18'),
+(2552, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Letter', 13, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-27 20:47:26'),
+(2553, 2, 'ANAK AGUNG G.S.M. PUTRA SE', 'created', 'Letter', 14, NULL, NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', '2026-04-28 06:19:46');
 
 -- --------------------------------------------------------
 
@@ -2622,35 +2618,25 @@ INSERT DELAYED IGNORE INTO `activity_logs` (`id`, `user_id`, `user_name`, `actio
 -- Table structure for table `cache`
 --
 
-DROP TABLE IF EXISTS `cache`;
-CREATE TABLE IF NOT EXISTS `cache` (
+CREATE TABLE `cache` (
   `key` varchar(255) NOT NULL,
   `value` mediumtext NOT NULL,
-  `expiration` int(11) NOT NULL,
-  PRIMARY KEY (`key`)
+  `expiration` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `cache`
---
-
-TRUNCATE TABLE `cache`;
 --
 -- Dumping data for table `cache`
 --
 
-INSERT DELAYED IGNORE INTO `cache` (`key`, `value`, `expiration`) VALUES
-('laravel-cache-5c785c036466adea360111aa28563bfd556b5fba', 'i:1;', 1777206065),
-('laravel-cache-5c785c036466adea360111aa28563bfd556b5fba:timer', 'i:1777206065;', 1777206065),
-('laravel-cache-da4b9237bacccdf19c0760cab7aec4a8359010b0', 'i:1;', 1777211320),
-('laravel-cache-da4b9237bacccdf19c0760cab7aec4a8359010b0:timer', 'i:1777211320;', 1777211320),
-('laravel-cache-wilayah_districts_1806', 'a:20:{i:0;a:4:{s:2:\"id\";s:6:\"180601\";s:4:\"nama\";s:10:\"Kota Agung\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:1;a:4:{s:2:\"id\";s:6:\"180602\";s:4:\"nama\";s:13:\"Talang Padang\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:2;a:4:{s:2:\"id\";s:6:\"180603\";s:4:\"nama\";s:8:\"Wonosobo\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:3;a:4:{s:2:\"id\";s:6:\"180604\";s:4:\"nama\";s:14:\"Pulau Panggung\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:4;a:4:{s:2:\"id\";s:6:\"180609\";s:4:\"nama\";s:11:\"Cukuh Balak\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:5;a:4:{s:2:\"id\";s:6:\"180611\";s:4:\"nama\";s:6:\"Pugung\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:6;a:4:{s:2:\"id\";s:6:\"180612\";s:4:\"nama\";s:6:\"Semaka\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:7;a:4:{s:2:\"id\";s:6:\"180613\";s:4:\"nama\";s:9:\"Sumberejo\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:8;a:4:{s:2:\"id\";s:6:\"180615\";s:4:\"nama\";s:8:\"Ulu Belu\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:9;a:4:{s:2:\"id\";s:6:\"180616\";s:4:\"nama\";s:13:\"Pematang Sawa\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:10;a:4:{s:2:\"id\";s:6:\"180617\";s:4:\"nama\";s:10:\"Kelumbayan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:11;a:4:{s:2:\"id\";s:6:\"180618\";s:4:\"nama\";s:16:\"Kota Agung Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:12;a:4:{s:2:\"id\";s:6:\"180619\";s:4:\"nama\";s:16:\"Kota Agung Timur\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:13;a:4:{s:2:\"id\";s:6:\"180620\";s:4:\"nama\";s:7:\"Gisting\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:14;a:4:{s:2:\"id\";s:6:\"180621\";s:4:\"nama\";s:11:\"Gunung Alip\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:15;a:4:{s:2:\"id\";s:6:\"180624\";s:4:\"nama\";s:5:\"Limau\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:16;a:4:{s:2:\"id\";s:6:\"180625\";s:4:\"nama\";s:21:\"Bandar Negeri Semuong\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:17;a:4:{s:2:\"id\";s:6:\"180626\";s:4:\"nama\";s:12:\"Air Naningan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:18;a:4:{s:2:\"id\";s:6:\"180627\";s:4:\"nama\";s:5:\"Bulok\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:19;a:4:{s:2:\"id\";s:6:\"180628\";s:4:\"nama\";s:16:\"Kelumbayan Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}}', 1777293734),
-('laravel-cache-wilayah_districts_3374', 'a:16:{i:0;a:4:{s:2:\"id\";s:6:\"337401\";s:4:\"nama\";s:15:\"Semarang Tengah\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:1;a:4:{s:2:\"id\";s:6:\"337402\";s:4:\"nama\";s:14:\"Semarang Utara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:2;a:4:{s:2:\"id\";s:6:\"337403\";s:4:\"nama\";s:14:\"Semarang Timur\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:3;a:4:{s:2:\"id\";s:6:\"337404\";s:4:\"nama\";s:9:\"Gayamsari\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:4;a:4:{s:2:\"id\";s:6:\"337405\";s:4:\"nama\";s:5:\"Genuk\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:5;a:4:{s:2:\"id\";s:6:\"337406\";s:4:\"nama\";s:10:\"Pedurungan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:6;a:4:{s:2:\"id\";s:6:\"337407\";s:4:\"nama\";s:16:\"Semarang Selatan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:7;a:4:{s:2:\"id\";s:6:\"337408\";s:4:\"nama\";s:9:\"Candisari\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:8;a:4:{s:2:\"id\";s:6:\"337409\";s:4:\"nama\";s:12:\"Gajahmungkur\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:9;a:4:{s:2:\"id\";s:6:\"337410\";s:4:\"nama\";s:9:\"Tembalang\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:10;a:4:{s:2:\"id\";s:6:\"337411\";s:4:\"nama\";s:10:\"Banyumanik\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:11;a:4:{s:2:\"id\";s:6:\"337412\";s:4:\"nama\";s:10:\"Gunungpati\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:12;a:4:{s:2:\"id\";s:6:\"337413\";s:4:\"nama\";s:14:\"Semarang Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:13;a:4:{s:2:\"id\";s:6:\"337414\";s:4:\"nama\";s:5:\"Mijen\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:14;a:4:{s:2:\"id\";s:6:\"337415\";s:4:\"nama\";s:8:\"Ngaliyan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:15;a:4:{s:2:\"id\";s:6:\"337416\";s:4:\"nama\";s:4:\"Tugu\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}}', 1777293260),
-('laravel-cache-wilayah_provinces', 'a:38:{i:0;a:4:{s:2:\"id\";s:2:\"11\";s:4:\"nama\";s:4:\"Aceh\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:1;a:4:{s:2:\"id\";s:2:\"12\";s:4:\"nama\";s:14:\"Sumatera Utara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:2;a:4:{s:2:\"id\";s:2:\"13\";s:4:\"nama\";s:14:\"Sumatera Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:3;a:4:{s:2:\"id\";s:2:\"14\";s:4:\"nama\";s:4:\"Riau\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:4;a:4:{s:2:\"id\";s:2:\"15\";s:4:\"nama\";s:5:\"Jambi\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:5;a:4:{s:2:\"id\";s:2:\"16\";s:4:\"nama\";s:16:\"Sumatera Selatan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:6;a:4:{s:2:\"id\";s:2:\"17\";s:4:\"nama\";s:8:\"Bengkulu\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:7;a:4:{s:2:\"id\";s:2:\"18\";s:4:\"nama\";s:7:\"Lampung\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:8;a:4:{s:2:\"id\";s:2:\"19\";s:4:\"nama\";s:25:\"Kepulauan Bangka Belitung\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:9;a:4:{s:2:\"id\";s:2:\"21\";s:4:\"nama\";s:14:\"Kepulauan Riau\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:10;a:4:{s:2:\"id\";s:2:\"31\";s:4:\"nama\";s:29:\"Daerah Khusus Ibukota Jakarta\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:11;a:4:{s:2:\"id\";s:2:\"32\";s:4:\"nama\";s:10:\"Jawa Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:12;a:4:{s:2:\"id\";s:2:\"33\";s:4:\"nama\";s:11:\"Jawa Tengah\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:13;a:4:{s:2:\"id\";s:2:\"34\";s:4:\"nama\";s:26:\"Daerah Istimewa Yogyakarta\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:14;a:4:{s:2:\"id\";s:2:\"35\";s:4:\"nama\";s:10:\"Jawa Timur\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:15;a:4:{s:2:\"id\";s:2:\"36\";s:4:\"nama\";s:6:\"Banten\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:16;a:4:{s:2:\"id\";s:2:\"51\";s:4:\"nama\";s:4:\"Bali\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:17;a:4:{s:2:\"id\";s:2:\"52\";s:4:\"nama\";s:19:\"Nusa Tenggara Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:18;a:4:{s:2:\"id\";s:2:\"53\";s:4:\"nama\";s:19:\"Nusa Tenggara Timur\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:19;a:4:{s:2:\"id\";s:2:\"61\";s:4:\"nama\";s:16:\"Kalimantan Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:20;a:4:{s:2:\"id\";s:2:\"62\";s:4:\"nama\";s:17:\"Kalimantan Tengah\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:21;a:4:{s:2:\"id\";s:2:\"63\";s:4:\"nama\";s:18:\"Kalimantan Selatan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:22;a:4:{s:2:\"id\";s:2:\"64\";s:4:\"nama\";s:16:\"Kalimantan Timur\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:23;a:4:{s:2:\"id\";s:2:\"65\";s:4:\"nama\";s:16:\"Kalimantan Utara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:24;a:4:{s:2:\"id\";s:2:\"71\";s:4:\"nama\";s:14:\"Sulawesi Utara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:25;a:4:{s:2:\"id\";s:2:\"72\";s:4:\"nama\";s:15:\"Sulawesi Tengah\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:26;a:4:{s:2:\"id\";s:2:\"73\";s:4:\"nama\";s:16:\"Sulawesi Selatan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:27;a:4:{s:2:\"id\";s:2:\"74\";s:4:\"nama\";s:17:\"Sulawesi Tenggara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:28;a:4:{s:2:\"id\";s:2:\"75\";s:4:\"nama\";s:9:\"Gorontalo\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:29;a:4:{s:2:\"id\";s:2:\"76\";s:4:\"nama\";s:14:\"Sulawesi Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:30;a:4:{s:2:\"id\";s:2:\"81\";s:4:\"nama\";s:6:\"Maluku\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:31;a:4:{s:2:\"id\";s:2:\"82\";s:4:\"nama\";s:12:\"Maluku Utara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:32;a:4:{s:2:\"id\";s:2:\"91\";s:4:\"nama\";s:5:\"Papua\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:33;a:4:{s:2:\"id\";s:2:\"92\";s:4:\"nama\";s:11:\"Papua Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:34;a:4:{s:2:\"id\";s:2:\"93\";s:4:\"nama\";s:13:\"Papua Selatan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:35;a:4:{s:2:\"id\";s:2:\"94\";s:4:\"nama\";s:12:\"Papua Tengah\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:36;a:4:{s:2:\"id\";s:2:\"95\";s:4:\"nama\";s:16:\"Papua Pegunungan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:37;a:4:{s:2:\"id\";s:2:\"96\";s:4:\"nama\";s:16:\"Papua Barat Daya\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}}', 1777293075),
-('laravel-cache-wilayah_regencies_18', 'a:15:{i:0;a:4:{s:2:\"id\";s:4:\"1801\";s:4:\"nama\";s:25:\"Kabupaten Lampung Selatan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:1;a:4:{s:2:\"id\";s:4:\"1802\";s:4:\"nama\";s:24:\"Kabupaten Lampung Tengah\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:2;a:4:{s:2:\"id\";s:4:\"1803\";s:4:\"nama\";s:23:\"Kabupaten Lampung Utara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:3;a:4:{s:2:\"id\";s:4:\"1804\";s:4:\"nama\";s:23:\"Kabupaten Lampung Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:4;a:4:{s:2:\"id\";s:4:\"1805\";s:4:\"nama\";s:23:\"Kabupaten Tulang Bawang\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:5;a:4:{s:2:\"id\";s:4:\"1806\";s:4:\"nama\";s:19:\"Kabupaten Tanggamus\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:6;a:4:{s:2:\"id\";s:4:\"1807\";s:4:\"nama\";s:23:\"Kabupaten Lampung Timur\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:7;a:4:{s:2:\"id\";s:4:\"1808\";s:4:\"nama\";s:19:\"Kabupaten Way Kanan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:8;a:4:{s:2:\"id\";s:4:\"1809\";s:4:\"nama\";s:19:\"Kabupaten Pesawaran\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:9;a:4:{s:2:\"id\";s:4:\"1810\";s:4:\"nama\";s:19:\"Kabupaten Pringsewu\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:10;a:4:{s:2:\"id\";s:4:\"1811\";s:4:\"nama\";s:16:\"Kabupaten Mesuji\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:11;a:4:{s:2:\"id\";s:4:\"1812\";s:4:\"nama\";s:29:\"Kabupaten Tulang Bawang Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:12;a:4:{s:2:\"id\";s:4:\"1813\";s:4:\"nama\";s:23:\"Kabupaten Pesisir Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:13;a:4:{s:2:\"id\";s:4:\"1871\";s:4:\"nama\";s:19:\"Kota Bandar Lampung\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:14;a:4:{s:2:\"id\";s:4:\"1872\";s:4:\"nama\";s:10:\"Kota Metro\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}}', 1777293727),
-('laravel-cache-wilayah_regencies_33', 'a:35:{i:0;a:4:{s:2:\"id\";s:4:\"3301\";s:4:\"nama\";s:17:\"Kabupaten Cilacap\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:1;a:4:{s:2:\"id\";s:4:\"3302\";s:4:\"nama\";s:18:\"Kabupaten Banyumas\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:2;a:4:{s:2:\"id\";s:4:\"3303\";s:4:\"nama\";s:21:\"Kabupaten Purbalingga\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:3;a:4:{s:2:\"id\";s:4:\"3304\";s:4:\"nama\";s:22:\"Kabupaten Banjarnegara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:4;a:4:{s:2:\"id\";s:4:\"3305\";s:4:\"nama\";s:17:\"Kabupaten Kebumen\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:5;a:4:{s:2:\"id\";s:4:\"3306\";s:4:\"nama\";s:19:\"Kabupaten Purworejo\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:6;a:4:{s:2:\"id\";s:4:\"3307\";s:4:\"nama\";s:18:\"Kabupaten Wonosobo\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:7;a:4:{s:2:\"id\";s:4:\"3308\";s:4:\"nama\";s:18:\"Kabupaten Magelang\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:8;a:4:{s:2:\"id\";s:4:\"3309\";s:4:\"nama\";s:18:\"Kabupaten Boyolali\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:9;a:4:{s:2:\"id\";s:4:\"3310\";s:4:\"nama\";s:16:\"Kabupaten Klaten\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:10;a:4:{s:2:\"id\";s:4:\"3311\";s:4:\"nama\";s:19:\"Kabupaten Sukoharjo\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:11;a:4:{s:2:\"id\";s:4:\"3312\";s:4:\"nama\";s:18:\"Kabupaten Wonogiri\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:12;a:4:{s:2:\"id\";s:4:\"3313\";s:4:\"nama\";s:21:\"Kabupaten Karanganyar\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:13;a:4:{s:2:\"id\";s:4:\"3314\";s:4:\"nama\";s:16:\"Kabupaten Sragen\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:14;a:4:{s:2:\"id\";s:4:\"3315\";s:4:\"nama\";s:18:\"Kabupaten Grobogan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:15;a:4:{s:2:\"id\";s:4:\"3316\";s:4:\"nama\";s:15:\"Kabupaten Blora\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:16;a:4:{s:2:\"id\";s:4:\"3317\";s:4:\"nama\";s:17:\"Kabupaten Rembang\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:17;a:4:{s:2:\"id\";s:4:\"3318\";s:4:\"nama\";s:14:\"Kabupaten Pati\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:18;a:4:{s:2:\"id\";s:4:\"3319\";s:4:\"nama\";s:15:\"Kabupaten Kudus\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:19;a:4:{s:2:\"id\";s:4:\"3320\";s:4:\"nama\";s:16:\"Kabupaten Jepara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:20;a:4:{s:2:\"id\";s:4:\"3321\";s:4:\"nama\";s:15:\"Kabupaten Demak\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:21;a:4:{s:2:\"id\";s:4:\"3322\";s:4:\"nama\";s:18:\"Kabupaten Semarang\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:22;a:4:{s:2:\"id\";s:4:\"3323\";s:4:\"nama\";s:20:\"Kabupaten Temanggung\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:23;a:4:{s:2:\"id\";s:4:\"3324\";s:4:\"nama\";s:16:\"Kabupaten Kendal\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:24;a:4:{s:2:\"id\";s:4:\"3325\";s:4:\"nama\";s:16:\"Kabupaten Batang\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:25;a:4:{s:2:\"id\";s:4:\"3326\";s:4:\"nama\";s:20:\"Kabupaten Pekalongan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:26;a:4:{s:2:\"id\";s:4:\"3327\";s:4:\"nama\";s:18:\"Kabupaten Pemalang\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:27;a:4:{s:2:\"id\";s:4:\"3328\";s:4:\"nama\";s:15:\"Kabupaten Tegal\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:28;a:4:{s:2:\"id\";s:4:\"3329\";s:4:\"nama\";s:16:\"Kabupaten Brebes\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:29;a:4:{s:2:\"id\";s:4:\"3371\";s:4:\"nama\";s:13:\"Kota Magelang\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:30;a:4:{s:2:\"id\";s:4:\"3372\";s:4:\"nama\";s:14:\"Kota Surakarta\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:31;a:4:{s:2:\"id\";s:4:\"3373\";s:4:\"nama\";s:13:\"Kota Salatiga\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:32;a:4:{s:2:\"id\";s:4:\"3374\";s:4:\"nama\";s:13:\"Kota Semarang\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:33;a:4:{s:2:\"id\";s:4:\"3375\";s:4:\"nama\";s:15:\"Kota Pekalongan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:34;a:4:{s:2:\"id\";s:4:\"3376\";s:4:\"nama\";s:10:\"Kota Tegal\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}}', 1777293248),
-('laravel-cache-wilayah_villages_180618', 'a:16:{i:0;a:4:{s:2:\"id\";s:10:\"1806182001\";s:4:\"nama\";s:4:\"Belu\";s:8:\"latitude\";d:-5.4918138327;s:9:\"longitude\";d:104.5592998752;}i:1;a:4:{s:2:\"id\";s:10:\"1806182002\";s:4:\"nama\";s:12:\"Negara Batin\";s:8:\"latitude\";d:-5.4833251427;s:9:\"longitude\";d:104.5634335767;}i:2;a:4:{s:2:\"id\";s:10:\"1806182003\";s:4:\"nama\";s:12:\"Banjar Masin\";s:8:\"latitude\";d:-5.4765916933;s:9:\"longitude\";d:104.5655964676;}i:3;a:4:{s:2:\"id\";s:10:\"1806182004\";s:4:\"nama\";s:9:\"Kanyangan\";s:8:\"latitude\";d:-5.4453131142;s:9:\"longitude\";d:104.5680585373;}i:4;a:4:{s:2:\"id\";s:10:\"1806182005\";s:4:\"nama\";s:12:\"Kandang Besi\";s:8:\"latitude\";d:-5.493249869;s:9:\"longitude\";d:104.5720815721;}i:5;a:4:{s:2:\"id\";s:10:\"1806182006\";s:4:\"nama\";s:10:\"Teba Bunuk\";s:8:\"latitude\";d:-5.4910503536;s:9:\"longitude\";d:104.5780937549;}i:6;a:4:{s:2:\"id\";s:10:\"1806182007\";s:4:\"nama\";s:10:\"Way Gelang\";s:8:\"latitude\";d:-5.4916832131;s:9:\"longitude\";d:104.5849355028;}i:7;a:4:{s:2:\"id\";s:10:\"1806182008\";s:4:\"nama\";s:11:\"Tala Gening\";s:8:\"latitude\";d:-5.4911160387;s:9:\"longitude\";d:104.5947788539;}i:8;a:4:{s:2:\"id\";s:10:\"1806182009\";s:4:\"nama\";s:12:\"Gedung Jambu\";s:8:\"latitude\";d:-5.4806509242;s:9:\"longitude\";d:104.5938885558;}i:9;a:4:{s:2:\"id\";s:10:\"1806182010\";s:4:\"nama\";s:4:\"Maja\";s:8:\"latitude\";d:-5.4707120353;s:9:\"longitude\";d:104.5980677301;}i:10;a:4:{s:2:\"id\";s:10:\"1806182011\";s:4:\"nama\";s:14:\"Pulau Benawang\";s:8:\"latitude\";d:-5.47407823;s:9:\"longitude\";d:104.5839862163;}i:11;a:4:{s:2:\"id\";s:10:\"1806182012\";s:4:\"nama\";s:6:\"Payung\";s:8:\"latitude\";d:-5.4558307548;s:9:\"longitude\";d:104.5963645031;}i:12;a:4:{s:2:\"id\";s:10:\"1806182013\";s:4:\"nama\";s:9:\"Kesugihan\";s:8:\"latitude\";d:-5.4808693825;s:9:\"longitude\";d:104.6036580766;}i:13;a:4:{s:2:\"id\";s:10:\"1806182014\";s:4:\"nama\";s:9:\"Pejajaran\";s:8:\"latitude\";d:-5.4715737012;s:9:\"longitude\";d:104.6024436269;}i:14;a:4:{s:2:\"id\";s:10:\"1806182015\";s:4:\"nama\";s:10:\"Kalimiring\";s:8:\"latitude\";d:-5.4458941796;s:9:\"longitude\";d:104.5825385642;}i:15;a:4:{s:2:\"id\";s:10:\"1806182016\";s:4:\"nama\";s:13:\"Tanjung Agung\";s:8:\"latitude\";d:-5.510884173;s:9:\"longitude\";d:104.5583189899;}}', 1777293747),
-('laravel-cache-wilayah_villages_337409', 'a:8:{i:0;a:4:{s:2:\"id\";s:10:\"3374091001\";s:4:\"nama\";s:10:\"Karangrejo\";s:8:\"latitude\";d:-7.0245390055;s:9:\"longitude\";d:110.4127152871;}i:1;a:4:{s:2:\"id\";s:10:\"3374091002\";s:4:\"nama\";s:13:\"Bendan Dhuwur\";s:8:\"latitude\";d:-7.0204952346;s:9:\"longitude\";d:110.3972035941;}i:2;a:4:{s:2:\"id\";s:10:\"3374091003\";s:4:\"nama\";s:13:\"Bendan Ngisor\";s:8:\"latitude\";d:-7.0114719131;s:9:\"longitude\";d:110.3986276682;}i:3;a:4:{s:2:\"id\";s:10:\"3374091004\";s:4:\"nama\";s:9:\"Sampangan\";s:8:\"latitude\";d:-7.0112231895;s:9:\"longitude\";d:110.3915158654;}i:4;a:4:{s:2:\"id\";s:10:\"3374091005\";s:4:\"nama\";s:12:\"Gajahmungkur\";s:8:\"latitude\";d:-7.0132425087;s:9:\"longitude\";d:110.4093410114;}i:5;a:4:{s:2:\"id\";s:10:\"3374091006\";s:4:\"nama\";s:11:\"Lempongsari\";s:8:\"latitude\";d:-7.0010130168;s:9:\"longitude\";d:110.4147043715;}i:6;a:4:{s:2:\"id\";s:10:\"3374091007\";s:4:\"nama\";s:8:\"Petompon\";s:8:\"latitude\";d:-7.0016906351;s:9:\"longitude\";d:110.4024995177;}i:7;a:4:{s:2:\"id\";s:10:\"3374091008\";s:4:\"nama\";s:9:\"Bendungan\";s:8:\"latitude\";d:-7.0000701755;s:9:\"longitude\";d:110.409032415;}}', 1777293271);
+INSERT INTO `cache` (`key`, `value`, `expiration`) VALUES
+('laravel-cache-5c785c036466adea360111aa28563bfd556b5fba', 'i:1;', 1777380517),
+('laravel-cache-5c785c036466adea360111aa28563bfd556b5fba:timer', 'i:1777380517;', 1777380517),
+('laravel-cache-da4b9237bacccdf19c0760cab7aec4a8359010b0', 'i:1;', 1777382446),
+('laravel-cache-da4b9237bacccdf19c0760cab7aec4a8359010b0:timer', 'i:1777382446;', 1777382446),
+('laravel-cache-wilayah_districts_5205', 'a:8:{i:0;a:4:{s:2:\"id\";s:6:\"520501\";s:4:\"nama\";s:5:\"Dompu\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:1;a:4:{s:2:\"id\";s:6:\"520502\";s:4:\"nama\";s:5:\"Kempo\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:2;a:4:{s:2:\"id\";s:6:\"520503\";s:4:\"nama\";s:4:\"Hu\'u\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:3;a:4:{s:2:\"id\";s:6:\"520504\";s:4:\"nama\";s:4:\"Kilo\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:4;a:4:{s:2:\"id\";s:6:\"520505\";s:4:\"nama\";s:4:\"Woja\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:5;a:4:{s:2:\"id\";s:6:\"520506\";s:4:\"nama\";s:5:\"Pekat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:6;a:4:{s:2:\"id\";s:6:\"520507\";s:4:\"nama\";s:10:\"Manggalewa\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:7;a:4:{s:2:\"id\";s:6:\"520508\";s:4:\"nama\";s:4:\"Pajo\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}}', 1777468444),
+('laravel-cache-wilayah_provinces', 'a:38:{i:0;a:4:{s:2:\"id\";s:2:\"11\";s:4:\"nama\";s:4:\"Aceh\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:1;a:4:{s:2:\"id\";s:2:\"12\";s:4:\"nama\";s:14:\"Sumatera Utara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:2;a:4:{s:2:\"id\";s:2:\"13\";s:4:\"nama\";s:14:\"Sumatera Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:3;a:4:{s:2:\"id\";s:2:\"14\";s:4:\"nama\";s:4:\"Riau\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:4;a:4:{s:2:\"id\";s:2:\"15\";s:4:\"nama\";s:5:\"Jambi\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:5;a:4:{s:2:\"id\";s:2:\"16\";s:4:\"nama\";s:16:\"Sumatera Selatan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:6;a:4:{s:2:\"id\";s:2:\"17\";s:4:\"nama\";s:8:\"Bengkulu\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:7;a:4:{s:2:\"id\";s:2:\"18\";s:4:\"nama\";s:7:\"Lampung\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:8;a:4:{s:2:\"id\";s:2:\"19\";s:4:\"nama\";s:25:\"Kepulauan Bangka Belitung\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:9;a:4:{s:2:\"id\";s:2:\"21\";s:4:\"nama\";s:14:\"Kepulauan Riau\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:10;a:4:{s:2:\"id\";s:2:\"31\";s:4:\"nama\";s:29:\"Daerah Khusus Ibukota Jakarta\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:11;a:4:{s:2:\"id\";s:2:\"32\";s:4:\"nama\";s:10:\"Jawa Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:12;a:4:{s:2:\"id\";s:2:\"33\";s:4:\"nama\";s:11:\"Jawa Tengah\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:13;a:4:{s:2:\"id\";s:2:\"34\";s:4:\"nama\";s:26:\"Daerah Istimewa Yogyakarta\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:14;a:4:{s:2:\"id\";s:2:\"35\";s:4:\"nama\";s:10:\"Jawa Timur\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:15;a:4:{s:2:\"id\";s:2:\"36\";s:4:\"nama\";s:6:\"Banten\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:16;a:4:{s:2:\"id\";s:2:\"51\";s:4:\"nama\";s:4:\"Bali\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:17;a:4:{s:2:\"id\";s:2:\"52\";s:4:\"nama\";s:19:\"Nusa Tenggara Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:18;a:4:{s:2:\"id\";s:2:\"53\";s:4:\"nama\";s:19:\"Nusa Tenggara Timur\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:19;a:4:{s:2:\"id\";s:2:\"61\";s:4:\"nama\";s:16:\"Kalimantan Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:20;a:4:{s:2:\"id\";s:2:\"62\";s:4:\"nama\";s:17:\"Kalimantan Tengah\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:21;a:4:{s:2:\"id\";s:2:\"63\";s:4:\"nama\";s:18:\"Kalimantan Selatan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:22;a:4:{s:2:\"id\";s:2:\"64\";s:4:\"nama\";s:16:\"Kalimantan Timur\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:23;a:4:{s:2:\"id\";s:2:\"65\";s:4:\"nama\";s:16:\"Kalimantan Utara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:24;a:4:{s:2:\"id\";s:2:\"71\";s:4:\"nama\";s:14:\"Sulawesi Utara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:25;a:4:{s:2:\"id\";s:2:\"72\";s:4:\"nama\";s:15:\"Sulawesi Tengah\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:26;a:4:{s:2:\"id\";s:2:\"73\";s:4:\"nama\";s:16:\"Sulawesi Selatan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:27;a:4:{s:2:\"id\";s:2:\"74\";s:4:\"nama\";s:17:\"Sulawesi Tenggara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:28;a:4:{s:2:\"id\";s:2:\"75\";s:4:\"nama\";s:9:\"Gorontalo\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:29;a:4:{s:2:\"id\";s:2:\"76\";s:4:\"nama\";s:14:\"Sulawesi Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:30;a:4:{s:2:\"id\";s:2:\"81\";s:4:\"nama\";s:6:\"Maluku\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:31;a:4:{s:2:\"id\";s:2:\"82\";s:4:\"nama\";s:12:\"Maluku Utara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:32;a:4:{s:2:\"id\";s:2:\"91\";s:4:\"nama\";s:5:\"Papua\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:33;a:4:{s:2:\"id\";s:2:\"92\";s:4:\"nama\";s:11:\"Papua Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:34;a:4:{s:2:\"id\";s:2:\"93\";s:4:\"nama\";s:13:\"Papua Selatan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:35;a:4:{s:2:\"id\";s:2:\"94\";s:4:\"nama\";s:12:\"Papua Tengah\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:36;a:4:{s:2:\"id\";s:2:\"95\";s:4:\"nama\";s:16:\"Papua Pegunungan\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:37;a:4:{s:2:\"id\";s:2:\"96\";s:4:\"nama\";s:16:\"Papua Barat Daya\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}}', 1777435757),
+('laravel-cache-wilayah_regencies_52', 'a:10:{i:0;a:4:{s:2:\"id\";s:4:\"5201\";s:4:\"nama\";s:22:\"Kabupaten Lombok Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:1;a:4:{s:2:\"id\";s:4:\"5202\";s:4:\"nama\";s:23:\"Kabupaten Lombok Tengah\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:2;a:4:{s:2:\"id\";s:4:\"5203\";s:4:\"nama\";s:22:\"Kabupaten Lombok Timur\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:3;a:4:{s:2:\"id\";s:4:\"5204\";s:4:\"nama\";s:17:\"Kabupaten Sumbawa\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:4;a:4:{s:2:\"id\";s:4:\"5205\";s:4:\"nama\";s:15:\"Kabupaten Dompu\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:5;a:4:{s:2:\"id\";s:4:\"5206\";s:4:\"nama\";s:14:\"Kabupaten Bima\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:6;a:4:{s:2:\"id\";s:4:\"5207\";s:4:\"nama\";s:23:\"Kabupaten Sumbawa Barat\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:7;a:4:{s:2:\"id\";s:4:\"5208\";s:4:\"nama\";s:22:\"Kabupaten Lombok Utara\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:8;a:4:{s:2:\"id\";s:4:\"5271\";s:4:\"nama\";s:12:\"Kota Mataram\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}i:9;a:4:{s:2:\"id\";s:4:\"5272\";s:4:\"nama\";s:9:\"Kota Bima\";s:8:\"latitude\";i:0;s:9:\"longitude\";i:0;}}', 1777468441),
+('laravel-cache-wilayah_villages_520504', 'a:6:{i:0;a:4:{s:2:\"id\";s:10:\"5205042001\";s:4:\"nama\";s:6:\"Malaju\";s:8:\"latitude\";d:-8.346845927;s:9:\"longitude\";d:118.4364893508;}i:1;a:4:{s:2:\"id\";s:10:\"5205042002\";s:4:\"nama\";s:4:\"Lasi\";s:8:\"latitude\";d:-8.3206307957;s:9:\"longitude\";d:118.4366299998;}i:2;a:4:{s:2:\"id\";s:10:\"5205042003\";s:4:\"nama\";s:5:\"Mbuju\";s:8:\"latitude\";d:-8.4078249562;s:9:\"longitude\";d:118.3438812375;}i:3;a:4:{s:2:\"id\";s:10:\"5205042004\";s:4:\"nama\";s:4:\"Kiwu\";s:8:\"latitude\";d:-8.3094460623;s:9:\"longitude\";d:118.4582231382;}i:4;a:4:{s:2:\"id\";s:10:\"5205042005\";s:4:\"nama\";s:6:\"Taropo\";s:8:\"latitude\";d:-8.4296221863;s:9:\"longitude\";d:118.3260417194;}i:5;a:4:{s:2:\"id\";s:10:\"5205042006\";s:4:\"nama\";s:6:\"Karama\";s:8:\"latitude\";d:-8.3642446797;s:9:\"longitude\";d:118.3911729471;}}', 1777468448);
 
 -- --------------------------------------------------------
 
@@ -2658,50 +2644,34 @@ INSERT DELAYED IGNORE INTO `cache` (`key`, `value`, `expiration`) VALUES
 -- Table structure for table `cache_locks`
 --
 
-DROP TABLE IF EXISTS `cache_locks`;
-CREATE TABLE IF NOT EXISTS `cache_locks` (
+CREATE TABLE `cache_locks` (
   `key` varchar(255) NOT NULL,
   `owner` varchar(255) NOT NULL,
-  `expiration` int(11) NOT NULL,
-  PRIMARY KEY (`key`)
+  `expiration` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `cache_locks`
---
-
-TRUNCATE TABLE `cache_locks`;
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `credential_counters`
 --
 
-DROP TABLE IF EXISTS `credential_counters`;
-CREATE TABLE IF NOT EXISTS `credential_counters` (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE `credential_counters` (
+  `id` bigint(20) UNSIGNED NOT NULL,
   `jabatan_key` varchar(255) NOT NULL,
   `last_number` int(10) UNSIGNED NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `credential_counters_jabatan_key_unique` (`jabatan_key`)
+  `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `credential_counters`
---
-
-TRUNCATE TABLE `credential_counters`;
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `email_otps`
 --
 
-DROP TABLE IF EXISTS `email_otps`;
-CREATE TABLE IF NOT EXISTS `email_otps` (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE `email_otps` (
+  `id` bigint(20) UNSIGNED NOT NULL,
   `email` varchar(255) NOT NULL,
   `otp_hash` varchar(255) NOT NULL,
   `expires_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
@@ -2711,72 +2681,48 @@ CREATE TABLE IF NOT EXISTS `email_otps` (
   `consecutive_failures` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
   `last_failed_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `email_otps_email_index` (`email`)
+  `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `email_otps`
---
-
-TRUNCATE TABLE `email_otps`;
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `failed_jobs`
 --
 
-DROP TABLE IF EXISTS `failed_jobs`;
-CREATE TABLE IF NOT EXISTS `failed_jobs` (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE `failed_jobs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
   `uuid` varchar(255) NOT NULL,
   `connection` text NOT NULL,
   `queue` text NOT NULL,
   `payload` longtext NOT NULL,
   `exception` longtext NOT NULL,
-  `failed_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`)
+  `failed_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `failed_jobs`
---
-
-TRUNCATE TABLE `failed_jobs`;
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `jobs`
 --
 
-DROP TABLE IF EXISTS `jobs`;
-CREATE TABLE IF NOT EXISTS `jobs` (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE `jobs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
   `queue` varchar(255) NOT NULL,
   `payload` longtext NOT NULL,
   `attempts` tinyint(3) UNSIGNED NOT NULL,
   `reserved_at` int(10) UNSIGNED DEFAULT NULL,
   `available_at` int(10) UNSIGNED NOT NULL,
-  `created_at` int(10) UNSIGNED NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `jobs_queue_index` (`queue`)
+  `created_at` int(10) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `jobs`
---
-
-TRUNCATE TABLE `jobs`;
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `job_batches`
 --
 
-DROP TABLE IF EXISTS `job_batches`;
-CREATE TABLE IF NOT EXISTS `job_batches` (
+CREATE TABLE `job_batches` (
   `id` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
   `total_jobs` int(11) NOT NULL,
@@ -2786,24 +2732,17 @@ CREATE TABLE IF NOT EXISTS `job_batches` (
   `options` mediumtext DEFAULT NULL,
   `cancelled_at` int(11) DEFAULT NULL,
   `created_at` int(11) NOT NULL,
-  `finished_at` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  `finished_at` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `job_batches`
---
-
-TRUNCATE TABLE `job_batches`;
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `kelurahan_credentials`
 --
 
-DROP TABLE IF EXISTS `kelurahan_credentials`;
-CREATE TABLE IF NOT EXISTS `kelurahan_credentials` (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE `kelurahan_credentials` (
+  `id` bigint(20) UNSIGNED NOT NULL,
   `code` varchar(20) NOT NULL,
   `jabatan` varchar(50) NOT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
@@ -2811,27 +2750,17 @@ CREATE TABLE IF NOT EXISTS `kelurahan_credentials` (
   `used_by` bigint(20) UNSIGNED DEFAULT NULL,
   `used_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `kelurahan_credentials_code_unique` (`code`),
-  KEY `kelurahan_credentials_used_by_foreign` (`used_by`),
-  KEY `kelurahan_credentials_jabatan_is_active_index` (`jabatan`,`is_active`)
+  `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `kelurahan_credentials`
---
-
-TRUNCATE TABLE `kelurahan_credentials`;
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `letters`
 --
 
-DROP TABLE IF EXISTS `letters`;
-CREATE TABLE IF NOT EXISTS `letters` (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE `letters` (
+  `id` bigint(20) UNSIGNED NOT NULL,
   `template_slug` varchar(255) DEFAULT NULL,
   `title` varchar(255) NOT NULL,
   `no_surat` varchar(255) NOT NULL,
@@ -2845,33 +2774,27 @@ CREATE TABLE IF NOT EXISTS `letters` (
   `is_manual` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
-  `deleted_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `letters_no_surat_unique` (`no_surat`),
-  KEY `letters_printed_by_foreign` (`printed_by`),
-  KEY `letters_template_slug_index` (`template_slug`),
-  KEY `letters_index_code_index` (`index_code`),
-  KEY `letters_urut_index` (`urut`),
-  KEY `letters_printed_at_index` (`printed_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `deleted_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `letters`
---
-
-TRUNCATE TABLE `letters`;
 --
 -- Dumping data for table `letters`
 --
 
-INSERT DELAYED IGNORE INTO `letters` (`id`, `template_slug`, `title`, `no_surat`, `index_code`, `urut`, `month_roman`, `year`, `payload`, `printed_at`, `printed_by`, `is_manual`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `letters` (`id`, `template_slug`, `title`, `no_surat`, `index_code`, `urut`, `month_roman`, `year`, `payload`, `printed_at`, `printed_by`, `is_manual`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (1, 'keterangan-domisili', 'Surat Keterangan Domisili', '1/Kel.Ftbs.400.12.1/IV/2026', '400.12.1', 1, 'IV', 2026, '{\"judulSurat\":\"Surat Keterangan Domisili\",\"noSurat\":\"1\\/Kel.Ftbs.400.12.1\\/IV\\/2026\",\"tanggalSurat\":\"2026-04-24\",\"penduduk_id\":359,\"nama\":\"ADELCI ABIA TALLAN\",\"nik\":\"5371034606640003\",\"tempatLahir\":\"TAKARI\",\"tanggalLahir\":\"1964-06-06\",\"jenisKelamin\":\"Perempuan\",\"pekerjaan\":\"Wiraswasta\",\"agama\":\"Kristen\",\"namaAyah\":null,\"namaIbu\":null,\"ayah_id\":null,\"ibu_id\":null,\"dusun\":null,\"kode_keluarga\":null,\"nama_kepala_keluarga\":null,\"alamat\":\"Jln Alor\",\"alamatAsal\":\"Jln Alor\",\"alamatAsalJalan\":\"Jln Alor\",\"alamatAsalRt\":\"003\",\"alamatAsalRw\":\"001\",\"alamatAsalKelurahan\":\"Fatubesi\",\"alamatAsalKecamatan\":\"Kota Lama\",\"alamatDomisili\":\"Jln Alor\",\"rt\":\"003\",\"rw\":\"001\",\"kelurahan\":null,\"kecamatan\":null,\"sebabKematian\":null,\"tanggalMeninggal\":null,\"tempatMeninggal\":null,\"umur\":null,\"statusPerkawinan\":\"Janda\\/Duda\",\"kewarganegaraan\":\"Warga Negara Indonesia\",\"alamatTujuan\":null,\"desaTujuan\":null,\"kecamatanTujuan\":null,\"kabupatenTujuan\":null,\"provinsiTujuan\":null,\"tanggalPindah\":null,\"alasanPindah\":null,\"pengikut\":[]}', '2026-04-24 00:24:10', 2, 0, '2026-04-24 00:24:10', '2026-04-24 00:24:10', NULL),
 (2, 'keterangan-kelahiran', 'Surat Keterangan Kelahiran', '1/Kel.Ftbs.400.12.2.1/IV/2026', '400.12.2.1', 1, 'IV', 2026, '{\"judulSurat\":\"Surat Keterangan Kelahiran\",\"noSurat\":\"1\\/Kel.Ftbs.400.12.2.1\\/IV\\/2026\",\"tanggalSurat\":\"2026-04-24\",\"penduduk_id\":null,\"nama\":\"Arsanta\",\"nik\":null,\"tempatLahir\":\"Kupang\",\"tanggalLahir\":\"2026-04-24\",\"jenisKelamin\":\"Perempuan\",\"pekerjaan\":\"Wiraswasta\",\"agama\":\"Kristen\",\"namaAyah\":\"0RCE W. PELU\",\"namaIbu\":\"ADIRIN M. RATUCOREH\",\"ayah_id\":2324,\"ibu_id\":1664,\"dusun\":null,\"kode_keluarga\":\"5371061503190001\",\"nama_kepala_keluarga\":\"ORCE W. PELLO\",\"alamat\":\"JLN. Apel\",\"alamatAsal\":null,\"alamatAsalJalan\":null,\"alamatAsalRt\":null,\"alamatAsalRw\":null,\"alamatAsalKelurahan\":null,\"alamatAsalKecamatan\":null,\"alamatDomisili\":null,\"rt\":\"017\",\"rw\":\"004\",\"kelurahan\":\"Fatubesi\",\"kecamatan\":\"Kota Lama\",\"sebabKematian\":null,\"tanggalMeninggal\":null,\"tempatMeninggal\":null,\"umur\":null,\"statusPerkawinan\":null,\"kewarganegaraan\":\"Indonesia\",\"alamatTujuan\":null,\"desaTujuan\":null,\"kecamatanTujuan\":null,\"kabupatenTujuan\":null,\"provinsiTujuan\":null,\"tanggalPindah\":null,\"alasanPindah\":null,\"pengikut\":[]}', '2026-04-24 00:45:00', 2, 0, '2026-04-24 00:45:00', '2026-04-24 00:45:00', NULL),
 (3, 'keterangan-domisili', 'Surat Keterangan Domisili', '2/Kel.Ftbs.400.12.2.2/IV/2026', '400.12.2.2', 2, 'IV', 2026, '{\"judulSurat\":\"Surat Keterangan Domisili\",\"noSurat\":\"2\\/Kel.Ftbs.400.12.2.2\\/IV\\/2026\",\"tanggalSurat\":\"2026-04-24\",\"penduduk_id\":1773,\"nama\":\"AGUSTINUS LOWE\",\"nik\":\"5371061208850001\",\"tempatLahir\":\"SABU\",\"tanggalLahir\":\"1985-08-12\",\"jenisKelamin\":\"Laki-laki\",\"pekerjaan\":\"Wiraswasta\",\"agama\":\"Kristen\",\"namaAyah\":null,\"namaIbu\":null,\"ayah_id\":null,\"ibu_id\":null,\"dusun\":null,\"kode_keluarga\":null,\"nama_kepala_keluarga\":null,\"alamat\":\"JLN ALOR\",\"alamatAsal\":\"JLN ALOR\",\"alamatAsalJalan\":\"JLN ALOR\",\"alamatAsalRt\":\"014\",\"alamatAsalRw\":\"004\",\"alamatAsalKelurahan\":\"Fatubesi\",\"alamatAsalKecamatan\":\"Kota Lama\",\"alamatDomisili\":\"JLN ALOR\",\"rt\":\"014\",\"rw\":\"004\",\"kelurahan\":null,\"kecamatan\":null,\"sebabKematian\":null,\"tanggalMeninggal\":null,\"tempatMeninggal\":null,\"umur\":null,\"statusPerkawinan\":\"Kawin\",\"kewarganegaraan\":\"Warga Negara Indonesia\",\"alamatTujuan\":null,\"desaTujuan\":null,\"kecamatanTujuan\":null,\"kabupatenTujuan\":null,\"provinsiTujuan\":null,\"tanggalPindah\":null,\"alasanPindah\":null,\"pengikut\":[]}', '2026-04-24 07:53:09', 2, 0, '2026-04-24 07:53:09', '2026-04-24 07:53:09', NULL),
 (5, 'keterangan-pindah', 'Surat Keterangan Pindah', '1/Kel.Ftbs.400.12.3/IV/2026', '400.12.3', 1, 'IV', 2026, '{\"judulSurat\":\"Surat Keterangan Pindah\",\"noSurat\":\"1\\/Kel.Ftbs.400.12.3\\/IV\\/2026\",\"tanggalSurat\":\"2026-04-26\",\"penduduk_id\":2337,\"nama\":\"AFRIANA MAERSELINA DAFA\",\"nik\":\"5371035508850902\",\"tempatLahir\":\"ROTE\",\"tanggalLahir\":\"1985-08-15\",\"jenisKelamin\":\"Perempuan\",\"pekerjaan\":\"Ibu Rumah Tangga\",\"agama\":\"Katholik\",\"namaAyah\":null,\"namaIbu\":null,\"alamat\":\"JLN ALOR\",\"alamatAsal\":\"JLN ALOR\",\"alamatDomisili\":null,\"rt\":\"017\",\"rw\":\"004\",\"kelurahan\":null,\"kecamatan\":null,\"sebabKematian\":null,\"tanggalMeninggal\":null,\"tempatMeninggal\":null,\"umur\":null,\"statusPerkawinan\":\"Kawin\",\"kewarganegaraan\":\"Warga Negara Indonesia\",\"alamatTujuan\":\"Jl. Apel RT 001\\/ RW 001\",\"desaTujuan\":\"Payung\",\"desaTujuanId\":\"1806182012\",\"kecamatanTujuan\":\"Kota Agung Barat\",\"kecamatanTujuanId\":\"180618\",\"kabupatenTujuan\":\"Kabupaten Tanggamus\",\"kabupatenTujuanId\":\"1806\",\"provinsiTujuan\":\"Lampung\",\"provinsiTujuanId\":\"18\",\"tanggalPindah\":\"2026-04-26\",\"alasanPindah\":\"Kerja\",\"pengikut\":[]}', '2026-04-26 05:43:37', 2, 0, '2026-04-26 05:43:37', '2026-04-26 05:43:37', NULL),
 (6, 'keterangan-domisili', 'Surat Keterangan Domisili', '3/Kel.Ftbs.400.12.1/IV/2026', '400.12.1', 3, 'IV', 2026, '{\"judulSurat\":\"Surat Keterangan Domisili\",\"noSurat\":\"3\\/Kel.Ftbs.400.12.1\\/IV\\/2026\",\"tanggalSurat\":\"2026-04-26\",\"penduduk_id\":1494,\"nama\":\"ABNER ADITIO SIKI\",\"nik\":\"5371062904880001\",\"tempatLahir\":\"RETRAEN\",\"tanggalLahir\":\"1988-04-29\",\"jenisKelamin\":\"Laki-laki\",\"pekerjaan\":\"Belum Bekerja\",\"agama\":\"Kristen\",\"namaAyah\":null,\"namaIbu\":null,\"alamat\":\"KEL. FATUBESI\",\"alamatAsal\":\"KEL. FATUBESI\",\"alamatDomisili\":\"KEL. FATUBESI\",\"rt\":\"010\",\"rw\":\"003\",\"kelurahan\":null,\"kecamatan\":null,\"sebabKematian\":null,\"tanggalMeninggal\":null,\"tempatMeninggal\":null,\"umur\":null,\"statusPerkawinan\":\"Belum Kawin\",\"kewarganegaraan\":\"Warga Negara Indonesia\",\"alamatTujuan\":null,\"desaTujuan\":null,\"desaTujuanId\":null,\"kecamatanTujuan\":null,\"kecamatanTujuanId\":null,\"kabupatenTujuan\":null,\"kabupatenTujuanId\":null,\"provinsiTujuan\":null,\"provinsiTujuanId\":null,\"tanggalPindah\":null,\"alasanPindah\":null,\"pengikut\":[]}', '2026-04-26 06:09:32', 2, 0, '2026-04-26 06:09:32', '2026-04-26 06:09:32', NULL),
 (7, 'keterangan-domisili', 'Surat Keterangan Domisili', '4/Kel.Ftbs.400.12.2/IV/2026', '400.12.2', 4, 'IV', 2026, '{\"judulSurat\":\"Surat Keterangan Domisili\",\"noSurat\":\"4\\/Kel.Ftbs.400.12.2\\/IV\\/2026\",\"tanggalSurat\":\"2026-04-26\",\"penduduk_id\":555,\"nama\":\"ADRIANA LETTE BOLA\",\"nik\":\"5371036104720006\",\"tempatLahir\":\"ROTE\",\"tanggalLahir\":\"1972-04-21\",\"jenisKelamin\":\"Perempuan\",\"pekerjaan\":\"Ibu Rumah Tangga\",\"agama\":\"Kristen\",\"namaAyah\":null,\"namaIbu\":null,\"alamat\":\"JLN ALOR\",\"alamatAsal\":\"JLN ALOR\",\"alamatDomisili\":\"JLN ALOR\",\"rt\":\"003\",\"rw\":\"001\",\"kelurahan\":null,\"kecamatan\":null,\"sebabKematian\":null,\"tanggalMeninggal\":null,\"tempatMeninggal\":null,\"umur\":null,\"statusPerkawinan\":\"Kawin\",\"kewarganegaraan\":\"Warga Negara Indonesia\",\"alamatTujuan\":null,\"desaTujuan\":null,\"desaTujuanId\":null,\"kecamatanTujuan\":null,\"kecamatanTujuanId\":null,\"kabupatenTujuan\":null,\"kabupatenTujuanId\":null,\"provinsiTujuan\":null,\"provinsiTujuanId\":null,\"tanggalPindah\":null,\"alasanPindah\":null,\"pengikut\":[]}', '2026-04-26 06:26:00', 2, 0, '2026-04-26 06:26:00', '2026-04-26 06:26:00', NULL),
-(8, 'keterangan-domisili', 'Surat Keterangan Domisili', '5/Kel.Ftbs.400.12.2.2/IV/2026', '400.12.2.2', 5, 'IV', 2026, '{\"judulSurat\":\"Surat Keterangan Domisili\",\"noSurat\":\"5\\/Kel.Ftbs.400.12.2.2\\/IV\\/2026\",\"tanggalSurat\":\"2026-04-26\",\"penduduk_id\":555,\"nama\":\"ADRIANA LETTE BOLA\",\"nik\":\"5371036104720006\",\"tempatLahir\":\"ROTE\",\"tanggalLahir\":\"1972-04-21\",\"jenisKelamin\":\"Perempuan\",\"pekerjaan\":\"Ibu Rumah Tangga\",\"agama\":\"Kristen\",\"namaAyah\":null,\"namaIbu\":null,\"alamat\":\"JLN ALOR\",\"alamatAsal\":\"JLN ALOR\",\"alamatDomisili\":\"JLN ALOR\",\"rt\":\"003\",\"rw\":\"001\",\"kelurahan\":null,\"kecamatan\":null,\"sebabKematian\":null,\"tanggalMeninggal\":null,\"tempatMeninggal\":null,\"umur\":null,\"statusPerkawinan\":\"Kawin\",\"kewarganegaraan\":\"Warga Negara Indonesia\",\"alamatTujuan\":null,\"desaTujuan\":null,\"desaTujuanId\":null,\"kecamatanTujuan\":null,\"kecamatanTujuanId\":null,\"kabupatenTujuan\":null,\"kabupatenTujuanId\":null,\"provinsiTujuan\":null,\"provinsiTujuanId\":null,\"tanggalPindah\":null,\"alasanPindah\":null,\"pengikut\":[]}', '2026-04-26 06:47:40', 2, 0, '2026-04-26 06:47:40', '2026-04-26 06:47:40', NULL);
+(8, 'keterangan-domisili', 'Surat Keterangan Domisili', '5/Kel.Ftbs.400.12.2.2/IV/2026', '400.12.2.2', 5, 'IV', 2026, '{\"judulSurat\":\"Surat Keterangan Domisili\",\"noSurat\":\"5\\/Kel.Ftbs.400.12.2.2\\/IV\\/2026\",\"tanggalSurat\":\"2026-04-26\",\"penduduk_id\":555,\"nama\":\"ADRIANA LETTE BOLA\",\"nik\":\"5371036104720006\",\"tempatLahir\":\"ROTE\",\"tanggalLahir\":\"1972-04-21\",\"jenisKelamin\":\"Perempuan\",\"pekerjaan\":\"Ibu Rumah Tangga\",\"agama\":\"Kristen\",\"namaAyah\":null,\"namaIbu\":null,\"alamat\":\"JLN ALOR\",\"alamatAsal\":\"JLN ALOR\",\"alamatDomisili\":\"JLN ALOR\",\"rt\":\"003\",\"rw\":\"001\",\"kelurahan\":null,\"kecamatan\":null,\"sebabKematian\":null,\"tanggalMeninggal\":null,\"tempatMeninggal\":null,\"umur\":null,\"statusPerkawinan\":\"Kawin\",\"kewarganegaraan\":\"Warga Negara Indonesia\",\"alamatTujuan\":null,\"desaTujuan\":null,\"desaTujuanId\":null,\"kecamatanTujuan\":null,\"kecamatanTujuanId\":null,\"kabupatenTujuan\":null,\"kabupatenTujuanId\":null,\"provinsiTujuan\":null,\"provinsiTujuanId\":null,\"tanggalPindah\":null,\"alasanPindah\":null,\"pengikut\":[]}', '2026-04-26 06:47:40', 2, 0, '2026-04-26 06:47:40', '2026-04-26 06:47:40', NULL),
+(9, 'keterangan-kematian', 'Surat Keterangan Kematian', '1/Kel.Ftbs.400.12.2/IV/2026', '400.12.2', 1, 'IV', 2026, '{\"judulSurat\":\"Surat Keterangan Kematian\",\"noSurat\":\"1\\/Kel.Ftbs.400.12.2\\/IV\\/2026\",\"tanggalSurat\":\"2026-04-27\",\"penduduk_id\":2526,\"nama\":\"Dummy\",\"nik\":\"0987654321\",\"tempatLahir\":\"Kupang\",\"tanggalLahir\":\"1988-01-12\",\"jenisKelamin\":\"Laki-laki\",\"pekerjaan\":\"Wiraswasta\",\"agama\":\"Kristen\",\"namaAyah\":null,\"namaIbu\":null,\"alamat\":\"Jl. Apel No. 5\",\"alamatAsal\":null,\"alamatDomisili\":null,\"rt\":\"001\",\"rw\":\"001\",\"kelurahan\":null,\"kecamatan\":null,\"sebabKematian\":\"Sakit\",\"tanggalMeninggal\":\"2026-04-27\",\"tempatMeninggal\":\"Kupang\",\"umur\":\"38 Tahun\",\"statusPerkawinan\":\"Kawin\",\"kewarganegaraan\":\"WNI\",\"alamatTujuan\":null,\"desaTujuan\":null,\"desaTujuanId\":null,\"kecamatanTujuan\":null,\"kecamatanTujuanId\":null,\"kabupatenTujuan\":null,\"kabupatenTujuanId\":null,\"provinsiTujuan\":null,\"provinsiTujuanId\":null,\"tanggalPindah\":null,\"alasanPindah\":null,\"pengikut\":[]}', '2026-04-27 06:28:53', 2, 0, '2026-04-27 06:28:53', '2026-04-27 06:28:53', NULL),
+(10, 'keterangan-kematian', 'Surat Keterangan Kematian', '2/Kel.Ftbs.400.12.2/IV/2026', '400.12.2', 2, 'IV', 2026, '{\"judulSurat\":\"Surat Keterangan Kematian\",\"noSurat\":\"2\\/Kel.Ftbs.400.12.2\\/IV\\/2026\",\"tanggalSurat\":\"2026-04-27\",\"penduduk_id\":2527,\"nama\":\"Dummy2\",\"nik\":\"2468101214\",\"tempatLahir\":\"Sabu\",\"tanggalLahir\":\"1987-06-09\",\"jenisKelamin\":\"Perempuan\",\"pekerjaan\":\"IRT\",\"agama\":\"Kristen\",\"namaAyah\":null,\"namaIbu\":null,\"alamat\":\"Jl. Apel No. 5\",\"alamatAsal\":null,\"alamatDomisili\":null,\"rt\":\"001\",\"rw\":\"001\",\"kelurahan\":null,\"kecamatan\":null,\"sebabKematian\":\"Kecelakaan\",\"tanggalMeninggal\":\"2026-04-27\",\"tempatMeninggal\":\"Kupang\",\"umur\":\"38 Tahun\",\"statusPerkawinan\":\"Kawin\",\"kewarganegaraan\":\"WNI\",\"alamatTujuan\":null,\"desaTujuan\":null,\"desaTujuanId\":null,\"kecamatanTujuan\":null,\"kecamatanTujuanId\":null,\"kabupatenTujuan\":null,\"kabupatenTujuanId\":null,\"provinsiTujuan\":null,\"provinsiTujuanId\":null,\"tanggalPindah\":null,\"alasanPindah\":null,\"pengikut\":[]}', '2026-04-27 06:45:28', 2, 0, '2026-04-27 06:45:28', '2026-04-27 06:45:28', NULL),
+(11, 'keterangan-kematian', 'Surat Keterangan Kematian', '3/Kel.Ftbs.400.12.2.1/IV/2026', '400.12.2.1', 3, 'IV', 2026, '{\"judulSurat\":\"Surat Keterangan Kematian\",\"noSurat\":\"3\\/Kel.Ftbs.400.12.2.1\\/IV\\/2026\",\"tanggalSurat\":\"2026-04-28\",\"penduduk_id\":2528,\"nama\":\"Dummy3\",\"nik\":\"1357911131517\",\"tempatLahir\":\"Rote\",\"tanggalLahir\":\"2006-03-01\",\"jenisKelamin\":\"Perempuan\",\"pekerjaan\":\"Pelajar\",\"agama\":\"Kristen\",\"namaAyah\":null,\"namaIbu\":null,\"alamat\":\"Jl. Apel No. 5\",\"alamatAsal\":null,\"alamatDomisili\":null,\"rt\":\"001\",\"rw\":\"001\",\"kelurahan\":null,\"kecamatan\":null,\"sebabKematian\":\"Kecelakaan\",\"tanggalMeninggal\":\"2026-04-28\",\"tempatMeninggal\":\"Kupang\",\"umur\":\"20 Tahun\",\"statusPerkawinan\":\"Belum Kawin\",\"kewarganegaraan\":\"WNI\",\"alamatTujuan\":null,\"desaTujuan\":null,\"desaTujuanId\":null,\"kecamatanTujuan\":null,\"kecamatanTujuanId\":null,\"kabupatenTujuan\":null,\"kabupatenTujuanId\":null,\"provinsiTujuan\":null,\"provinsiTujuanId\":null,\"tanggalPindah\":null,\"alasanPindah\":null,\"pengikut\":[]}', '2026-04-27 20:17:52', 2, 0, '2026-04-27 20:17:52', '2026-04-27 20:17:52', NULL),
+(12, 'keterangan-kematian', 'Surat Keterangan Kematian', '4/Kel.Ftbs.400.12.3/IV/2026', '400.12.3', 4, 'IV', 2026, '{\"judulSurat\":\"Surat Keterangan Kematian\",\"noSurat\":\"4\\/Kel.Ftbs.400.12.3\\/IV\\/2026\",\"tanggalSurat\":\"2026-04-28\",\"penduduk_id\":2529,\"nama\":\"Dummy4\",\"nik\":\"369121518\",\"tempatLahir\":\"Kupang\",\"tanggalLahir\":\"2011-06-17\",\"jenisKelamin\":\"Laki-laki\",\"pekerjaan\":\"Pelajar\",\"agama\":\"Kristen\",\"namaAyah\":null,\"namaIbu\":null,\"alamat\":\"Jl. Apel No. 5\",\"alamatAsal\":null,\"alamatDomisili\":null,\"rt\":\"001\",\"rw\":\"001\",\"kelurahan\":null,\"kecamatan\":null,\"sebabKematian\":\"Sakit\",\"tanggalMeninggal\":\"2026-04-28\",\"tempatMeninggal\":\"Kupang\",\"umur\":\"14 Tahun\",\"statusPerkawinan\":\"Belum Kawin\",\"kewarganegaraan\":\"WNI\",\"alamatTujuan\":null,\"desaTujuan\":null,\"desaTujuanId\":null,\"kecamatanTujuan\":null,\"kecamatanTujuanId\":null,\"kabupatenTujuan\":null,\"kabupatenTujuanId\":null,\"provinsiTujuan\":null,\"provinsiTujuanId\":null,\"tanggalPindah\":null,\"alasanPindah\":null,\"pengikut\":[]}', '2026-04-27 20:41:18', 2, 0, '2026-04-27 20:41:18', '2026-04-27 20:41:18', NULL),
+(13, 'keterangan-kematian', 'Surat Keterangan Kematian', '5/Kel.Ftbs.400.12.2.1/IV/2026', '400.12.2.1', 5, 'IV', 2026, '{\"judulSurat\":\"Surat Keterangan Kematian\",\"noSurat\":\"5\\/Kel.Ftbs.400.12.2.1\\/IV\\/2026\",\"tanggalSurat\":\"2026-04-28\",\"penduduk_id\":1494,\"nama\":\"ABNER ADITIO SIKI\",\"nik\":\"5371062904880001\",\"tempatLahir\":\"RETRAEN\",\"tanggalLahir\":\"1988-04-29\",\"jenisKelamin\":\"Laki-laki\",\"pekerjaan\":\"Belum Bekerja\",\"agama\":\"Kristen\",\"namaAyah\":null,\"namaIbu\":null,\"alamat\":\"KEL. FATUBESI\",\"alamatAsal\":null,\"alamatDomisili\":null,\"rt\":\"010\",\"rw\":\"003\",\"kelurahan\":null,\"kecamatan\":null,\"sebabKematian\":\"Sakit\",\"tanggalMeninggal\":\"2026-04-28\",\"tempatMeninggal\":\"Kupang\",\"umur\":\"37 Tahun\",\"statusPerkawinan\":\"Belum Kawin\",\"kewarganegaraan\":\"Warga Negara Indonesia\",\"alamatTujuan\":null,\"desaTujuan\":null,\"desaTujuanId\":null,\"kecamatanTujuan\":null,\"kecamatanTujuanId\":null,\"kabupatenTujuan\":null,\"kabupatenTujuanId\":null,\"provinsiTujuan\":null,\"provinsiTujuanId\":null,\"tanggalPindah\":null,\"alasanPindah\":null,\"pengikut\":[]}', '2026-04-27 20:47:26', 2, 0, '2026-04-27 20:47:26', '2026-04-27 20:47:26', NULL),
+(14, 'keterangan-pindah', 'Surat Keterangan Pindah', '2/Kel.Ftbs.400.12.2.1/IV/2026', '400.12.2.1', 2, 'IV', 2026, '{\"judulSurat\":\"Surat Keterangan Pindah\",\"noSurat\":\"2\\/Kel.Ftbs.400.12.2.1\\/IV\\/2026\",\"tanggalSurat\":\"2026-04-28\",\"penduduk_id\":2240,\"nama\":\"ADEIVINA BABYS- PANDU\",\"nik\":\"5371035404680001\",\"tempatLahir\":\"ALOR\",\"tanggalLahir\":\"1968-04-14\",\"jenisKelamin\":\"Perempuan\",\"pekerjaan\":\"Ibu Rumah Tangga\",\"agama\":\"Kristen\",\"namaAyah\":null,\"namaIbu\":null,\"alamat\":\"JLN ROTE\",\"alamatAsal\":\"JLN ROTE\",\"alamatAsalJalan\":null,\"alamatAsalRt\":null,\"alamatAsalRw\":null,\"alamatAsalKelurahan\":null,\"alamatAsalKecamatan\":null,\"alamatAsalKota\":null,\"alamatAsalProvinsi\":null,\"alamatDomisili\":null,\"rt\":\"017\",\"rw\":\"004\",\"kelurahan\":null,\"kecamatan\":null,\"sebabKematian\":null,\"tanggalMeninggal\":null,\"tempatMeninggal\":null,\"umur\":null,\"statusPerkawinan\":\"Kawin\",\"kewarganegaraan\":\"Warga Negara Indonesia\",\"alamatTujuan\":\"Jl. Apel RT 001\\/ RW 001\",\"desaTujuan\":\"Mbuju\",\"desaTujuanId\":\"5205042003\",\"kecamatanTujuan\":\"Kilo\",\"kecamatanTujuanId\":\"520504\",\"kabupatenTujuan\":\"Kabupaten Dompu\",\"kabupatenTujuanId\":\"5205\",\"provinsiTujuan\":\"Nusa Tenggara Barat\",\"provinsiTujuanId\":\"52\",\"tanggalPindah\":\"2026-04-28\",\"alasanPindah\":\"Pekerjaan\",\"pengikut\":[]}', '2026-04-28 06:19:46', 2, 0, '2026-04-28 06:19:46', '2026-04-28 06:19:46', NULL);
 
 -- --------------------------------------------------------
 
@@ -2879,30 +2802,95 @@ INSERT DELAYED IGNORE INTO `letters` (`id`, `template_slug`, `title`, `no_surat`
 -- Table structure for table `letter_counters`
 --
 
-DROP TABLE IF EXISTS `letter_counters`;
-CREATE TABLE IF NOT EXISTS `letter_counters` (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE `letter_counters` (
+  `id` bigint(20) UNSIGNED NOT NULL,
   `template_slug` varchar(255) NOT NULL,
   `count` bigint(20) UNSIGNED NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `letter_counters_template_slug_unique` (`template_slug`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `letter_counters`
---
-
-TRUNCATE TABLE `letter_counters`;
 --
 -- Dumping data for table `letter_counters`
 --
 
-INSERT DELAYED IGNORE INTO `letter_counters` (`id`, `template_slug`, `count`, `created_at`, `updated_at`) VALUES
+INSERT INTO `letter_counters` (`id`, `template_slug`, `count`, `created_at`, `updated_at`) VALUES
 (1, 'keterangan-domisili', 5, '2026-04-24 00:24:10', '2026-04-26 06:47:40'),
 (2, 'keterangan-kelahiran', 1, '2026-04-24 00:45:00', '2026-04-24 00:45:00'),
-(4, 'keterangan-pindah', 1, '2026-04-26 05:43:37', '2026-04-26 05:43:37');
+(4, 'keterangan-pindah', 2, '2026-04-26 05:43:37', '2026-04-28 06:19:46'),
+(5, 'keterangan-kematian', 5, '2026-04-27 06:28:53', '2026-04-27 20:47:26');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `letter_documents`
+--
+
+CREATE TABLE `letter_documents` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `letter_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `doc_key` varchar(80) NOT NULL,
+  `doc_label` varchar(200) NOT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `original_name` varchar(300) DEFAULT NULL,
+  `mime_type` varchar(100) DEFAULT NULL,
+  `file_size` bigint(20) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `letter_documents`
+--
+
+INSERT INTO `letter_documents` (`id`, `letter_id`, `doc_key`, `doc_label`, `file_path`, `original_name`, `mime_type`, `file_size`, `created_at`, `updated_at`) VALUES
+(1, NULL, 'suratPengantarRtRw', 'Surat Pengantar RT/RW', 'dokumen-surat/2026/04/f59da2ca-0b8d-46e3-993f-141b7e2e9444.jpeg', 'arsip.jpeg', 'image/jpeg', 182663, '2026-04-27 06:23:36', '2026-04-27 06:23:36'),
+(2, NULL, 'suratKetKematian', 'Surat Keterangan Kematian dari Dokter/Bidan/Puskesmas', 'dokumen-surat/2026/04/0d8ffddf-0efb-4af6-80bc-798dc7fa5fb9.jpeg', 'WhatsApp Image 2026-03-13 at 1.53.49 PM.jpeg', 'image/jpeg', 127307, '2026-04-27 06:23:46', '2026-04-27 06:23:46'),
+(3, NULL, 'fotoKtpAlmarhum', 'Fotocopy KTP Almarhum/Almarhumah', 'dokumen-surat/2026/04/269c5040-ea6d-46d1-9112-16f50a855140.png', 'Screenshot 2025-10-14 131011.png', 'image/png', 90280, '2026-04-27 06:24:26', '2026-04-27 06:24:26'),
+(4, NULL, 'fotoKkAlmarhum', 'Fotocopy Kartu Keluarga Almarhum/Almarhumah', 'dokumen-surat/2026/04/cba400d1-1482-45a1-a39b-53c00f13f722.png', 'Screenshot 2025-10-04 212628.png', 'image/png', 66125, '2026-04-27 06:24:38', '2026-04-27 06:24:38'),
+(5, NULL, 'fotoKtpPemohon', 'Fotocopy KTP Pemohon (Pelapor)', 'dokumen-surat/2026/04/63ee574e-1665-451c-a6c2-bd2372fb3401.png', 'Screenshot 2025-10-12 112342.png', 'image/png', 73343, '2026-04-27 06:24:49', '2026-04-27 06:24:49'),
+(6, NULL, 'suratPernyataanPelapor', 'Surat Pernyataan dari Pelapor (ditandatangani 2 saksi & RT)', 'dokumen-surat/2026/04/70146f12-154c-4a8b-be85-e93e034e01b2.png', 'Screenshot 2025-10-12 090913.png', 'image/png', 135513, '2026-04-27 06:24:58', '2026-04-27 06:24:58'),
+(7, 9, 'suratPengantarRtRw', 'Surat Pengantar RT/RW', 'dokumen-surat/2026/04/46ad7c89-b070-4275-b8b1-ecd00c8e711b.jpeg', 'arsip.jpeg', 'image/jpeg', 182663, '2026-04-27 06:27:25', '2026-04-27 06:28:53'),
+(8, 9, 'suratKetKematian', 'Surat Keterangan Kematian dari Dokter/Bidan/Puskesmas', 'dokumen-surat/2026/04/eacf7b59-e949-41ad-a565-d194815bb1a2.jpeg', 'WhatsApp Image 2026-03-13 at 1.53.49 PM.jpeg', 'image/jpeg', 127307, '2026-04-27 06:27:35', '2026-04-27 06:28:53'),
+(9, 9, 'fotoKtpAlmarhum', 'Fotocopy KTP Almarhum/Almarhumah', 'dokumen-surat/2026/04/b19d8da4-1fbf-4442-8a75-7e1a0b3e19b0.png', 'owasp-top-10-2025-mappings-1024x283.png', 'image/png', 82192, '2026-04-27 06:27:41', '2026-04-27 06:28:53'),
+(10, 9, 'fotoKkAlmarhum', 'Fotocopy Kartu Keluarga Almarhum/Almarhumah', 'dokumen-surat/2026/04/5062dccb-30e8-4846-9b8a-bdd7c9f08813.png', 'Screenshot 2025-10-02 120001.png', 'image/png', 153252, '2026-04-27 06:27:57', '2026-04-27 06:28:53'),
+(11, 9, 'fotoKtpPemohon', 'Fotocopy KTP Pemohon (Pelapor)', 'dokumen-surat/2026/04/0ce57a91-faf7-4be1-9269-430a0c6eec64.png', 'Screenshot 2025-10-10 140007.png', 'image/png', 64684, '2026-04-27 06:28:06', '2026-04-27 06:28:53'),
+(12, 9, 'suratPernyataanPelapor', 'Surat Pernyataan dari Pelapor (ditandatangani 2 saksi & RT)', 'dokumen-surat/2026/04/e268a09d-a458-46f3-8ecd-60eecdcb4b74.png', 'Screenshot 2025-10-10 141642.png', 'image/png', 98362, '2026-04-27 06:28:16', '2026-04-27 06:28:53'),
+(13, 10, 'suratPengantarRtRw', 'Surat Pengantar RT/RW', 'dokumen-surat/2026/04/96eafe68-f713-40ac-bae2-f39e6acdc915.png', 'Screenshot 2025-10-10 142443.png', 'image/png', 22458, '2026-04-27 06:43:49', '2026-04-27 06:45:28'),
+(14, 10, 'suratKetKematian', 'Surat Pernyataan dari 2 Orang Saksi', 'dokumen-surat/2026/04/f1e09192-8603-496b-a9b3-9920040399c5.png', 'Screenshot 2025-10-12 095548.png', 'image/png', 94622, '2026-04-27 06:44:01', '2026-04-27 06:45:28'),
+(15, 10, 'fotoKtpAlmarhum', 'Fotocopy KTP Almarhum/Almarhumah', 'dokumen-surat/2026/04/a129e1ae-6ad2-4a0a-974e-0d17be936c7d.png', 'Screenshot 2025-10-10 140007.png', 'image/png', 64684, '2026-04-27 06:44:19', '2026-04-27 06:45:28'),
+(16, 10, 'fotoKkAlmarhum', 'Fotocopy Kartu Keluarga Almarhum/Almarhumah', 'dokumen-surat/2026/04/0db10d58-0118-47bb-9a7d-5454f4943b65.png', 'Screenshot 2025-10-12 112342.png', 'image/png', 73343, '2026-04-27 06:44:27', '2026-04-27 06:45:28'),
+(17, 10, 'fotoKtpPemohon', 'Fotocopy KTP Pemohon (Pelapor)', 'dokumen-surat/2026/04/011c3bc5-5faa-40b3-8b30-1b663783d1ad.png', 'Screenshot 2025-10-13 104921.png', 'image/png', 58497, '2026-04-27 06:44:48', '2026-04-27 06:45:28'),
+(18, 10, 'suratPernyataanPelapor', 'Surat Pernyataan dari Pelapor (ditandatangani 2 saksi & RT)', 'dokumen-surat/2026/04/1869c8a5-05cb-4bfe-8b19-004fa199c871.png', 'Screenshot 2025-10-12 115459.png', 'image/png', 202295, '2026-04-27 06:45:10', '2026-04-27 06:45:28'),
+(19, 11, 'suratPengantarRtRw', 'Surat Pengantar RT/RW', 'dokumen-surat/2026/04/08697fec-62e0-4806-9e99-42b99c35cd33.png', 'Screenshot 2025-10-02 121728.png', 'image/png', 148968, '2026-04-27 20:16:59', '2026-04-27 20:17:52'),
+(20, 11, 'suratKetKematian', 'Surat Keterangan Kematian dari Dokter/Bidan/Puskesmas', 'dokumen-surat/2026/04/8d7ceebc-c81b-4624-9487-13940c023c18.png', 'Screenshot 2025-10-10 140135.png', 'image/png', 61077, '2026-04-27 20:17:08', '2026-04-27 20:17:52'),
+(21, 11, 'fotoKtpAlmarhum', 'Fotocopy KTP Almarhum/Almarhumah', 'dokumen-surat/2026/04/fd7ca2c1-117c-4003-940a-4e5013ca9605.png', 'Screenshot 2025-10-10 141359.png', 'image/png', 113078, '2026-04-27 20:17:18', '2026-04-27 20:17:52'),
+(22, 11, 'fotoKkAlmarhum', 'Fotocopy Kartu Keluarga Almarhum/Almarhumah', 'dokumen-surat/2026/04/8edcfd20-76e6-45e6-9033-b312d26478f2.png', 'Screenshot 2025-10-10 141642.png', 'image/png', 98362, '2026-04-27 20:17:24', '2026-04-27 20:17:52'),
+(23, 11, 'fotoKtpPemohon', 'Fotocopy KTP Pemohon (Pelapor)', 'dokumen-surat/2026/04/2ef43860-bd71-4b79-9cce-c3422553b9e1.png', 'Screenshot 2025-10-10 121554.png', 'image/png', 48742, '2026-04-27 20:17:30', '2026-04-27 20:17:52'),
+(24, 11, 'suratPernyataanPelapor', 'Surat Pernyataan dari Pelapor (ditandatangani 2 saksi & RT)', 'dokumen-surat/2026/04/b2d26661-c868-4acc-b5cb-690d1062c20d.png', 'Screenshot 2025-10-10 140135.png', 'image/png', 61077, '2026-04-27 20:17:36', '2026-04-27 20:17:52'),
+(25, 12, 'suratPengantarRtRw', 'Surat Pengantar RT/RW', 'dokumen-surat/2026/04/2c87455c-2b39-4cd5-a2ae-1b5b731e32fe.png', 'Screenshot 2025-10-02 121728.png', 'image/png', 148968, '2026-04-27 20:40:20', '2026-04-27 20:41:18'),
+(26, 12, 'suratKetKematian', 'Surat Keterangan Kematian dari Dokter/Bidan/Puskesmas', 'dokumen-surat/2026/04/7950d679-66fa-4d02-970d-10873e76cde7.png', 'Screenshot 2025-10-04 155831.png', 'image/png', 148746, '2026-04-27 20:40:28', '2026-04-27 20:41:18'),
+(27, 12, 'fotoKtpAlmarhum', 'Fotocopy KTP Almarhum/Almarhumah', 'dokumen-surat/2026/04/c2313d69-beca-4772-a782-c438e9ff245c.png', 'Screenshot 2025-09-30 143549.png', 'image/png', 339541, '2026-04-27 20:40:34', '2026-04-27 20:41:18'),
+(28, 12, 'fotoKkAlmarhum', 'Fotocopy Kartu Keluarga Almarhum/Almarhumah', 'dokumen-surat/2026/04/cd282c0f-13b9-40f0-8ef0-d5b84dc2518c.png', 'Screenshot 2025-10-05 104107.png', 'image/png', 214502, '2026-04-27 20:40:49', '2026-04-27 20:41:18'),
+(29, 12, 'fotoKtpPemohon', 'Fotocopy KTP Pemohon (Pelapor)', 'dokumen-surat/2026/04/15fa7f2e-3640-4049-a7dd-7de012edb784.png', 'Screenshot 2025-09-29 104820.png', 'image/png', 63665, '2026-04-27 20:40:55', '2026-04-27 20:41:18'),
+(30, 12, 'suratPernyataanPelapor', 'Surat Pernyataan dari Pelapor (ditandatangani 2 saksi & RT)', 'dokumen-surat/2026/04/01ab6580-8d08-456c-b9b0-479216ad5759.png', 'Screenshot 2025-10-12 090913.png', 'image/png', 135513, '2026-04-27 20:41:02', '2026-04-27 20:41:18'),
+(31, 13, 'suratPengantarRtRw', 'Surat Pengantar RT/RW', 'dokumen-surat/2026/04/88b784cc-d6b2-470d-b146-808da83941a1.png', 'Screenshot 2025-10-12 104941.png', 'image/png', 44962, '2026-04-27 20:46:27', '2026-04-27 20:47:26'),
+(32, 13, 'suratKetKematian', 'Surat Keterangan Kematian dari Dokter/Bidan/Puskesmas', 'dokumen-surat/2026/04/36d725ca-f734-4185-891e-58b9cc4e744c.png', 'Screenshot 2025-10-05 160320.png', 'image/png', 8469, '2026-04-27 20:46:42', '2026-04-27 20:47:26'),
+(33, 13, 'fotoKtpAlmarhum', 'Fotocopy KTP Almarhum/Almarhumah', 'dokumen-surat/2026/04/28ba8d2a-b52d-4571-ac0c-b8f5b8a650cb.png', 'Screenshot 2025-10-10 115046.png', 'image/png', 18477, '2026-04-27 20:46:49', '2026-04-27 20:47:26'),
+(34, 13, 'fotoKkAlmarhum', 'Fotocopy Kartu Keluarga Almarhum/Almarhumah', 'dokumen-surat/2026/04/c6814944-ff9b-43b9-94b6-7f5ec67c437c.png', 'Screenshot 2025-10-12 091432.png', 'image/png', 11775, '2026-04-27 20:46:57', '2026-04-27 20:47:26'),
+(35, 13, 'fotoKtpPemohon', 'Fotocopy KTP Pemohon (Pelapor)', 'dokumen-surat/2026/04/84e6847a-8188-4c3b-a282-25cf9bf3878d.png', 'Screenshot 2025-10-12 092958.png', 'image/png', 44995, '2026-04-27 20:47:03', '2026-04-27 20:47:26'),
+(36, 13, 'suratPernyataanPelapor', 'Surat Pernyataan dari Pelapor (ditandatangani 2 saksi & RT)', 'dokumen-surat/2026/04/c6a8bf19-bb90-46d1-88bc-6e58a424771f.png', 'Screenshot 2025-10-09 143530.png', 'image/png', 316204, '2026-04-27 20:47:10', '2026-04-27 20:47:26'),
+(37, NULL, 'suratKetLahir', 'Surat Keterangan Lahir dari RS/Bidan/Puskesmas', 'dokumen-surat/2026/04/0b21277d-a39a-4d10-857f-13a7fc3b2991.png', 'Screenshot 2025-10-10 143047.png', 'image/png', 76333, '2026-04-28 00:54:08', '2026-04-28 00:54:08'),
+(38, NULL, 'fotoKkKelahiran', 'Kartu Keluarga (KK)', 'dokumen-surat/2026/04/31eec2be-8b1d-4984-8ec4-0ab1a18abbed.png', 'Screenshot 2025-10-10 141359.png', 'image/png', 113078, '2026-04-28 00:54:15', '2026-04-28 00:54:15'),
+(39, NULL, 'fotoKtpAyahIbu', 'Fotocopy KTP Ayah dan Ibu', 'dokumen-surat/2026/04/1225a5ed-b7cb-4663-b782-be6d0d6ce821.png', 'Screenshot 2025-10-10 142208.png', 'image/png', 15034, '2026-04-28 00:54:28', '2026-04-28 00:54:28'),
+(40, NULL, 'fotoBukuNikah', 'Fotocopy Buku Nikah / Akta Perkawinan', 'dokumen-surat/2026/04/e0bd550d-e3e6-4f8b-82ce-8b4879352a72.png', 'Screenshot 2025-10-13 104921.png', 'image/png', 58497, '2026-04-28 00:54:34', '2026-04-28 00:54:34'),
+(41, NULL, 'fotoKtp2Saksi', 'Fotocopy KTP 2 Orang Saksi', 'dokumen-surat/2026/04/27061c4a-3935-4f3a-838e-fda002c66315.png', 'Screenshot 2025-10-02 121728.png', 'image/png', 148968, '2026-04-28 01:00:17', '2026-04-28 01:00:17'),
+(42, NULL, 'suratPengantarRtRwLahir', 'Surat Pengantar RT/RW', 'dokumen-surat/2026/04/482df23d-e144-4259-bf3e-069e9660cfdb.png', 'Screenshot 2025-10-04 155831.png', 'image/png', 148746, '2026-04-28 01:00:23', '2026-04-28 01:00:23'),
+(43, 14, 'suratPengantarRt', 'Surat Pengantar dari RT', 'dokumen-surat/2026/04/405e8431-4557-4026-9757-2c62e1f6dac6.png', 'Screenshot 2025-10-13 111525.png', 'image/png', 54801, '2026-04-28 06:18:36', '2026-04-28 06:19:46'),
+(44, 14, 'fotoKtpPindah', 'Fotocopy KTP yang akan pindah', 'dokumen-surat/2026/04/364d76f8-a586-4a7f-a4de-ee9227ee79e6.png', 'Screenshot 2025-10-12 091432.png', 'image/png', 11775, '2026-04-28 06:18:42', '2026-04-28 06:19:46'),
+(45, 14, 'fotoKkPindah', 'Fotocopy Kartu Keluarga', 'dokumen-surat/2026/04/af7c4102-5506-4be0-893f-0af60613255a.png', 'Screenshot 2025-10-10 142659.png', 'image/png', 38248, '2026-04-28 06:18:58', '2026-04-28 06:19:46'),
+(46, 14, 'suratKetPasFoto', 'Surat keterangan yang sudah ditempel pas foto', 'dokumen-surat/2026/04/c12baeef-fda2-4c7e-9eb2-0484e8133fd0.png', 'Screenshot 2025-10-13 105748.png', 'image/png', 47604, '2026-04-28 06:19:09', '2026-04-28 06:19:46'),
+(47, 14, 'pasFotoPindah', 'Pas foto yang akan pindah', 'dokumen-surat/2026/04/4c9ad385-ca68-4763-82b3-1e88e3cc6241.png', 'Screenshot 2025-10-04 155831.png', 'image/png', 148746, '2026-04-28 06:19:15', '2026-04-28 06:19:46');
 
 -- --------------------------------------------------------
 
@@ -2910,24 +2898,17 @@ INSERT DELAYED IGNORE INTO `letter_counters` (`id`, `template_slug`, `count`, `c
 -- Table structure for table `migrations`
 --
 
-DROP TABLE IF EXISTS `migrations`;
-CREATE TABLE IF NOT EXISTS `migrations` (
-  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE `migrations` (
+  `id` int(10) UNSIGNED NOT NULL,
   `migration` varchar(255) NOT NULL,
-  `batch` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `batch` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `migrations`
---
-
-TRUNCATE TABLE `migrations`;
 --
 -- Dumping data for table `migrations`
 --
 
-INSERT DELAYED IGNORE INTO `migrations` (`id`, `migration`, `batch`) VALUES
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (1, '0001_01_01_000000_create_users_table', 1),
 (2, '0001_01_01_000001_create_cache_table', 1),
 (3, '0001_01_01_000002_create_jobs_table', 1),
@@ -2954,7 +2935,8 @@ INSERT DELAYED IGNORE INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (24, '2026_04_15_050145_change_index_code_to_string_in_letters_table', 1),
 (25, '2026_04_15_084013_add_status_kehidupan_to_penduduks_table', 1),
 (26, '2026_04_21_000001_add_nip_to_users_table', 1),
-(27, '2026_04_22_000000_make_letter_template_fields_nullable', 1);
+(27, '2026_04_22_000000_make_letter_template_fields_nullable', 1),
+(28, '2026_04_27_131306_create_letter_documents_table', 2);
 
 -- --------------------------------------------------------
 
@@ -2962,28 +2944,20 @@ INSERT DELAYED IGNORE INTO `migrations` (`id`, `migration`, `batch`) VALUES
 -- Table structure for table `password_reset_tokens`
 --
 
-DROP TABLE IF EXISTS `password_reset_tokens`;
-CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
+CREATE TABLE `password_reset_tokens` (
   `email` varchar(255) NOT NULL,
   `token` varchar(255) NOT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`email`)
+  `created_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `password_reset_tokens`
---
-
-TRUNCATE TABLE `password_reset_tokens`;
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `penduduks`
 --
 
-DROP TABLE IF EXISTS `penduduks`;
-CREATE TABLE IF NOT EXISTS `penduduks` (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE `penduduks` (
+  `id` bigint(20) UNSIGNED NOT NULL,
   `kode_keluarga` varchar(32) NOT NULL,
   `nama_kepala_keluarga` varchar(150) DEFAULT NULL,
   `alamat` varchar(255) DEFAULT NULL,
@@ -3008,24 +2982,14 @@ CREATE TABLE IF NOT EXISTS `penduduks` (
   `status_kehidupan` enum('Hidup','Meninggal') NOT NULL DEFAULT 'Hidup',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
-  `deleted_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `penduduks_nik_unique` (`nik`),
-  KEY `penduduks_dusun_rt_rw_index` (`dusun`,`rt`,`rw`),
-  KEY `penduduks_nama_index` (`nama`),
-  KEY `penduduks_kode_keluarga_index` (`kode_keluarga`)
-) ENGINE=InnoDB AUTO_INCREMENT=2526 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `deleted_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `penduduks`
---
-
-TRUNCATE TABLE `penduduks`;
 --
 -- Dumping data for table `penduduks`
 --
 
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (1, '5371061404160020', 'ABD. RASYID DG. MANAMBUNG', 'FATUBESI', '001', '001', 'KELURAHAN FATUBESI', 1, '7307051408690001', 'ABD. RASYID DG. MANAMBUNG', 'L', 'Suami', 'SINJAI', '1989-08-14', 37, 'Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:22:55', '2026-04-24 00:22:55', NULL),
 (2, '5371061404160020', 'ABD. RASYID DG. MANAMBUNG', 'FATUBESI', '001', '001', 'KELURAHAN FATUBESI', 2, '7307057112740136', 'MULIATI', 'P', 'Istri', 'SINJAI', '1974-12-31', 51, 'Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Pedagang barang kelontong', 'Hidup', '2026-04-24 00:22:55', '2026-04-24 00:22:55', NULL),
 (3, '5371061404160020', 'ABD. RASYID DG. MANAMBUNG', 'FATUBESI', '001', '001', 'KELURAHAN FATUBESI', 3, '7307055902980002', 'RAFIDAH RASYID', 'P', 'Anak Kandung', 'SINJAI', '1998-02-19', 28, 'Belum Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Sedang S-1/sederajat', 'Belum Bekerja', 'Hidup', '2026-04-24 00:22:55', '2026-04-24 00:22:55', NULL),
@@ -3175,7 +3139,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (147, '5371061010120004', 'ROBIN NANGE', 'JLN ALOR', '001', '001', '', 1, '5371062202850002', 'ROBIN NANGE', 'L', 'Kepala Keluarga', 'KUPANG', '1985-02-22', 41, 'Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTP/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:22:55', '2026-04-24 00:22:55', NULL),
 (148, '5371061010120004', 'ROBIN NANGE', 'JLN ALOR', '001', '001', '', 2, '5371066707860001', 'YANTI ADOE', 'P', 'Istri', 'KUPANG', '1986-07-27', 40, 'Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:22:55', '2026-04-24 00:22:55', NULL),
 (149, '5371061010120004', 'ROBIN NANGE', 'JLN ALOR', '001', '001', '', 3, '5371061802080002', 'YOSUA NANGE', 'L', 'Anak Kandung', 'KUPANG', '2008-02-18', 18, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:55', '2026-04-24 00:22:55', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (150, '5371061010120004', 'ROBIN NANGE', 'JLN ALOR', '001', '001', '', 4, '5371062305100001', 'STEVANUS NANGE', 'L', 'Anak Kandung', 'KUPANG', '2010-05-23', 16, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:55', '2026-04-24 00:22:55', NULL),
 (151, '5371061010120004', 'ROBIN NANGE', 'JLN ALOR', '001', '001', '', 5, '5371065304150001', 'AMOUREYZA NANGE', 'P', 'Anak Kandung', 'KUPANG', '2015-04-13', 11, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang TK/Kelompok Bermain', 'Pelajar', 'Hidup', '2026-04-24 00:22:55', '2026-04-24 00:22:55', NULL),
 (152, '5371062809160003', 'ROMAN ADOE', 'JLN ALOR NO 10', '001', '001', '', 2, '5371054208980002', 'SAMA YUNI FEUK', 'P', 'Istri', 'BATU BAO', '1998-06-02', 28, 'Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:22:55', '2026-04-24 00:22:55', NULL),
@@ -3327,7 +3291,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (298, '5371062005150002', 'LICEN RIHI PAKE', 'JLN ALOR', '002', '001', '', 2, '5371030909040003', 'DELON ARWANDO LAY', 'L', 'Anak Kandung', 'KUPANG', '2004-06-27', 22, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SLTP/Sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:56', '2026-04-24 00:22:56', NULL),
 (299, '5371062005150002', 'LICEN RIHI PAKE', 'JLN ALOR', '002', '001', '', 3, '5371034910100001', 'CIKA CHINTA LAY', 'P', 'Anak Kandung', 'KUPANG', '2010-08-09', 16, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:56', '2026-04-24 00:22:56', NULL),
 (300, '5371062005150002', 'LICEN RIHI PAKE', 'JLN ALOR', '002', '001', '', 4, '5371086001120003', 'CEKITA KEYLEE LAY', 'P', 'Anak Kandung', 'KUPANG', '2012-01-10', 14, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:56', '2026-04-24 00:22:56', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (301, '5371062705130007', 'LOT SESELI', 'RT 002', '002', '001', '', 1, '5371062810660001', 'LOT SESELI', 'L', 'Kepala Keluarga', 'ROTE', '1966-10-28', 60, 'Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', NULL, 'Tamat SLTP/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:22:56', '2026-04-24 00:22:56', NULL),
 (302, '5371062705130007', 'LOT SESELI', 'RT 002', '002', '001', '', 2, '537106600750001', 'JULIANA LONA', 'P', 'Istri', 'ROTE', '1958-07-20', 68, 'Kawin', 'Kristen', 'B', 'Warga Negara Indonesia', NULL, 'Tamat SD/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:22:56', '2026-04-24 00:22:56', NULL),
 (303, '5371062705130007', 'LOT SESELI', 'RT 002', '002', '001', '', 3, '537106630000002', 'YOSANDRO I. SESELI', 'L', 'Anak Kandung', 'KUPANG', '2000-10-13', 26, 'Belum Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Belum Bekerja', 'Hidup', '2026-04-24 00:22:56', '2026-04-24 00:22:56', NULL),
@@ -3478,7 +3442,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (448, '5371063004120005', 'H. MUHAMMAD', 'JLN. ALOR', '003', '001', '', 6, '5371061111030001', 'MUHAMMAD ARU', 'L', 'Anak Kandung', 'KUPANG', '2003-11-11', 22, 'Belum Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SLTA/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:57', '2026-04-24 00:22:57', NULL),
 (449, '5371060304120019', 'HANAS TANGGUH', 'Jln ALOR', '003', '001', '', 1, '5371062706760001', 'HANAS TANGDUIL', 'L', 'Kepala Keluarga', 'KUPANG', '1975-05-27', 51, 'Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTP/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:22:57', '2026-04-24 00:22:57', NULL),
 (450, '5371060304120019', 'HANAS TANGGUH', 'Jln ALOR', '003', '001', '', 2, '5371064703810002', 'MARIANA TABITA TANGDUIL', 'P', 'Istri', 'ROTE', '1981-03-07', 45, 'Kawin', 'Konghucu', 'A', 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:22:57', '2026-04-24 00:22:57', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (451, '5371060304120019', 'HANAS TANGGUH', 'Jln ALOR', '003', '001', '', 3, '5371064904000001', 'HASRY ANJALI TANGDUIL', 'P', 'Anak Kandung', 'KUPANG', '2000-04-09', 26, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Belum Bekerja', 'Hidup', '2026-04-24 00:22:57', '2026-04-24 00:22:57', NULL),
 (452, '5371060304120019', 'HANAS TANGGUH', 'Jln ALOR', '003', '001', '', 4, '531066312040001', 'TITANIA MILANISTI TANGDUIL', 'P', 'Anak Kandung', 'KUPANG', '2004-12-23', 21, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SLTA/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:57', '2026-04-24 00:22:57', NULL),
 (453, '5371060304120019', 'HANAS TANGGUH', 'Jln ALOR', '003', '001', '', 5, '5371061709050001', 'SEPRIANUS JERICHO TANGDUIL', 'L', 'Anak Kandung', 'KUPANG', '2005-09-17', 21, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SLTP/Sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:57', '2026-04-24 00:22:57', NULL),
@@ -3629,7 +3593,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (598, '5371032412072153', 'MELKIOR LIMAN', 'JLN. ALOR', '003', '001', '', 3, '5371035403020005', 'NINDIANI EMELIN CORISMAR LIMAN', 'P', 'Anak Kandung', 'ROTE', '2002-03-14', 24, 'Belum Kawin', 'Kristen', 'AB', 'Warga Negara Indonesia', NULL, 'Sedang SLTA/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:57', '2026-04-24 00:22:57', NULL),
 (599, '5371032412072153', 'MELKIOR LIMAN', 'JLN. ALOR', '003', '001', '', 4, '5371034907040004', 'NINFA CINTAMI JUALMAR LIMAN', 'P', 'Anak Kandung', 'ROTE', '2004-07-09', 22, 'Belum Kawin', 'Kristen', 'AB', 'Warga Negara Indonesia', NULL, 'Sedang SLTP/Sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:57', '2026-04-24 00:22:57', NULL),
 (600, '5371032412072153', 'MELKIOR LIMAN', 'JLN. ALOR', '003', '001', '', 5, '5371030801070001', 'NICKY SEMUEL JAMARCO LIMAN', 'L', 'Anak Kandung', 'KUPANG', '2007-01-08', 19, 'Belum Kawin', 'Kristen', 'AB', 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:57', '2026-04-24 00:22:57', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (601, '5371032412072153', 'MELKIOR LIMAN', 'JLN. ALOR', '003', '001', '', 7, NULL, 'AGUSTHINUS LIMAN', 'L', 'Keponakan', 'ROTE', '1991-08-02', 35, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat D-3/sederajat', 'Belum Bekerja', 'Hidup', '2026-04-24 00:22:57', '2026-04-24 00:22:57', NULL),
 (602, '5371061601120010', 'MELKIOR POY', 'Kelurahan Fatubesi', '003', '001', '', 1, '537105050750001', 'MELKIOR POY', 'L', 'Kepala Keluarga', 'ROTE', '1975-05-05', 51, 'Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SD/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:22:57', '2026-04-24 00:22:57', NULL),
 (603, '5371061601120010', 'MELKIOR POY', 'Kelurahan Fatubesi', '003', '001', '', 2, '53710668038900001', 'LUISA LANCO', 'P', 'Istri', 'ROTE', '1989-03-28', 37, 'Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:22:57', '2026-04-24 00:22:57', NULL),
@@ -3779,7 +3743,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (747, '5371032212071543', 'YESAYA ABIA', 'JLN ALOR', '003', '001', '', 1, '5371032008750002', 'YESAYA ABIA', 'L', 'Kepala Keluarga', 'KUPANG', '1975-06-20', 51, 'Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', NULL, 'Tamat SD/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:22:58', '2026-04-24 00:22:58', NULL),
 (748, '5371032212071543', 'YESAYA ABIA', 'JLN ALOR', '003', '001', '', 2, '53710037105790004', 'REBECA ABIA', 'P', 'Istri', 'ROTE', '1979-06-07', 47, 'Kawin', 'Kristen', 'B', 'Warga Negara Indonesia', NULL, 'Tamat SD/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:22:58', '2026-04-24 00:22:58', NULL),
 (749, '5371032212071543', 'YESAYA ABIA', 'JLN ALOR', '003', '001', '', 3, '5371034210990001', 'GARNIS. Y. P. ABIA', 'P', 'Anak Kandung', 'KUPANG', '1999-10-02', 27, 'Belum Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', NULL, 'Sedang S-1/sederajat', 'Belum Bekerja', 'Hidup', '2026-04-24 00:22:58', '2026-04-24 00:22:58', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (750, '5371032212071543', 'YESAYA ABIA', 'JLN ALOR', '003', '001', '', 4, '5371032106050003', 'GLEN SAMUDRA ABIA', 'L', 'Anak Kandung', 'KUPANG', '2005-06-21', 21, 'Belum Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', NULL, 'Sedang SLTP/Sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:58', '2026-04-24 00:22:58', NULL),
 (751, '5371032212071543', 'YESAYA ABIA', 'JLN ALOR', '003', '001', '', 5, '5371052103110001', 'NICK CANNON JUNIOR ABIA', 'L', 'Anak Kandung', 'KUPANG', '2011-03-21', 15, 'Belum Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:58', '2026-04-24 00:22:58', NULL),
 (752, '5371061406110006', 'YUSUF ABIA', 'JLN ALOR', '003', '001', '', 1, '5371061406110006', 'YUSUF ABIA', 'L', 'Kepala Keluarga', 'KUPANG', '1973-01-31', 53, 'Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SD/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:22:58', '2026-04-24 00:22:58', NULL),
@@ -3933,7 +3897,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (900, '5371032512072522', 'ISAK TITUS', 'JLN ALOR', '005', '001', '', 3, '5371030707870005', 'JEMY LORI TITUS', 'L', 'Anak Kandung', 'KUPANG', '1987-07-07', 39, 'Belum Kawin', 'Kristen', 'A', 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:22:58', '2026-04-24 00:22:58', NULL),
 (901, '5371032512072522', 'ISAK TITUS', 'JLN ALOR', '005', '001', '', 5, '5371032308920002', 'AGUS TITUS', 'L', 'Anak Kandung', 'KUPANG', '1992-08-23', 34, 'Belum Kawin', 'Kristen', 'A', 'Warga Negara Indonesia', NULL, 'Tamat SLTP/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:22:58', '2026-04-24 00:22:58', NULL),
 (902, '5371032512072522', 'ISAK TITUS', 'JLN ALOR', '005', '001', '', 6, '5371031405940003', 'FERDINAN TITUS', 'L', 'Anak Kandung', 'KUPANG', '1994-05-14', 32, 'Belum Kawin', 'Kristen', 'A', 'Warga Negara Indonesia', NULL, 'Tamat SLTP/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:22:58', '2026-04-24 00:22:58', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (903, '5371032312070376', 'JEMSON SIUS KASE', 'ALOR', '005', '001', '', 1, '5371031309790003', 'JEMSONSIUS KASE', 'L', 'Kepala Keluarga', 'KUPANG', '1979-09-13', 47, 'Kawin', 'Katholik', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:22:58', '2026-04-24 00:22:58', NULL),
 (904, '5371032312070376', 'JEMSON SIUS KASE', 'ALOR', '005', '001', '', 2, '53710361079002', 'OMA SARA TITUS', 'P', 'Istri', 'KUPANG', '1979-10-20', 47, 'Kawin', 'Katholik', 'B', 'Warga Negara Indonesia', NULL, 'Tamat SLTP/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:22:58', '2026-04-24 00:22:58', NULL),
 (905, '5371032312070376', 'JEMSON SIUS KASE', 'ALOR', '005', '001', '', 3, '537103511010001', 'EDUARD R. A. KASE', 'L', 'Anak Kandung', 'KUPANG', '2001-11-15', 24, 'Belum Kawin', 'Katholik', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SLTA/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:58', '2026-04-24 00:22:58', NULL),
@@ -4082,7 +4046,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (1048, '00000000000000', 'MARIA GLORIA GORETY WATU RAKA', 'JLN SABU NO 08', '006', '002', '', 3, '5371064404110001', 'MARIA LOURDES DEALOVA WATURAKA KLAU', 'P', 'Anak Kandung', 'KUPANG', '2011-04-04', 15, 'Belum Kawin', 'Katholik', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:59', '2026-04-24 00:22:59', NULL),
 (1049, '00000000000000', 'MARIA GLORIA GORETY WATU RAKA', 'JLN SABU NO 08', '006', '002', '', 4, '5371030807030006', 'ALESSANDRO ARIANENO HENDRY KLAU', 'L', 'Anak Kandung', 'KUPANG', '2003-07-08', 23, 'Belum Kawin', 'Katholik', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SLTA/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:59', '2026-04-24 00:22:59', NULL),
 (1050, '00000000000000', 'MARIA GLORIA GORETY WATU RAKA', 'JLN SABU NO 08', '006', '002', '', 5, '5371061206150001', 'GREGORIUS AGUNG WATURAKA KLAU', 'L', 'Anak Kandung', 'KUPANG', '2015-06-12', 11, 'Belum Kawin', 'Katholik', NULL, 'Warga Negara Indonesia', NULL, 'Belum masuk TK/Kelompok Bermain', 'Belum Bekerja', 'Hidup', '2026-04-24 00:22:59', '2026-04-24 00:22:59', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (1051, '00000000000000', 'MARIA GLORIA GORETY WATU RAKA', 'JLN SABU NO 08', '006', '002', '', 6, '5371032406720008', 'ARNOLDUS WATURAKA', 'L', 'Adik', 'KUPANG', '1972-06-24', 54, 'Belum Kawin', 'Katholik', 'B', 'Warga Negara Indonesia', NULL, 'Tamat S-1/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:22:59', '2026-04-24 00:22:59', NULL),
 (1052, '5371032412070012', 'MAWANG', 'JLN SABU', '006', '002', '', 1, '5371037112680008', 'MONASRI', 'P', 'Istri', 'LAMONGAN', '1969-12-31', 56, 'Kawin', 'Islam', 'O', 'Warga Negara Indonesia', NULL, 'Tamat SD/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:22:59', '2026-04-24 00:22:59', NULL),
 (1053, '5371032412070012', 'MAWANG', 'JLN SABU', '006', '002', '', 2, '5371034703040001', 'EVI', 'P', 'Anak Kandung', 'KUPANG', '2004-03-07', 22, 'Belum Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SLTA/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:22:59', '2026-04-24 00:22:59', NULL),
@@ -4230,7 +4194,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (1195, '5371032212072760', 'APRI DEVINDSON MBATU', 'JLN SABU', '008', '002', '', 4, '5371066101070001', 'LOVELY D. MBATU', 'P', 'Anak Kandung', 'KUPANG', '2007-01-11', 19, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:00', '2026-04-24 00:23:00', NULL),
 (1196, '5371032212072760', 'APRI DEVINDSON MBATU', 'JLN SABU', '008', '002', '', 5, '5371064101090001', 'ADETYA DEVIANA MBATU', 'P', 'Anak Kandung', 'KUPANG', '2009-01-01', 17, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:00', '2026-04-24 00:23:00', NULL),
 (1197, '5371032412074460', 'BARDENOTA D. Y. BAOK', 'JLN SABU', '008', '002', '', 2, '5371035205570001', 'MARITJE A. S. BAOK OTEMUSU', 'P', 'Istri', 'OEKABITI', '1957-05-12', 69, 'Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:00', '2026-04-24 00:23:00', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (1198, '5371032412074460', 'BARDENOTA D. Y. BAOK', 'JLN SABU', '008', '002', '', 3, '5371035305860003', 'SHERLY M. I. BAOK', 'P', 'Anak Kandung', 'KUPANG', '1986-05-13', 40, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat S-1/sederajat', 'Pegawai Negeri Sipil', 'Hidup', '2026-04-24 00:23:00', '2026-04-24 00:23:00', NULL),
 (1199, '5371032412074460', 'BARDENOTA D. Y. BAOK', 'JLN SABU', '008', '002', '', 4, '5371030107920004', 'SAMUEL I. BAOK', 'L', 'Anak Kandung', 'KUPANG', '1992-07-01', 34, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Belum Bekerja', 'Hidup', '2026-04-24 00:23:00', '2026-04-24 00:23:00', NULL),
 (1200, '53701034305520001', 'BELANDINA MATARATU', 'JLN SABU', '008', '002', '', 1, '5371034305520001', 'BENDALINA MATARATU', 'P', 'Kepala Keluarga', 'SABU', '1952-05-03', 74, 'Kawin', 'Kristen', 'B', 'Warga Negara Indonesia', NULL, 'Tamat SD/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:00', '2026-04-24 00:23:00', NULL),
@@ -4378,7 +4342,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (1342, '5371032212074341', 'HABEL EDUARD MAAK', 'JLN. TIMOR RAYA', '009', '002', '', 4, '5371060608080001', 'REINALDYB MAAK', 'L', 'Anak Kandung', 'KUPANG', '2008-08-06', 18, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:00', '2026-04-24 00:23:00', NULL),
 (1343, '5371032212074341', 'HABEL EDUARD MAAK', 'JLN. TIMOR RAYA', '009', '002', '', 5, '5371060906100001', 'ANDHIKA PUTRA MAAK', 'L', 'Anak Kandung', 'KUPANG', '2010-06-09', 16, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:00', '2026-04-24 00:23:00', NULL),
 (1344, '5371032508100017', 'HADI WIYANTO', 'JLN ALOR', '009', '002', '', 1, '53710326048400006', 'HADI WIYANTO', 'L', 'Kepala Keluarga', 'DEMAK', '1984-04-25', 42, 'Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTP/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:23:00', '2026-04-24 00:23:00', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (1345, '5371032508100017', 'HADI WIYANTO', 'JLN ALOR', '009', '002', '', 2, '5371036203870001', 'MURNI WATI', 'P', 'Istri', 'DEMAK', '1987-03-22', 39, 'Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SD/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:00', '2026-04-24 00:23:00', NULL),
 (1346, '5371032508100017', 'HADI WIYANTO', 'JLN ALOR', '009', '002', '', 3, '5371030912040003', 'MUHAMMAD KHOIRUL ARIFIN', 'L', 'Anak Kandung', 'DEMAK', '2004-12-09', 21, 'Belum Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SLTP/Sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:00', '2026-04-24 00:23:00', NULL),
 (1347, '5371032508100017', 'HADI WIYANTO', 'JLN ALOR', '009', '002', '', 4, '5371030311070001', 'ARIN NASHIKA AGNIYARUS ZAHRA', 'P', 'Anak Kandung', 'KUPANG', '2007-11-03', 18, 'Belum Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:00', '2026-04-24 00:23:00', NULL),
@@ -4528,8 +4492,8 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (1491, '5371032212071162', 'IGNATIUS TAOLIN, IR', 'KEL. FATUBESI', '010', '003', '', 1, '5371030602650003', 'IGNATIUS TAOLIN, IR', 'L', 'Kepala Keluarga', 'BELU', '1965-02-06', 61, 'Kawin', 'Katholik', NULL, 'Warga Negara Indonesia', NULL, 'Tamat D-4/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:23:01', '2026-04-24 00:23:01', NULL),
 (1492, '5371032212071162', 'IGNATIUS TAOLIN, IR', 'KEL. FATUBESI', '010', '003', '', 2, '5371036010650006', 'LIE ING HONG', 'P', 'Istri', 'SEMARANG', '1965-10-10', 61, 'Kawin', 'Katholik', NULL, 'Warga Negara Indonesia', NULL, 'Tamat D-3/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:01', '2026-04-24 00:23:01', NULL),
 (1493, '5371032212071162', 'IGNATIUS TAOLIN, IR', 'KEL. FATUBESI', '010', '003', '', 3, '5371032002950001', 'CHRIS RAYNALDY', 'L', 'Anak Kandung', 'SEMARANG', '1995-02-20', 31, 'Belum Kawin', 'Katholik', NULL, 'Warga Negara Indonesia', NULL, 'Tidak tamat SD/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:23:01', '2026-04-24 00:23:01', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1494, '5371032212071162', 'IGNATIUS TAOLIN, IR', 'KEL. FATUBESI', '010', '003', '', 4, '5371062904880001', 'ABNER ADITIO SIKI', 'L', 'Famili lain', 'RETRAEN', '1988-04-29', 38, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Belum Bekerja', 'Hidup', '2026-04-24 00:23:01', '2026-04-24 00:23:01', NULL),
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+(1494, '5371032212071162', 'IGNATIUS TAOLIN, IR', 'KEL. FATUBESI', '010', '003', '', 4, '5371062904880001', 'ABNER ADITIO SIKI', 'L', 'Famili lain', 'RETRAEN', '1988-04-29', 38, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Belum Bekerja', 'Meninggal', '2026-04-24 00:23:01', '2026-04-27 20:47:26', NULL),
 (1495, '5371062905120002', 'ISAK D. E. BALBESI, S.Pd', 'JLN A. YANI NO 170 A', '010', '003', '', 1, '5371062610760001', 'ISAK D. E. BALBESI, S.Pd', 'L', 'Kepala Keluarga', 'KUANHEU', '1975-10-26', 51, 'Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Tamat S-1/sederajat', 'Guru swasta', 'Hidup', '2026-04-24 00:23:01', '2026-04-24 00:23:01', NULL),
 (1496, '5371060302110002', 'JOHN OKTOVIANUS ROTU LEDE', 'JLN SUMBA NO 01', '010', '003', '', 1, '5371061010790001', 'JOHN OKTOVIANUS ROTU LEDE', 'L', 'Kepala Keluarga', 'KUPANG', '1979-10-10', 47, 'Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:23:01', '2026-04-24 00:23:01', NULL),
 (1497, '5371060302110002', 'JOHN OKTOVIANUS ROTU LEDE', 'JLN SUMBA NO 01', '010', '003', '', 2, '5371064407800001', 'MARLEN PATRESYA BAOEN', 'P', 'Istri', 'KUPANG', '1980-07-04', 46, 'Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat D-4/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:23:01', '2026-04-24 00:23:01', NULL),
@@ -4673,7 +4637,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (1635, '5371060205120004', 'YANUARIUS DE RORIS SOFA', 'JLN SUMBA NO 15 B', '011', '003', '', 3, '5371066910110001', 'MICHELIS STIVAY SOFA', 'L', 'Anak Kandung', 'KUPANG', '2011-10-29', 14, 'Belum Kawin', 'Katholik', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:01', '2026-04-24 00:23:01', NULL),
 (1636, '5371060205120004', 'YANUARIUS DE RORIS SOFA', 'JLN SUMBA NO 15 B', '011', '003', '', 4, '5371064201140001', 'SCHOLASTIKA INRY SOFA', 'P', 'Anak Kandung', 'KUPANG', '2014-01-02', 12, 'Belum Kawin', 'Katholik', NULL, 'Warga Negara Indonesia', NULL, 'Sedang TK/Kelompok Bermain', 'Pelajar', 'Hidup', '2026-04-24 00:23:01', '2026-04-24 00:23:01', NULL),
 (1637, '5371061006110003', 'YOAN ANDRERETNO FRANS', 'JLN SUMBA NO 3', '011', '003', '', 1, '5371061006110003', 'YOAN ANDRE RETNO FRANS', 'L', 'Kepala Keluarga', 'ENDE', '1987-07-26', 39, 'Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:23:01', '2026-04-24 00:23:01', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (1638, '5371061006110003', 'YOAN ANDRERETNO FRANS', 'JLN SUMBA NO 3', '011', '003', '', 2, '5371034206790002', 'A.A. SG. TRIYANI', 'P', 'Istri', 'KUPANG', '1979-08-02', 47, 'Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:01', '2026-04-24 00:23:01', NULL),
 (1639, '5371061702120010', 'ANDREW WILLIAM OVERBEEK', 'JLN. FLORES', '012', '003', '', 1, '5371032601770005', 'ANDREW WILLIAM OVERBEEK', 'L', 'Kepala Keluarga', 'KUPANG', '1977-01-26', 49, 'Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', NULL, 'Tamat D-3/sederajat', 'Karyawan Perusahaan Swasta', 'Hidup', '2026-04-24 00:23:01', '2026-04-24 00:23:01', NULL),
 (1640, '5371061702120010', 'ANDREW WILLIAM OVERBEEK', 'JLN. FLORES', '012', '003', '', 2, '5371034202830007', 'SANTHI NIANDRA OCTOVIANA MBOEK, SH', 'P', 'Istri', 'JOGJAKARTA', '1983-02-02', 43, 'Kawin', 'Kristen', 'B', 'Warga Negara Indonesia', NULL, 'Tamat S-1/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:01', '2026-04-24 00:23:01', NULL),
@@ -4818,7 +4782,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (1779, '53710616021100004', 'AGUSTINUS LOWE', 'JLN ALOR', '014', '004', '', 4, '5371067103200002', 'MARITA CHALINDA BERYL LOWE', 'P', 'Anak Kandung', 'KUPANG', '2020-03-31', 6, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Belum masuk TK/Kelompok Bermain', 'Belum Bekerja', 'Hidup', '2026-04-24 00:23:02', '2026-04-24 00:23:02', NULL),
 (1780, '5371060809150011', 'ALBERT DIMA', 'JLN ALOR', '014', '004', '', 1, '5371061304840001', 'ALBERT DIMA', 'L', 'Kepala Keluarga', 'KUPANG', '1984-04-12', 42, 'Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTP/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:23:02', '2026-04-24 00:23:02', NULL),
 (1781, '5371060809150011', 'ALBERT DIMA', 'JLN ALOR', '014', '004', '', 2, '5371065503890004', 'MAYA ANDREANY', 'P', 'Istri', 'KUPANG', '1989-03-15', 37, 'Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:02', '2026-04-24 00:23:02', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (1782, '5371060809150011', 'ALBERT DIMA', 'JLN ALOR', '014', '004', '', 3, '5371065509080002', 'MEYSEY AURORA DIMA', 'P', 'Anak Kandung', 'KUPANG', '2008-11-15', 17, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:02', '2026-04-24 00:23:02', NULL),
 (1783, '5371060809150011', 'ALBERT DIMA', 'JLN ALOR', '014', '004', '', 4, '5371064202110002', 'ALEXANDRIA DIMA', 'P', 'Anak Kandung', 'KUPANG', '2011-02-02', 15, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:02', '2026-04-24 00:23:02', NULL),
 (1784, '5371060809150011', 'ALBERT DIMA', 'JLN ALOR', '014', '004', '', 5, '5371065009150001', 'AURELIA BELLVANIA PAULINA DIMA', 'P', 'Anak Kandung', 'KUPANG', '2015-09-10', 11, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Belum masuk TK/Kelompok Bermain', 'Belum Bekerja', 'Hidup', '2026-04-24 00:23:02', '2026-04-24 00:23:02', NULL),
@@ -4969,7 +4933,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (1929, '5371032407100011', 'SHERRY CH MBATU', 'JLN ALOR NO 26', '014', '004', '', 3, '5371031502060002', 'SCHAD BERED G. MBATU', 'L', 'Anak Kandung', 'KUPANG', '2006-02-15', 20, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SLTP/Sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:03', '2026-04-24 00:23:03', NULL),
 (1930, '5371032407100011', 'SHERRY CH MBATU', 'JLN ALOR NO 26', '014', '004', '', 4, '5371032503080001', 'MARCHELINO RENVILD MBATU', 'L', 'Anak Kandung', 'KUPANG', '2008-03-25', 18, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:03', '2026-04-24 00:23:03', NULL),
 (1931, '5371032407100011', 'SHERRY CH MBATU', 'JLN ALOR NO 26', '014', '004', '', 5, '5371062005110003', 'BRIGHAT DAMEI SION AZYEFRAN MBATU', 'L', 'Anak Kandung', 'KUPANG', '2011-05-20', 15, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:03', '2026-04-24 00:23:03', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (1932, '5371032407100011', 'SHERRY CH MBATU', 'JLN ALOR NO 26', '014', '004', '', 6, '5371064507120002', 'JULLYA VICTORY MBATU', 'P', 'Anak Kandung', 'KUPANG', '2012-07-05', 14, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:03', '2026-04-24 00:23:03', NULL),
 (1933, '5371032407100011', 'SHERRY CH MBATU', 'JLN ALOR NO 26', '014', '004', '', 7, '5371062410170001', 'SEAN AVSER MBATU', 'L', 'Anak Kandung', 'KUPANG', '2017-10-24', 8, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Belum masuk TK/Kelompok Bermain', 'Tidak Mempunyai Pekerjaan Tetap', 'Hidup', '2026-04-24 00:23:03', '2026-04-24 00:23:03', NULL),
 (1934, '5371032512072738', 'SILVESTER MUSI', 'JLN SUMBA NO 14', '014', '004', '', 1, '5371033103690002', 'SILVESTER MUSI', 'L', 'Kepala Keluarga', 'MANUFUI', '1959-03-31', 67, 'Kawin', 'Katholik', 'O', 'Warga Negara Indonesia', NULL, 'Tamat SD/sederajat', 'Karyawan Perusahaan Swasta', 'Hidup', '2026-04-24 00:23:03', '2026-04-24 00:23:03', NULL),
@@ -5118,7 +5082,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (2077, '5371061506110011', 'MASLIKAN', 'KEL FATUBESI', '015', '004', '', 4, '5371061411120002', 'AHMAD GILANG DWI SAPUTRA', 'L', 'Anak Kandung', 'KUPANG', '2012-11-14', 13, 'Belum Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:03', '2026-04-24 00:23:03', NULL),
 (2078, '5371032312071564', 'MASUM', 'JLN ALOR', '015', '004', '', 2, '5371034303740005', 'ISTIROKAH', 'P', 'Istri', 'DEMAK', '1974-03-03', 52, 'Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SD/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:03', '2026-04-24 00:23:03', NULL),
 (2079, '5371032312071564', 'MASUM', 'JLN ALOR', '015', '004', '', 3, '5371030012950006', 'ANDI PRASETYO', 'L', 'Anak Kandung', 'KUPANG', '1995-12-09', 30, 'Belum Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Belum Bekerja', 'Hidup', '2026-04-24 00:23:03', '2026-04-24 00:23:03', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (2080, '5371032312071564', 'MASUM', 'JLN ALOR', '015', '004', '', 4, '5371030511010001', 'HAVID iQBAL', 'L', 'Anak Kandung', 'KUPANG', '2001-11-05', 25, 'Belum Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SLTA/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:03', '2026-04-24 00:23:03', NULL),
 (2081, '5371032312071564', 'MASUM', 'JLN ALOR', '015', '004', '', 5, '5371060501130001', 'HAIDAR', 'L', 'Anak Kandung', 'KUPANG', '2013-01-05', 13, 'Belum Kawin', 'Islam', NULL, 'Warga Negara Indonesia', NULL, 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:03', '2026-04-24 00:23:03', NULL),
 (2082, '537100000000000', 'MAX MOEDAK', 'JLN SUMBA NO 18', '015', '004', '', 1, '5371031209840002', 'MAX MOEDAK', 'L', 'Kepala Keluarga', 'KUPANG', '1984-09-12', 42, 'Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Karyawan Honorer', 'Hidup', '2026-04-24 00:23:03', '2026-04-24 00:23:03', NULL),
@@ -5267,7 +5231,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (2225, '5371060310120005', 'ANTONIUS D. BONIFA', 'JLN ROTE', '017', '004', '', 3, '5371065906090002', 'JESIKA D. BONIFA', 'P', 'Anak Kandung', 'KUPANG', '2009-06-16', 17, 'Belum Kawin', 'Katholik', NULL, 'Warga Negara Indonesia', 'Manggarai', 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
 (2226, '5371060310120005', 'ANTONIUS D. BONIFA', 'JLN ROTE', '017', '004', '', 4, '5371060205150001', 'ANASTASIUS ADRIANO BONIFA', 'L', 'Anak Kandung', 'KUPANG', '2015-05-02', 11, 'Belum Kawin', 'Katholik', NULL, 'Warga Negara Indonesia', 'Manggarai', 'Belum masuk TK/Kelompok Bermain', 'Belum Bekerja', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
 (2227, '5371032009100021', 'ANTONIUS S. LIWU', 'JLN ROTE', '017', '004', '', 2, '5371036505790008', 'YUSINTA ARIANTI LIU', 'P', 'Istri', 'OEMOFA', '1979-05-25', 47, 'Kawin', 'Katholik', 'O', 'Warga Negara Indonesia', NULL, 'Tamat SLTP/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (2228, '5371032009100021', 'ANTONIUS S. LIWU', 'JLN ROTE', '017', '004', '', 3, '5371031004030006', 'MARKUS MARAK LIWU', 'L', 'Anak Kandung', 'KUPANG', '2003-04-10', 23, 'Belum Kawin', 'Katholik', 'O', 'Warga Negara Indonesia', NULL, 'Sedang SLTA/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
 (2229, '5371032009100021', 'ANTONIUS S. LIWU', 'JLN ROTE', '017', '004', '', 4, '5371034105050002', 'MARIA KAMINI LIWU', 'P', 'Anak Kandung', 'KUPANG', '2005-05-01', 21, 'Belum Kawin', 'Katholik', 'O', 'Warga Negara Indonesia', NULL, 'Sedang SLTP/Sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
 (2230, '5371032009100021', 'ANTONIUS S. LIWU', 'JLN ROTE', '017', '004', '', 6, '5371062801130001', 'ALOSIUS LIWU', 'L', 'Anak Kandung', 'KUPANG', '2013-01-28', 13, 'Belum Kawin', 'Katholik', 'O', 'Warga Negara Indonesia', NULL, 'Belum masuk TK/Kelompok Bermain', 'Belum Bekerja', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
@@ -5280,7 +5244,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (2237, '5371062605160002', 'ARYANTO DILLAK', 'JLN ROTE', '017', '004', '', 2, '5371064409850001', 'TABITA WADU KADJA', 'P', 'Istri', 'KOLOLIE', '1986-09-04', 40, 'Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', 'Sabu', 'Tamat D-3/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
 (2238, '5371062605160002', 'ARYANTO DILLAK', 'JLN ROTE', '017', '004', '', 3, '5371061411130001', 'OLLAND R. DILLAK', 'L', 'Anak Kandung', 'KUPANG', '2013-11-14', 12, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Sedang TK/Kelompok Bermain', 'Pelajar', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
 (2239, '5371062605160002', 'ARYANTO DILLAK', 'JLN ROTE', '017', '004', '', 4, '5371065805160001', 'MELLAN P. DILLAK', 'P', 'Anak Kandung', 'KUPANG', '2016-05-18', 10, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', 'Rote', 'Belum masuk TK/Kelompok Bermain', 'Belum Bekerja', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
-(2240, '5371032412072883', 'BENJAMIN BABYS', 'JLN ROTE', '017', '004', '', 2, '5371035404680001', 'ADEIVINA BABYS- PANDU', 'P', 'Istri', 'ALOR', '1968-04-14', 58, 'Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', NULL, 'Tamat SD/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
+(2240, '5371032412072883', 'BENJAMIN BABYS', 'JLN ROTE', '017', '004', '', 2, '5371035404680001', 'ADEIVINA BABYS- PANDU', 'P', 'Istri', 'ALOR', '1968-04-14', 58, 'Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', NULL, 'Tamat SD/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:04', '2026-04-28 06:19:46', '2026-04-28 06:19:46'),
 (2241, '5371032412072883', 'BENJAMIN BABYS', 'JLN ROTE', '017', '004', '', 3, '5371034512920003', 'DESY NATALIA KATARINA BABYS', 'P', 'Anak Kandung', 'KUPANG', '1992-12-05', 33, 'Belum Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', 'Timor', 'Tamat SLTA/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
 (2242, '5371032412072883', 'BENJAMIN BABYS', 'JLN ROTE', '017', '004', '', 4, '5371036809970001', 'MARTHINA STEFANI BABYS', 'P', 'Anak Kandung', 'KUPANG', '1997-09-28', 29, 'Belum Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', NULL, 'Tamat SLTA/sederajat', 'Belum Bekerja', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
 (2243, '5371032412072883', 'BENJAMIN BABYS', 'JLN ROTE', '017', '004', '', 5, '5371030503990004', 'MARTHEN MIKAEL BABYS', 'L', 'Anak Kandung', 'KUPANG', '1999-03-05', 27, 'Belum Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', 'Timor', 'Tamat SLTA/sederajat', 'Belum Bekerja', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
@@ -5418,7 +5382,7 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (2375, '5371062609180003', 'ADRIANUS LEONARDUS LUANGKALY', 'JLN ROTE', '018', '004', '', 1, '3175072104780012', 'ADRIANUS LEONARDUS LUANGKALY', 'L', 'Kepala Keluarga', 'BAJAWA', '1978-04-21', 48, 'Kawin', 'Katholik', 'A', 'Warga Negara Indonesia', 'Ambon', 'Tamat SLTA/sederajat', 'Karyawan Honorer', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
 (2376, '5371062609180003', 'ADRIANUS LEONARDUS LUANGKALY', 'JLN ROTE', '018', '004', '', 2, '3175075607790026', 'JULY YANTI SIMORANGKIR', 'P', 'Istri', 'DURI', '1976-07-16', 50, 'Kawin', 'Islam', 'B', 'Warga Negara Indonesia', 'Batak', 'Tamat SLTA/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
 (2377, '5371062609180003', 'ADRIANUS LEONARDUS LUANGKALY', 'JLN ROTE', '018', '004', '', 3, '3175073008101007', 'JUAN ALFARO LUANGKALY', 'L', 'Anak Kandung', 'JAKARTA', '2010-08-30', 16, 'Kawin', 'Katholik', 'A', 'Warga Negara Indonesia', 'Ambon', 'Sedang SD/sederajat', 'Pelajar', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL);
-INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (2378, '5371062609180003', 'ADRIANUS LEONARDUS LUANGKALY', 'JLN ROTE', '018', '004', '', 4, '5371065403140001', 'GLORIANA ALONA LUANGKALY', 'P', 'Anak Kandung', 'KUPANG', '2014-03-14', 12, 'Belum Kawin', 'Katholik', 'A', 'Warga Negara Indonesia', 'Ambon', 'Belum masuk TK/Kelompok Bermain', 'Belum Bekerja', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
 (2379, '5371061807120019', 'AGUS FINTJE ALAMOY', 'JLN. ROTE', '018', '004', '', 1, '5371036308650002', 'AGUS FINTJE ALAMOY', 'P', 'Kepala Keluarga', 'KUAPNG', '1965-08-23', 61, 'Belum Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', NULL, 'Tamat SLTP/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
 (2380, '5371061807120019', 'AGUS FINTJE ALAMOY', 'JLN. ROTE', '018', '004', '', 2, '5371034801670001', 'JENI YOSIANI ALAMOY', 'P', 'Adik', 'KUPANG', '1967-01-08', 59, 'Belum Kawin', 'Kristen', 'O', 'Warga Negara Indonesia', NULL, 'Tamat SLTP/sederajat', 'Wiraswasta', 'Hidup', '2026-04-24 00:23:04', '2026-04-24 00:23:04', NULL),
@@ -5565,7 +5529,12 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 (2521, '5371032512070939', 'YOSIAS KADEK,SH', 'JLN. ROTE', '018', '004', '', 1, '5371031510570005', 'YOSIAS KADEK,SH', 'L', 'Kepala Keluarga', 'KUPANG', '1957-10-15', 69, 'Kawin', 'Kristen', 'B', 'Warga Negara Indonesia', NULL, 'Tamat S-1/sederajat', 'Purnawirawan/Pensiunan', 'Hidup', '2026-04-24 00:23:05', '2026-04-24 00:23:05', NULL),
 (2522, '5371032512070939', 'YOSIAS KADEK,SH', 'JLN. ROTE', '018', '004', '', 2, '5371036606550001', 'TJUNE HONG MOE', 'P', 'Istri', 'ALOR', '1956-05-31', 70, 'Kawin', 'Kristen', 'B', 'Warga Negara Indonesia', NULL, 'Tamat SD/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:05', '2026-04-24 00:23:05', NULL),
 (2523, '5371060205190003', 'YUMINAH AMINAH KADEK', 'JLN. ROTE', '018', '004', '', 1, '5371035603380001', 'YUMINAH AMIN AH KADEK', 'P', 'Kepala Keluarga', 'KUPANG', '1938-03-16', 88, 'Janda/Duda', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, 'Tamat SD/sederajat', 'Ibu Rumah Tangga', 'Hidup', '2026-04-24 00:23:05', '2026-04-24 00:23:05', NULL),
-(2524, '5371061503190001', '0RCE W. PELU', 'JLN', '017', '004', '', 5, NULL, 'Arsanta', 'P', 'Anak Kandung', 'Kupang', '2026-04-24', 0, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, NULL, NULL, 'Hidup', '2026-04-24 00:45:00', '2026-04-24 00:45:00', NULL);
+(2524, '5371061503190001', '0RCE W. PELU', 'JLN', '017', '004', '', 5, NULL, 'Arsanta', 'P', 'Anak Kandung', 'Kupang', '2026-04-24', 0, 'Belum Kawin', 'Kristen', NULL, 'Warga Negara Indonesia', NULL, NULL, NULL, 'Hidup', '2026-04-24 00:45:00', '2026-04-24 00:45:00', NULL),
+(2526, '1234567890', 'Dummy', 'Jl. Apel No. 5', '001', '001', NULL, 1, '0987654321', 'Dummy', 'L', 'Kepala Keluarga', 'Kupang', '1988-01-12', 38, 'Kawin', 'Kristen', 'O', 'WNI', 'Batak', 'SMA', 'Wiraswasta', 'Meninggal', '2026-04-27 06:26:51', '2026-04-27 06:28:53', NULL),
+(2527, '1234567890', 'Dummy', 'Jl. Apel No. 5', '001', '001', NULL, 2, '2468101214', 'Dummy2', 'P', 'Istri', 'Sabu', '1987-06-09', 38, 'Kawin', 'Kristen', 'B', 'WNI', NULL, 'SMA', 'IRT', 'Meninggal', '2026-04-27 06:41:40', '2026-04-27 06:45:28', NULL),
+(2528, '1234567890', 'Dummy', 'Jl. Apel No. 5', '001', '001', NULL, 3, '1357911131517', 'Dummy3', 'P', 'Anak', 'Rote', '2006-03-01', 20, 'Belum Kawin', 'Kristen', 'A', 'WNI', NULL, 'SMA', 'Pelajar', 'Meninggal', '2026-04-27 20:02:43', '2026-04-27 20:17:52', NULL);
+INSERT INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_keluarga`, `alamat`, `rt`, `rw`, `dusun`, `no_urut`, `nik`, `nama`, `jenis_kelamin`, `hubungan`, `tempat_lahir`, `tanggal_lahir`, `usia`, `status_perkawinan`, `agama`, `golongan_darah`, `kewarganegaraan`, `etnis`, `pendidikan`, `pekerjaan`, `status_kehidupan`, `created_at`, `updated_at`, `deleted_at`) VALUES
+(2529, '1234567890', 'Dummy', 'Jl. Apel No. 5', '001', '001', NULL, 4, '369121518', 'Dummy4', 'L', 'Anak', 'Kupang', '2011-06-17', 14, 'Belum Kawin', 'Kristen', 'A', 'WNI', NULL, 'SMP', 'Pelajar', 'Meninggal', '2026-04-27 20:39:53', '2026-04-27 20:41:18', NULL);
 
 -- --------------------------------------------------------
 
@@ -5573,9 +5542,8 @@ INSERT DELAYED IGNORE INTO `penduduks` (`id`, `kode_keluarga`, `nama_kepala_kelu
 -- Table structure for table `register_otps`
 --
 
-DROP TABLE IF EXISTS `register_otps`;
-CREATE TABLE IF NOT EXISTS `register_otps` (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE `register_otps` (
+  `id` bigint(20) UNSIGNED NOT NULL,
   `phone` varchar(20) NOT NULL,
   `purpose` varchar(30) NOT NULL DEFAULT 'register',
   `otp_hash` varchar(255) NOT NULL,
@@ -5586,47 +5554,31 @@ CREATE TABLE IF NOT EXISTS `register_otps` (
   `request_ip` varchar(45) DEFAULT NULL,
   `user_agent` varchar(255) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `register_otps_phone_purpose_expires_at_index` (`phone`,`purpose`,`expires_at`),
-  KEY `register_otps_phone_index` (`phone`)
+  `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `register_otps`
---
-
-TRUNCATE TABLE `register_otps`;
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `sessions`
 --
 
-DROP TABLE IF EXISTS `sessions`;
-CREATE TABLE IF NOT EXISTS `sessions` (
+CREATE TABLE `sessions` (
   `id` varchar(255) NOT NULL,
   `user_id` bigint(20) UNSIGNED DEFAULT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
   `user_agent` text DEFAULT NULL,
   `payload` longtext NOT NULL,
-  `last_activity` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `sessions_user_id_index` (`user_id`),
-  KEY `sessions_last_activity_index` (`last_activity`)
+  `last_activity` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `sessions`
---
-
-TRUNCATE TABLE `sessions`;
 --
 -- Dumping data for table `sessions`
 --
 
-INSERT DELAYED IGNORE INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('tfoNGFRlJqITaHdGFLgBfhWPrHH4sAwu2bJ6DCSx', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'ZXlKcGRpSTZJbEo1VkUwMVlXRTFkbEJHVWtvMlluVlVSRXhOV1VFOVBTSXNJblpoYkhWbElqb2lXRkJuZG1vNFdHbDFkSFJYWW1sMWNERmFaSGxDYTFjeFMwZzFSa0ZFTVM5bFNrVkVSRmRNYmtaalNHTkhZMUpyU1ZCUlVIQlBZM05FTlM5RmRtSkhWR2hLU2psRE1uaFdTamxQZGxGQ1MybFZNa2xCVkVaa2NsbGtLMEZMTkVoQmRERXdXSGhSU0hacU1VZDNRM0ZaYW0xd1VrOVNla0p6U1M5UlltSnpXR1JOVld0M09YWkhMMlJyTlROa2JWSTJaM2RZV1UweVR6SjNkVms0YUdrNU0xTktiRlYwZWl0d1pVTjBiME56TTNKclp6aFNLMnhVYW5GMmFTOWFSamtyV1N0UmNraENUemxTYlZrNGVYVldTSE5qYUhGQlVFWTNRbGRIT1djNFdqWTBOeTh5YVZKNlJYZzBjalZCTVhoVE1HZERXV0Z4ZVdneVpXVktiMk5CZVU1dWNETnFXa0phU1Zka1RHRk9hWHBFV2tkWGVsSkpiMmxSWVZjNWNHcDJNM1JuVDBsMWFEWjNlbFUzUldsRVRVVjJRM0JsVjBZMlFXcDJSbWR0TkZOSlRuZEtlREJvSzNkalUzSm5XR1pUVGxwcU9ETmlhVWxWUlVSNlNVMVpkamhOUm1wYWFtVnRXalZITm13MVJYVTFWV0lyZWxGa1RVWkdRMFJ4Y0ZkeVQzQllhbE5TU0ZOMFptdEhlRzVIWVVkR05YaGljRXg2TmxOUVZXeHVUQzlRYzBvMVRXMDFjM1ZIZURSbFVFaERORlJyUTJ4TWVUaGFRVEpWUjNaWVdqaHVjR0owVjJKblZFZEtZamN2T1V4MVR6RjNURWwzYlUxWEx6bEtla1pFWWtoUlFuQlJlRkJXY1hwdVFWSklSR0Z2YWk5RWFUWlRkREp0Y0RkWE1UbGhUWGM1U21Sa2RITXZlR00wVDJOYVFsQTBOWEpoTjNNeVVXUklhRW93VTFkTFdGWkZSRk5rWkZoSVFWaHRSbGxDZGpCcFpFSlRTRWhMUTFOQ1VuWjJJaXdpYldGaklqb2lNbU15WlRjMk5UQXhNV1l3WldNNE1UYzFOelJrWW1Zd1l6QTBOVE0wT1dFM056ZGtaamhoWVRCaVpUQmhOVFV6WmpsaU1EWXdNemMwTURZek1XWTJOU0lzSW5SaFp5STZJaUo5', 1777217317);
+INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
+('5nwIbJ5jNtfSDxYtedKmCTIFEuXbU1KQ1AFAKCzr', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'ZXlKcGRpSTZJbEZFWTAxbmIybzVSV3g1U2pSU1ExaFRaRzFQYUZFOVBTSXNJblpoYkhWbElqb2lNaXRzVDJOeWJGUmFha3czV0dwdmRtcFJOWEJ0Y0dGWWFtVXlOa1Y1TlhOU2VtcHFVVXBHWWpkWmRVYzVla3BVTlNzelNVUnRiMWRYU21GeVdrZGpNR1YxYVZCRVYxZFdla05MUWxVdk9UZEVMMkZKY25WTE5WWXpUMlZ0V25aV1IzbHpiRGs1VnpkeEwzQnVURzV6WlVkS1ZWVk9NalpKVFZkelVtWXZiVmQ1TlRrM1ZreGpPVXROZDNGSlRVTkdiVUpGWjB0alRubFZNMjFHT1hScE5WVjJZVkZhUXpZdmFYUlJWR3BRZW5OWFJtRnBiakE1UVRodWRXNVBhVFJxUldKVlJuUkVkVGQzY2tKMFlWcHZSbkZaYnpJNVVYa3hkM3BPY0N0RVdtaDNXWGx1TmtwSFNVSjZkMmhyTnpGbFVHVm5kR0Y1UVc1MFdteENUa04yTUU1RmJYQkphMHBoWm5GMU4wMWlRV0l5WmtZMUszcDJlbWhaYW0xUWNXZFVkM3BQTVc5WFZqSmlWMUptVm5jdlNtcGhUVVpLZDBsUWRDdDNSMlF4YzB0c2JXTXpRVkozVDJkM1YyaG5aMnhWV21SbmMwWmFSRFJ1VnpKcFR6UjFWR3RyWlRkcmJVcFhlblZFU0VGVFprWlZRa0phU25kbE5uVnJWekpPTXpoemF6WmhVRkpVVTNsUkwzRnJUVXRIUVZWbFEwZDJjR1Z4UXpNM1pqVmpkeXRCV0ZKR2FVVjVOMG8xVTJ0bFlrcENkVEZDTkdoM1lpdGFWMmxLVmtodE15SXNJbTFoWXlJNklqaGxNbVEyWkRBNE1URTNZVGs1TnpRMVpEaGhZamMwTnpaa016UXpOVGswTVRGbE5tTm1NRE0yTWpobU1HUXdNelkwWlRCbVpXWm1PV1kzWXpWbFpUTWlMQ0owWVdjaU9pSWlmUT09', 1777380446),
+('TkplaDPCSWTpalAoZ6u1jrd1i7BlUp7M9mPKuRrx', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'ZXlKcGRpSTZJazFXTkVReWVFYzJiM1JzVkZwTWN6ZG5WRXRQYkZFOVBTSXNJblpoYkhWbElqb2lha0Z5TlhKcFZVRXdRM2hLZUZwRmRUWTNWRzV0TDJSd1RHUnBTRkUyVDBkVmRYQTVWbE4zT1ZwdVVFWkZkRXc0UkZsak1Vd3ZibTFxYmtFM2JrMURSelJ5UkdoalRIZHNOV05ITmt4VGFsTjJXVTV1YjJGaFVYZE5UblZDYkZoVWIyMW5iR041VkVkMmFXUXZWemhEZDJaWlltbFJXREpOVVRBclFYcFFNa1ZFUlc4dk5VTkhXRWQ2SzFONU9WWndNbFptUVRsR1p6QXJTRE5UV0ZOd2JGbzBVVXAwWW1wTGRsb3lhM05UYnpoVU9ITjRSM2xvZW5Sb1FUSjRPVEJhV2s4elp6TTJVakZEYW1KRFNXVm5Na1pUWWtWeE5HcGFWakJOV0RkbWRqZ3dRVVIyZDBoR1RVSTVhVXBOYTJwQ1NFdFJjMm8xVVZjMFdIVnNMMjVwWVVGSmExcHlTMWhWWkZCd2RtRTRaRU5UUm5aRlZXcEdPR2wzWTJ0SmRsVkNjR1JPY1ZvM1R6QnRUMUZ6YTBSdVZtdFRSR2d4UkVWMFEzRTVORTFFU1hWaWFsZ3JkbFZQV0ZBNVdWQk9UQzl2WXpOVVpWYzVTMHgxVTA1clNFSmlNbUZ4ZG5CRmVFTTJWM2t5UmtNMGNYcEdabXB5Y0M5RGEyWnFObGgxU2tKak5XcGhZVVJsV0V4a2RVSXlZbmRxWTFGdGJsUTNRaTgxVW1WblJtTnFUMmhtT0dOS1FpOVhhbmhVYjBwUU9WRkRUMnBqWkdaRFVFZHJlRXhCU25oSFpVOVhWVVl2ZERjeFJucHZNalo2T0U1VlUybGpPSHBsVTFwclRYUlhlVkZrVFd0YU9GQm9kRmxCWVRodFQwSXlWbXQyVjBob0syWjVjMnhsTTBkcE0xZDRVRFkwYm5jeFFrRTRVa1pJWmpGS0sxQkJTRzl5WmpGeFNEbHJUSGxpYkdGVlp6QXpOV05FU2xCdVVpOWFTa1pEVldaeVl6QkhOSFJDV0ROcU5sTTJkMGc1VFdZclRGWkhRbTluVUZSRFNXSkZPRU5qVVVwSFpYSTFaVXBLWmpSWFMyNVVlblZsYXpGSVVXdEJaREpYTlhkb2FFRTVOMkozTlRoeFprMU9haUlzSW0xaFl5STZJamsxT0dVd09EUXlOVFJqT1RZeFpqTmpaVGN3WWpBMVpqQTVNR1JsTXpCbU9HSTNNamcyTURBellqQXpPVGRtWVdFMU1qUm1ZakEyWkdZNU5qaGxPR0lpTENKMFlXY2lPaUlpZlE9PQ==', 1777382655);
 
 -- --------------------------------------------------------
 
@@ -5634,9 +5586,8 @@ INSERT DELAYED IGNORE INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agen
 -- Table structure for table `users`
 --
 
-DROP TABLE IF EXISTS `users`;
-CREATE TABLE IF NOT EXISTS `users` (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE `users` (
+  `id` bigint(20) UNSIGNED NOT NULL,
   `name` varchar(255) NOT NULL,
   `nip` varchar(30) DEFAULT NULL,
   `email` varchar(255) NOT NULL,
@@ -5651,25 +5602,14 @@ CREATE TABLE IF NOT EXISTS `users` (
   `jabatan` varchar(50) DEFAULT NULL,
   `kelurahan_credential_id` bigint(20) UNSIGNED DEFAULT NULL,
   `credential_issued_at` timestamp NULL DEFAULT NULL,
-  `is_active` tinyint(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `users_email_unique` (`email`),
-  UNIQUE KEY `users_phone_unique` (`phone`),
-  UNIQUE KEY `users_recovery_email_unique` (`recovery_email`),
-  KEY `users_kelurahan_credential_id_foreign` (`kelurahan_credential_id`),
-  KEY `users_jabatan_index` (`jabatan`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `is_active` tinyint(1) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Truncate table before insert `users`
---
-
-TRUNCATE TABLE `users`;
 --
 -- Dumping data for table `users`
 --
 
-INSERT DELAYED IGNORE INTO `users` (`id`, `name`, `nip`, `email`, `recovery_email`, `phone`, `email_verified_at`, `password`, `credential_code_hash`, `remember_token`, `created_at`, `updated_at`, `jabatan`, `kelurahan_credential_id`, `credential_issued_at`, `is_active`) VALUES
+INSERT INTO `users` (`id`, `name`, `nip`, `email`, `recovery_email`, `phone`, `email_verified_at`, `password`, `credential_code_hash`, `remember_token`, `created_at`, `updated_at`, `jabatan`, `kelurahan_credential_id`, `credential_issued_at`, `is_active`) VALUES
 (1, 'Test User', NULL, 'test@example.com', NULL, NULL, '2026-04-24 00:04:10', '$2y$12$R61k8ooYL.EuGvmP8yioaukrZzJ44.LhdN1Aau5bXGdLjKWXjJ.7u', NULL, 'u5Y8vX4Ycf', '2026-04-24 00:04:10', '2026-04-24 00:04:10', NULL, NULL, NULL, 0),
 (2, 'ANAK AGUNG G.S.M. PUTRA SE', '19760703 200112 1 002', 'anakagung.lurah@kelurahan.local', NULL, NULL, '2026-04-24 00:09:16', '$2y$12$FTBO3eZ9vvk220PNd7OVtOvexd16sTMZ0qmjWJMxkK0GftIO.BnLe', '$2y$12$OitxMRYxJtASK1u7unw93O/OsWLBJBQ19QWceU40TfH/Uu2CNK/Xy', NULL, '2026-04-24 00:09:16', '2026-04-24 00:09:16', 'lurah', NULL, NULL, 1),
 (3, 'YUBLINA BAUBANI, A.Md', '19750601 200012 2 007', 'yublina.sekretaris@kelurahan.local', NULL, NULL, '2026-04-24 00:09:16', '$2y$12$vIynK/mOXxYFgwWPyJdINOKtwyCVjQlg6UDN/0hdJd.yhvUzMBG3m', '$2y$12$af6Fd7Kc4jx9GDNjcmIW6uBpFZRgneDpEjvsXkVmNcPu5vX1wph/a', NULL, '2026-04-24 00:09:16', '2026-04-24 00:09:16', 'sekretaris', NULL, NULL, 1),
@@ -5683,6 +5623,233 @@ INSERT DELAYED IGNORE INTO `users` (`id`, `name`, `nip`, `email`, `recovery_emai
 (11, 'SOFIA MEIDIANA PAH', '19850510 202521 2 038', 'sofia.pengadmin5@kelurahan.local', NULL, NULL, '2026-04-24 00:09:20', '$2y$12$Ym7PYu2mgER0w1GzBKOvwushnHNFC9VyA4Juh4y5ZpyKFeFLp74Wi', '$2y$12$nV58qd56nOrXdXEKpSZJneDDz/QDH2DL6Ip7mZsqCSr/zXWASAzy.', NULL, '2026-04-24 00:09:20', '2026-04-24 00:09:20', 'pengadministrasi_perkantoran', NULL, NULL, 1),
 (12, 'YOHANES PAULUS NESI LEBAO, ST', '19900523 202521 1 063', 'yohanes.penata1@kelurahan.local', NULL, NULL, '2026-04-24 00:09:20', '$2y$12$HJx7Sxg4Pq2tDtq4V6fHF.sIMZI5PaEJVTfKEuHo6OMF0Rj2ZW5oW', '$2y$12$wfb2op9fw55WPTKRNfBm7e17KfHutaN2c7GRN2pbRo.E3GPQq8iOG', NULL, '2026-04-24 00:09:20', '2026-04-24 00:09:20', 'penata_layanan_operasional', NULL, NULL, 1),
 (13, 'CLARA PRISCILLA DARIS, S.AB', '7121199704260128', 'clara.penata2@kelurahan.local', NULL, NULL, '2026-04-24 00:09:21', '$2y$12$oHwsQzAqpEJPfzJIuyOvqufiA9UWNXkDg9vU.0TjUJIDfZnEruG.u', '$2y$12$2.07KKTunvjF/hd51gwXu.A8aKucLcx6wYs7tnVHI5ziY34ZOc4l6', NULL, '2026-04-24 00:09:21', '2026-04-24 00:09:21', 'penata_layanan_operasional', NULL, NULL, 1);
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_activity_model` (`model_type`,`model_id`),
+  ADD KEY `idx_activity_user_time` (`user_id`,`created_at`),
+  ADD KEY `activity_logs_action_index` (`action`),
+  ADD KEY `activity_logs_model_type_index` (`model_type`),
+  ADD KEY `activity_logs_model_id_index` (`model_id`);
+
+--
+-- Indexes for table `cache`
+--
+ALTER TABLE `cache`
+  ADD PRIMARY KEY (`key`);
+
+--
+-- Indexes for table `cache_locks`
+--
+ALTER TABLE `cache_locks`
+  ADD PRIMARY KEY (`key`);
+
+--
+-- Indexes for table `credential_counters`
+--
+ALTER TABLE `credential_counters`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `credential_counters_jabatan_key_unique` (`jabatan_key`);
+
+--
+-- Indexes for table `email_otps`
+--
+ALTER TABLE `email_otps`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `email_otps_email_index` (`email`);
+
+--
+-- Indexes for table `failed_jobs`
+--
+ALTER TABLE `failed_jobs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`);
+
+--
+-- Indexes for table `jobs`
+--
+ALTER TABLE `jobs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `jobs_queue_index` (`queue`);
+
+--
+-- Indexes for table `job_batches`
+--
+ALTER TABLE `job_batches`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `kelurahan_credentials`
+--
+ALTER TABLE `kelurahan_credentials`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `kelurahan_credentials_code_unique` (`code`),
+  ADD KEY `kelurahan_credentials_used_by_foreign` (`used_by`),
+  ADD KEY `kelurahan_credentials_jabatan_is_active_index` (`jabatan`,`is_active`);
+
+--
+-- Indexes for table `letters`
+--
+ALTER TABLE `letters`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `letters_no_surat_unique` (`no_surat`),
+  ADD KEY `letters_printed_by_foreign` (`printed_by`),
+  ADD KEY `letters_template_slug_index` (`template_slug`),
+  ADD KEY `letters_index_code_index` (`index_code`),
+  ADD KEY `letters_urut_index` (`urut`),
+  ADD KEY `letters_printed_at_index` (`printed_at`);
+
+--
+-- Indexes for table `letter_counters`
+--
+ALTER TABLE `letter_counters`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `letter_counters_template_slug_unique` (`template_slug`);
+
+--
+-- Indexes for table `letter_documents`
+--
+ALTER TABLE `letter_documents`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `letter_documents_letter_id_index` (`letter_id`);
+
+--
+-- Indexes for table `migrations`
+--
+ALTER TABLE `migrations`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `password_reset_tokens`
+--
+ALTER TABLE `password_reset_tokens`
+  ADD PRIMARY KEY (`email`);
+
+--
+-- Indexes for table `penduduks`
+--
+ALTER TABLE `penduduks`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `penduduks_nik_unique` (`nik`),
+  ADD KEY `penduduks_dusun_rt_rw_index` (`dusun`,`rt`,`rw`),
+  ADD KEY `penduduks_nama_index` (`nama`),
+  ADD KEY `penduduks_kode_keluarga_index` (`kode_keluarga`);
+
+--
+-- Indexes for table `register_otps`
+--
+ALTER TABLE `register_otps`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `register_otps_phone_purpose_expires_at_index` (`phone`,`purpose`,`expires_at`),
+  ADD KEY `register_otps_phone_index` (`phone`);
+
+--
+-- Indexes for table `sessions`
+--
+ALTER TABLE `sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `sessions_user_id_index` (`user_id`),
+  ADD KEY `sessions_last_activity_index` (`last_activity`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `users_email_unique` (`email`),
+  ADD UNIQUE KEY `users_phone_unique` (`phone`),
+  ADD UNIQUE KEY `users_recovery_email_unique` (`recovery_email`),
+  ADD KEY `users_kelurahan_credential_id_foreign` (`kelurahan_credential_id`),
+  ADD KEY `users_jabatan_index` (`jabatan`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2554;
+
+--
+-- AUTO_INCREMENT for table `credential_counters`
+--
+ALTER TABLE `credential_counters`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `email_otps`
+--
+ALTER TABLE `email_otps`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `failed_jobs`
+--
+ALTER TABLE `failed_jobs`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `jobs`
+--
+ALTER TABLE `jobs`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `kelurahan_credentials`
+--
+ALTER TABLE `kelurahan_credentials`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `letters`
+--
+ALTER TABLE `letters`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT for table `letter_counters`
+--
+ALTER TABLE `letter_counters`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `letter_documents`
+--
+ALTER TABLE `letter_documents`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+
+--
+-- AUTO_INCREMENT for table `migrations`
+--
+ALTER TABLE `migrations`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+
+--
+-- AUTO_INCREMENT for table `penduduks`
+--
+ALTER TABLE `penduduks`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2530;
+
+--
+-- AUTO_INCREMENT for table `register_otps`
+--
+ALTER TABLE `register_otps`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- Constraints for dumped tables
@@ -5699,6 +5866,12 @@ ALTER TABLE `kelurahan_credentials`
 --
 ALTER TABLE `letters`
   ADD CONSTRAINT `letters_printed_by_foreign` FOREIGN KEY (`printed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `letter_documents`
+--
+ALTER TABLE `letter_documents`
+  ADD CONSTRAINT `letter_documents_letter_id_foreign` FOREIGN KEY (`letter_id`) REFERENCES `letters` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `users`
