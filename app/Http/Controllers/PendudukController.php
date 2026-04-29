@@ -501,13 +501,8 @@ class PendudukController extends Controller
                 }
 
                 try {
-                    if ($existing) {
-                        $existing->update($data);
-                        $updated++;
-                    } else {
-                        Penduduk::create($data);
-                        $inserted++;
-                    }
+                    Penduduk::create($data);
+                    $inserted++;
                 } catch (\Throwable $e) {
                     $skipped++;
                     if (count($errors) < 5) {
@@ -605,6 +600,16 @@ class PendudukController extends Controller
         return redirect()
             ->route('penduduk.index')
             ->with('success', 'Data penduduk berhasil diperbarui.');
+    }
+
+    public function destroy(Penduduk $penduduk)
+    {
+        $nama = $penduduk->nama;
+        $penduduk->delete();
+
+        return redirect()
+            ->route('penduduk.index')
+            ->with('success', "Data penduduk {$nama} berhasil dihapus.");
     }
 
     public function searchKepalaKeluarga(Request $request)

@@ -32,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // SECURITY: File upload validation middleware
         $middleware->alias([
             'secure.upload' => \App\Http\Middleware\SecureFileUpload::class,
+            'role'          => \App\Http\Middleware\EnsureRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -14,6 +14,14 @@ const page = usePage()
 const flashSuccess = computed(() => page.props.flash?.success)
 const flashError = computed(() => page.props.flash?.error)
 
+const userRole = computed(() => page.props.auth?.user?.role ?? 'staff')
+const canDelete = computed(() => userRole.value === 'staff' || userRole.value === 'admin')
+
+const deletePenduduk = (p) => {
+  if (!confirm(`Hapus data penduduk "${p.nama}" (NIK: ${p.nik})? Tindakan ini tidak dapat dibatalkan.`)) return
+  router.delete(route('penduduk.destroy', p.id), { preserveScroll: true })
+}
+
 const filtersForm = reactive({
   q: props.filters?.q ?? '',
   dusun: props.filters?.dusun ?? '',
@@ -329,13 +337,23 @@ const importCsv = () => {
                   class="border-b hover:bg-gray-50"
                 >
                   <td class="px-3 py-3">
-                    <button
-                      type="button"
-                      class="rounded-lg bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-200 transition"
-                      @click="router.visit(route('penduduk.edit', p.id))"
-                    >
-                      Edit
-                    </button>
+                    <div class="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        class="rounded-lg bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-200 transition"
+                        @click="router.visit(route('penduduk.edit', p.id))"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        v-if="canDelete"
+                        type="button"
+                        class="rounded-lg bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700 hover:bg-red-200 transition"
+                        @click="deletePenduduk(p)"
+                      >
+                        Hapus
+                      </button>
+                    </div>
                   </td>
                   <td class="px-3 py-3 text-xs font-mono">{{ p.rt }}</td>
                   <td class="px-3 py-3 text-xs font-mono">{{ p.rw }}</td>

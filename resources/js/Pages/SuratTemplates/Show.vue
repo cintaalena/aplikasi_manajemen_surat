@@ -620,6 +620,7 @@ const saveAsPdfDraft = async () => {
   showExportMenu.value = false
 
   try {
+    validateDokDomisiliBeforePrint()
     validateDokKematianBeforePrint()
     validateDokKelahiranBeforePrint()
     validateDokPindahBeforePrint()
@@ -640,6 +641,7 @@ const saveAsWord = async () => {
   showExportMenu.value = false
 
   try {
+    validateDokDomisiliBeforePrint()
     validateDokKematianBeforePrint()
     validateDokKelahiranBeforePrint()
     validateDokPindahBeforePrint()
@@ -1004,6 +1006,81 @@ const validateDokPindahBeforePrint = () => {
 const getPindahDokIds = () => PINDAH_DOCS.map(d => pindahDokState[d.key].id).filter(Boolean)
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── Dokumen Persyaratan Surat Domisili ───────────────────────────────────────
+
+const DOMISILI_DOCS = [
+  { key: 'fotoEKtp',             label: 'Fotocopy e-KTP',                    wajib: true },
+  { key: 'suratPengantarRw',     label: 'Surat Pengantar dari RW',            wajib: true },
+]
+
+const domisiliDokState = reactive(
+  Object.fromEntries(DOMISILI_DOCS.map(d => [d.key, { id: null, url: null, isUploading: false, error: '' }]))
+)
+
+const handleDomisiliDokUpload = async (key, event) => {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  if (file.size > 5 * 1024 * 1024) {
+    domisiliDokState[key].error = 'Ukuran file terlalu besar. Maksimal 5 MB.'
+    return
+  }
+  const label = DOMISILI_DOCS.find(d => d.key === key)?.label ?? key
+  domisiliDokState[key].isUploading = true
+  domisiliDokState[key].error = ''
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('doc_key', key)
+    fd.append('doc_label', label)
+    const res = await fetch('/surat/dokumen/upload', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
+      credentials: 'include',
+      body: fd,
+    })
+    const data = await res.json().catch(() => null)
+    if (!res.ok) {
+      if (res.status === 419) throw new Error('Sesi Anda telah berakhir. Silakan muat ulang halaman lalu coba lagi.')
+      throw new Error(data?.message ?? `Upload gagal (${res.status})`)
+    }
+    domisiliDokState[key].id  = data.id
+    domisiliDokState[key].url = data.url
+  } catch (e) {
+    domisiliDokState[key].error = e.message ?? 'Gagal upload'
+  } finally {
+    domisiliDokState[key].isUploading = false
+  }
+}
+
+const removeDomisiliDok = async (key) => {
+  const id = domisiliDokState[key].id
+  if (id) {
+    try {
+      await fetch(`/surat/dokumen/${id}`, {
+        method: 'DELETE',
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
+        credentials: 'include',
+      })
+    } catch { /* abaikan */ }
+  }
+  domisiliDokState[key].id  = null
+  domisiliDokState[key].url = null
+  domisiliDokState[key].error = ''
+}
+
+const validateDokDomisiliBeforePrint = () => {
+  if (!isDomisili.value) return true
+  const missing = DOMISILI_DOCS.filter(d => d.wajib && !domisiliDokState[d.key].id).map(d => d.label)
+  if (missing.length > 0) {
+    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
+  }
+  return true
+}
+
+const getDomisiliDokIds = () => DOMISILI_DOCS.map(d => domisiliDokState[d.key].id).filter(Boolean)
+// ─────────────────────────────────────────────────────────────────────────────
+
 const finalizeLetter = async (templateSlug) => {
   if (!selectedIndexCode.value) {
     throw new Error('Silakan pilih kategori dan nomor index terlebih dahulu!')
@@ -1015,7 +1092,9 @@ const finalizeLetter = async (templateSlug) => {
     payload: { ...form },
   }
 
-  if (isKematian.value) {
+  if (isDomisili.value) {
+    body.doc_ids = getDomisiliDokIds()
+  } else if (isKematian.value) {
     body.doc_ids = getDokIds()
   } else if (isKelahiran.value) {
     body.doc_ids = getKelDokIds()
@@ -1085,6 +1164,13 @@ const printNow = async () => {
 
   try {
     validateDokPindahBeforePrint()
+  } catch (e) {
+    alert(e.message)
+    return
+  }
+
+  try {
+    validateDokDomisiliBeforePrint()
   } catch (e) {
     alert(e.message)
     return
@@ -1446,6 +1532,46 @@ const confirmFinalize = async (confirmed) => {
                   v-model="form.rw"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 />
+              </div>
+
+              <!-- ══ DOKUMEN PERSYARATAN SURAT DOMISILI ══ -->
+              <div class="sm:col-span-2 mt-1">
+                <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-3">
+                  <div class="flex items-start gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <div>
+                      <div class="text-sm font-semibold text-blue-800">Dokumen Persyaratan</div>
+                      <p class="text-xs text-blue-700 mt-0.5">Upload semua dokumen <span class="font-semibold">Wajib</span> sebelum surat dapat dicetak.</p>
+                    </div>
+                  </div>
+
+                  <div
+                    v-for="(doc, idx) in DOMISILI_DOCS"
+                    :key="doc.key"
+                    class="rounded-lg bg-white border border-blue-100 p-3 space-y-2"
+                  >
+                    <div class="flex items-start gap-2">
+                      <span class="inline-flex items-center rounded-full bg-red-100 text-red-700 px-2 py-0.5 text-xs font-semibold flex-shrink-0 mt-0.5">Wajib</span>
+                      <span class="text-xs font-medium text-gray-700 leading-snug">{{ idx + 1 }}. {{ doc.label }}</span>
+                    </div>
+
+                    <div v-if="domisiliDokState[doc.key].isUploading" class="rounded-lg border-2 border-dashed border-blue-300 bg-blue-50 py-2 text-center text-xs text-blue-700 font-medium">
+                      Mengupload...
+                    </div>
+                    <div v-else-if="!domisiliDokState[doc.key].id">
+                      <label class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-blue-400 bg-blue-50 py-2.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        Klik untuk Upload File
+                        <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDomisiliDokUpload(doc.key, $event)" />
+                      </label>
+                    </div>
+                    <div v-else class="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+                      <span class="text-xs text-blue-700 font-semibold">✓ File tersimpan</span>
+                      <button type="button" @click="removeDomisiliDok(doc.key)" class="text-xs text-red-500 hover:text-red-700 font-medium">Hapus</button>
+                    </div>
+                    <p v-if="domisiliDokState[doc.key].error" class="text-xs text-red-600">{{ domisiliDokState[doc.key].error }}</p>
+                  </div>
+                </div>
               </div>
             </template>
 

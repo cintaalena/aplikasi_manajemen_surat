@@ -31,7 +31,8 @@ class LoginRequest extends FormRequest
         return [
             'name'            => ['required', 'string'],
             'password'        => ['required', 'string'],
-            'credential_code' => ['required', 'regex:/^[A-Z0-9]{1,10}-\d{3,6}$/i'],
+            // credential_code bersifat opsional — tidak diperlukan untuk login admin
+            'credential_code' => ['nullable', 'string'],
         ];
     }
 
@@ -60,10 +61,14 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        if (! $user->credential_code_hash || ! \Illuminate\Support\Facades\Hash::check($credential, $user->credential_code_hash)) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'credential_code' => 'Credential tidak sesuai.',
-            ]);
+        // Admin tidak memerlukan credential_code — cukup username + password
+        if ($user->role !== 'admin') {
+            $credential = strtoupper(trim($this->input('credential_code') ?? ''));
+            if (! $credential || ! $user->credential_code_hash || ! \Illuminate\Support\Facades\Hash::check($credential, $user->credential_code_hash)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'credential_code' => 'Credential tidak sesuai.',
+                ]);
+            }
         }
 
         if (! \Illuminate\Support\Facades\Hash::check($password, $user->password)) {
