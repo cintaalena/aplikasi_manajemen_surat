@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Api\LetterController;
 use App\Http\Controllers\Api\LetterDocumentController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\LetterNotificationController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -95,6 +96,14 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/surat/dokumen/{document}', [LetterDocumentController::class, 'destroy'])
         ->name('surat.dokumen.destroy');
+
+    // ── Notifikasi — lurah saja ────────────────────────────────────────────
+    Route::middleware('role:lurah')->group(function () {
+        Route::get('/notifications', [LetterNotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/stream', [LetterNotificationController::class, 'stream'])->name('notifications.stream');
+        Route::post('/notifications/mark-all-read', [LetterNotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+        Route::patch('/notifications/{notification}/mark-read', [LetterNotificationController::class, 'markRead'])->name('notifications.mark-read');
+    });
 
     // ── Admin — manajemen pengguna ──────────────────────────────────────────
     Route::prefix('admin')->middleware('role:admin')->group(function () {
