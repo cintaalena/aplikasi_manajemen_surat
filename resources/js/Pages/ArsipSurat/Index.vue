@@ -41,13 +41,54 @@ const showManualForm = ref(false)
 const manualForm = useForm({
   no_surat: '',
   title:    '',
+  files:    [],  // array of File — dikirim langsung dengan form (satu request)
 })
+
+// Daftar file yang dipilih pengguna (untuk tampilan)
+const selectedFiles = ref([])
+const uploadError   = ref('')
+
+const formatBytes = (bytes) => {
+  if (!bytes) return ''
+  if (bytes < 1024)        return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+const ALLOWED_MIMES = ['image/jpeg','image/png','image/webp','application/pdf']
+const MAX_BYTES     = 5 * 1024 * 1024  // 5 MB
+
+const handleFileChange = (e) => {
+  const files = Array.from(e.target.files || [])
+  e.target.value = ''
+  uploadError.value = ''
+
+  for (const file of files) {
+    if (!ALLOWED_MIMES.includes(file.type)) {
+      uploadError.value = `File "${file.name}" tidak didukung. Gunakan JPG, PNG, WEBP, atau PDF.`
+      continue
+    }
+    if (file.size > MAX_BYTES) {
+      uploadError.value = `File "${file.name}" terlalu besar. Maksimal 5 MB.`
+      continue
+    }
+    selectedFiles.value.push({ name: file.name, size: file.size, mime: file.type })
+    manualForm.files.push(file)
+  }
+}
+
+const removeFile = (idx) => {
+  selectedFiles.value.splice(idx, 1)
+  manualForm.files.splice(idx, 1)
+}
 
 const submitManual = () => {
   manualForm.post(route('arsip-surat.store'), {
     preserveScroll: true,
     onSuccess: () => {
       manualForm.reset()
+      selectedFiles.value = []
+      uploadError.value   = ''
       showManualForm.value = false
     },
   })
@@ -149,11 +190,67 @@ function isPdf(mime) {
           </div>
         </div>
 
+        <!-- Upload Berkas -->
+        <div class="flex flex-col gap-2">
+          <label class="text-xs font-semibold text-gray-600">
+            Upload Berkas Surat
+            <span class="ml-1 font-normal text-gray-400">(opsional — JPG, PNG, WEBP, PDF · maks 5 MB/file)</span>
+          </label>
+
+          <!-- Drag-drop / klik area -->
+          <label
+            class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-purple-200 bg-purple-50/40 px-4 py-5 text-center transition hover:border-purple-400 hover:bg-purple-50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+            <span class="text-sm font-medium text-purple-600">Klik atau seret file ke sini</span>
+            <span class="text-xs text-gray-400">Bisa pilih lebih dari satu file</span>
+            <input type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" class="sr-only" @change="handleFileChange" />
+          </label>
+
+          <!-- Error upload -->
+          <p v-if="uploadError" class="text-xs text-red-600">{{ uploadError }}</p>
+
+          <!-- Daftar file yang dipilih -->
+          <div v-if="selectedFiles.length" class="space-y-2">
+            <div
+              v-for="(file, idx) in selectedFiles"
+              :key="idx"
+              class="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm"
+            >
+              <!-- Ikon tipe file -->
+              <span class="text-lg shrink-0">
+                <template v-if="file.mime === 'application/pdf'">📄</template>
+                <template v-else-if="file.mime?.startsWith('image/')">🖼️</template>
+                <template v-else>📎</template>
+              </span>
+
+              <div class="flex-1 min-w-0">
+                <p class="truncate font-medium text-gray-800 text-xs" :title="file.name">{{ file.name }}</p>
+                <p class="text-xs text-gray-400">{{ formatBytes(file.size) }}</p>
+              </div>
+
+              <!-- Tombol hapus -->
+              <button
+                type="button"
+                class="shrink-0 rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 transition"
+                @click="removeFile(idx)"
+                title="Hapus file ini"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="flex gap-2 justify-end">
           <button
             type="button"
             class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
-            @click="showManualForm = false; manualForm.reset()"
+            @click="showManualForm = false; manualForm.reset(); selectedFiles = []; uploadError = ''"
           >
             Batal
           </button>

@@ -75,25 +75,16 @@ defineProps({
                 Aplikasi internal untuk pencatatan surat masuk/keluar dan arsip yang lebih tertib, cepat, dan aman.
               </p>
 
-              <div class="mt-3 text-xs text-white/70">
-                SSDLC • OWASP Top 10 • Inertia + Vue
-              </div>
+
             </div>
           </div>
 
           <!-- RIGHT: Simple welcome + login button -->
-          <div class="bg-white p-8 sm:p-10">
+          <div class="flex flex-col items-center justify-center bg-white p-8 sm:p-10 text-center">
             <div class="text-sm text-gray-500">Hello!</div>
             <div class="text-2xl font-bold text-gray-900">Selamat Datang</div>
 
-            <div class="mt-6">
-              <div class="text-sm font-semibold text-gray-700">Masuk ke akun Anda</div>
-              <p class="mt-2 text-sm text-gray-600">
-                Gunakan email, password, dan credential untuk mengakses dashboard persuratan.
-              </p>
-            </div>
-
-            <div class="mt-8">
+            <div class="mt-8 w-full max-w-xs">
               <Link
                 v-if="canLogin"
                 :href="route('login')"

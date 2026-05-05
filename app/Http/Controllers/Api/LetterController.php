@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Letter;
 use App\Models\LetterCounter;
-use App\Models\LetterDocument;
+use App\Models\LetterNotification;
 use App\Models\Penduduk;
-use Illuminate\Database\UniqueConstraintViolationException;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -47,11 +47,9 @@ class LetterController extends Controller
     public function finalize(Request $request, string $templateSlug)
     {
         $validated = $request->validate([
-            'title'    => ['required', 'string', 'max:150'],
+            'title' => ['required', 'string', 'max:150'],
             'index_code' => ['required', 'string', 'max:50'],
-            'payload'  => ['required', 'array'],
-            'doc_ids'  => ['sometimes', 'array'],
-            'doc_ids.*' => ['integer', 'exists:letter_documents,id'],
+            'payload' => ['required', 'array'],
         ]);
 
         if ($this->mustExistInPenduduk($templateSlug)) {
@@ -88,61 +86,39 @@ class LetterController extends Controller
         $monthRoman = $this->monthToRoman((int) $now->format('n'));
         $year = (int) $now->format('Y');
 
-        try {
-            $letter = DB::transaction(function () use ($templateSlug, $validated, $monthRoman, $year, $now) {
-                $counter = LetterCounter::where('template_slug', $templateSlug)->lockForUpdate()->first();
+        $letter = DB::transaction(function () use ($templateSlug, $validated, $monthRoman, $year, $now) {
+            $counter = LetterCounter::where('template_slug', $templateSlug)->lockForUpdate()->first();
 
-                if (!$counter) {
-                    $counter = LetterCounter::create([
-                        'template_slug' => $templateSlug,
-                        'count' => 0,
-                    ]);
-                }
-
-                // Sinkronisasi counter dengan data aktual di tabel letters
-                // agar tidak bentrok jika counter pernah di-reset atau tidak sinkron
-                $maxUrut = Letter::where('template_slug', $templateSlug)
-                    ->where('month_roman', $monthRoman)
-                    ->where('year', $year)
-                    ->max('urut') ?? 0;
-
-                $nextUrut = max((int) $counter->count + 1, (int) $maxUrut + 1);
-                $counter->count = $nextUrut;
-                $counter->save();
-
-                $urut = $nextUrut;
-                $indexCode = (string) $validated['index_code'];
-                $noSurat = $this->buildNoSurat($urut, $indexCode, $monthRoman, $year);
-
-                return Letter::create([
+            if (!$counter) {
+                $counter = LetterCounter::create([
                     'template_slug' => $templateSlug,
-                    'title' => $validated['title'],
-                    'no_surat' => $noSurat,
-
-                    'index_code' => $indexCode,
-                    'urut' => $urut,
-                    'month_roman' => $monthRoman,
-                    'year' => $year,
-
-                    'payload' => $validated['payload'],
-
-                    'printed_at' => $now,
-                    'printed_by' => auth()->id(),
+                    'count' => 0,
                 ]);
-            });
-        } catch (UniqueConstraintViolationException $e) {
-            return response()->json([
-                'message' => 'Nomor surat ini sudah ada di arsip. Kemungkinan surat sudah pernah disimpan sebelumnya.',
-            ], 409);
-        }
+            }
 
-        // Hubungkan dokumen pendukung yang sudah di-upload sebelumnya
-        $docIds = $validated['doc_ids'] ?? [];
-        if (!empty($docIds)) {
-            LetterDocument::whereIn('id', $docIds)
-                ->whereNull('letter_id')
-                ->update(['letter_id' => $letter->id]);
-        }
+            $counter->count = $counter->count + 1;
+            $counter->save();
+
+            $urut = (int) $counter->count;
+            $indexCode = (string) $validated['index_code'];
+            $noSurat = $this->buildNoSurat($urut, $indexCode, $monthRoman, $year);
+
+            return Letter::create([
+                'template_slug' => $templateSlug,
+                'title' => $validated['title'],
+                'no_surat' => $noSurat,
+
+                'index_code' => $indexCode,
+                'urut' => $urut,
+                'month_roman' => $monthRoman,
+                'year' => $year,
+
+                'payload' => $validated['payload'],
+
+                'printed_at' => $now,
+                'printed_by' => auth()->id(),
+            ]);
+        });
 
         // Jika surat kematian → otomatis tandai penduduk sebagai Meninggal
         if ($templateSlug === 'keterangan-kematian') {
@@ -169,6 +145,8 @@ class LetterController extends Controller
             }
         }
 
+        $this->notifyLurah($letter);
+
         return response()->json([
             'id' => $letter->id,
             'noSurat' => $letter->no_surat,
@@ -176,5 +154,19 @@ class LetterController extends Controller
             'monthRoman' => $letter->month_roman,
             'year' => $letter->year,
         ]);
+    }
+
+    private function notifyLurah(Letter $letter): void
+    {
+        $lurahUsers = User::where('role', 'lurah')->where('is_active', true)->get(['id']);
+
+        foreach ($lurahUsers as $lurah) {
+            LetterNotification::create([
+                'user_id'   => $lurah->id,
+                'letter_id' => $letter->id,
+                'message'   => 'Surat baru dicetak: ' . $letter->no_surat . ' — ' . $letter->title,
+                'is_read'   => false,
+            ]);
+        }
     }
 }
