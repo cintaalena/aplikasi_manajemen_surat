@@ -137,7 +137,7 @@ function isPdf(mime) {
         </div>
         <button
           type="button"
-          class="rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition whitespace-nowrap"
+          class="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 shadow-sm transition whitespace-nowrap"
           @click="showManualForm = !showManualForm"
         >
           + Tambah Surat Masuk
@@ -161,7 +161,7 @@ function isPdf(mime) {
       <!-- Form tambah surat manual -->
       <div
         v-if="showManualForm"
-        class="rounded-2xl border border-purple-200 bg-white p-5 shadow-sm space-y-4"
+        class="rounded-2xl border border-green-200 bg-white p-5 shadow-sm space-y-4"
       >
         <h2 class="text-sm font-bold text-gray-800">Tambah Surat Masuk Manual</h2>
         <p class="text-xs text-gray-500">Untuk surat yang diterima dari luar (mis. dari kecamatan). Waktu masuk akan dicatat otomatis.</p>
@@ -173,7 +173,7 @@ function isPdf(mime) {
               v-model="manualForm.no_surat"
               type="text"
               placeholder="Contoh: 123/Kec.X/IV/2026"
-              class="rounded-xl border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400"
+              class="rounded-xl border-gray-200 text-sm focus:border-green-400 focus:ring-green-400"
             />
             <p v-if="manualForm.errors.no_surat" class="text-xs text-red-600">{{ manualForm.errors.no_surat }}</p>
           </div>
@@ -184,7 +184,7 @@ function isPdf(mime) {
               v-model="manualForm.title"
               type="text"
               placeholder="Contoh: Undangan Rapat Koordinasi"
-              class="rounded-xl border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400"
+              class="rounded-xl border-gray-200 text-sm focus:border-green-400 focus:ring-green-400"
             />
             <p v-if="manualForm.errors.title" class="text-xs text-red-600">{{ manualForm.errors.title }}</p>
           </div>
@@ -194,20 +194,25 @@ function isPdf(mime) {
         <div class="flex flex-col gap-2">
           <label class="text-xs font-semibold text-gray-600">
             Upload Berkas Surat
-            <span class="ml-1 font-normal text-gray-400">(opsional — JPG, PNG, WEBP, PDF · maks 5 MB/file)</span>
+            <span class="text-red-500">*</span>
+            <span class="ml-1 font-normal text-gray-400">(Wajib — JPG, PNG, WEBP, PDF · maks 5 MB/file)</span>
           </label>
 
           <!-- Drag-drop / klik area -->
           <label
-            class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-purple-200 bg-purple-50/40 px-4 py-5 text-center transition hover:border-purple-400 hover:bg-purple-50"
+            class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-green-200 bg-green-50/40 px-4 py-5 text-center transition hover:border-green-400 hover:bg-green-50"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
             </svg>
-            <span class="text-sm font-medium text-purple-600">Klik atau seret file ke sini</span>
+            <span class="text-sm font-medium text-green-600">Klik atau seret file ke sini</span>
             <span class="text-xs text-gray-400">Bisa pilih lebih dari satu file</span>
             <input type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" class="sr-only" @change="handleFileChange" />
           </label>
+
+
+          <!-- Peringatan jika belum ada file -->
+          <p v-if="selectedFiles.length === 0" class="text-xs text-red-600 font-medium">⚠ Wajib upload minimal 1 file berkas surat sebelum menyimpan.</p>
 
           <!-- Error upload -->
           <p v-if="uploadError" class="text-xs text-red-600">{{ uploadError }}</p>
@@ -256,8 +261,9 @@ function isPdf(mime) {
           </button>
           <button
             type="button"
-            :disabled="manualForm.processing"
-            class="rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition disabled:opacity-60"
+            :disabled="manualForm.processing || selectedFiles.length === 0"
+            class="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed"
+            :title="selectedFiles.length === 0 ? 'Upload file terlebih dahulu' : ''"
             @click="submitManual"
           >
             {{ manualForm.processing ? 'Menyimpan...' : 'Simpan ke Arsip' }}
@@ -266,7 +272,7 @@ function isPdf(mime) {
       </div>
 
       <!-- Panel Filter -->
-      <div class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm space-y-3">
+      <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm space-y-3">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
           <!-- Nomor Surat -->
@@ -276,7 +282,7 @@ function isPdf(mime) {
               v-model="form.no_surat"
               type="text"
               placeholder="Contoh: 71/Kel.Ftbs..."
-              class="rounded-xl border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400"
+              class="rounded-xl border-gray-200 text-sm focus:border-green-400 focus:ring-green-400"
               @keyup.enter="search"
             />
           </div>
@@ -288,7 +294,7 @@ function isPdf(mime) {
               v-model="form.title"
               type="text"
               placeholder="Contoh: Keterangan Domisili..."
-              class="rounded-xl border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400"
+              class="rounded-xl border-gray-200 text-sm focus:border-green-400 focus:ring-green-400"
               @keyup.enter="search"
             />
           </div>
@@ -299,7 +305,7 @@ function isPdf(mime) {
             <input
               v-model="form.date_from"
               type="date"
-              class="rounded-xl border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400"
+              class="rounded-xl border-gray-200 text-sm focus:border-green-400 focus:ring-green-400"
             />
           </div>
 
@@ -309,7 +315,7 @@ function isPdf(mime) {
             <input
               v-model="form.date_to"
               type="date"
-              class="rounded-xl border-gray-200 text-sm focus:border-purple-400 focus:ring-purple-400"
+              class="rounded-xl border-gray-200 text-sm focus:border-green-400 focus:ring-green-400"
             />
           </div>
         </div>
@@ -318,7 +324,7 @@ function isPdf(mime) {
         <div class="flex gap-2">
           <button
             type="button"
-            class="rounded-xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition"
+            class="rounded-xl px-4 py-2 text-sm font-semibold text-white bg-green-700 hover:bg-green-800 shadow-sm transition"
             @click="search"
           >
             Cari
@@ -338,17 +344,17 @@ function isPdf(mime) {
         <div v-if="hasActiveFilter" class="flex flex-wrap gap-2 pt-1">
           <span
             v-if="form.no_surat"
-            class="inline-flex items-center gap-1 rounded-full bg-purple-100 text-purple-700 text-xs font-medium px-2.5 py-1"
+            class="inline-flex items-center gap-1 rounded-full bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1"
           >
             No. Surat: {{ form.no_surat }}
-            <button @click="form.no_surat = ''; search()" class="hover:text-purple-900">✕</button>
+            <button @click="form.no_surat = ''; search()" class="hover:text-green-900">✕</button>
           </span>
           <span
             v-if="form.title"
-            class="inline-flex items-center gap-1 rounded-full bg-purple-100 text-purple-700 text-xs font-medium px-2.5 py-1"
+            class="inline-flex items-center gap-1 rounded-full bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1"
           >
             Judul: {{ form.title }}
-            <button @click="form.title = ''; search()" class="hover:text-purple-900">✕</button>
+            <button @click="form.title = ''; search()" class="hover:text-green-900">✕</button>
           </span>
           <span
             v-if="form.date_from"
@@ -368,9 +374,9 @@ function isPdf(mime) {
       </div>
 
       <!-- Tabel hasil -->
-      <div class="rounded-2xl border border-purple-100 bg-white shadow-sm overflow-hidden">
+      <div class="rounded-2xl border border-green-100 bg-white shadow-sm overflow-hidden">
         <table class="w-full text-sm">
-          <thead class="bg-purple-50 text-gray-700">
+          <thead class="bg-green-50 text-gray-700">
             <tr>
               <th class="p-3 text-left font-semibold whitespace-nowrap">Waktu</th>
               <th class="p-3 text-left font-semibold whitespace-nowrap">Nomor Surat</th>
@@ -385,7 +391,7 @@ function isPdf(mime) {
               <!-- Baris utama arsip surat -->
               <tr
                 :class="idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'"
-                class="border-t border-gray-100 hover:bg-purple-50 transition-colors"
+                class="border-t border-gray-100 hover:bg-green-50 transition-colors"
               >
                 <td class="p-3 text-gray-600 whitespace-nowrap text-xs">
                   {{ formatDate(row.printed_at) }}
@@ -408,7 +414,7 @@ function isPdf(mime) {
                   </span>
                   <span
                     v-else
-                    class="inline-block rounded-full bg-purple-100 text-purple-700 text-xs font-medium px-2.5 py-0.5 whitespace-nowrap"
+                    class="inline-block rounded-full bg-green-100 text-green-700 text-xs font-medium px-2.5 py-0.5 whitespace-nowrap"
                   >
                     Dicetak
                   </span>
@@ -420,7 +426,7 @@ function isPdf(mime) {
                       :href="`/arsip-surat/${row.id}/pratinjau`"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="inline-block rounded-lg bg-gradient-to-r from-purple-600 to-fuchsia-500 px-3 py-1.5 text-xs font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition whitespace-nowrap"
+                      class="inline-block rounded-lg bg-green-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-800 shadow-sm transition whitespace-nowrap"
                     >
                       Lihat Surat
                     </a>
@@ -541,7 +547,7 @@ function isPdf(mime) {
               ← Prev
             </span>
 
-            <span class="rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-purple-700 font-semibold">
+            <span class="rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 text-green-700 font-semibold">
               {{ letters.current_page }}
             </span>
 
@@ -621,5 +627,6 @@ function isPdf(mime) {
         </div>
       </div>
     </Teleport>
+
   </AppLayout>
 </template>

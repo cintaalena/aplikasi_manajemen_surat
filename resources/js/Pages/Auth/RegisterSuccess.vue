@@ -48,7 +48,7 @@ const copyCredential = async () => {
     <button
       @click="copyCredential"
       class="rounded-lg border px-4 py-2 text-sm font-semibold transition
-             bg-indigo-50 text-indigo-700 border-indigo-200"
+             bg-green-50 text-green-700 border-green-200"
     >
       {{ copied ? 'Tersalin ✓' : 'Copy Credential' }}
     </button>
@@ -68,7 +68,7 @@ const copyCredential = async () => {
     <div class="mt-8">
       <Link
         :href="route('login')"
-        class="inline-flex items-center rounded-lg bg-purple-600 px-6 py-2 text-white font-semibold hover:bg-purple-700 transition"
+        class="inline-flex items-center rounded-lg bg-green-700 px-6 py-2 text-white font-semibold hover:bg-green-800 transition"
       >
         Kembali ke Halaman Login
       </Link>

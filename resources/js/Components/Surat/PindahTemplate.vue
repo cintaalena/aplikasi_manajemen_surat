@@ -2,6 +2,9 @@
 import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { toTitleCase } from '@/utils/textFormat'
+import { useAsset } from '@/composables/useAsset'
+
+const { asset } = useAsset()
 
 const props = defineProps({
   form: { type: Object, required: true },
@@ -51,7 +54,7 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
         <tbody>
             <tr>
             <td class="w-20">
-                <img src="/images/logo.png" class="w-16 mx-auto" />
+                <img :src="asset('images/logo.png')" class="w-16 mx-auto" />
             </td>
             <td>
                 <div class="font-bold text-[16px] uppercase">

@@ -99,7 +99,7 @@ const verifyOtp = () => {
                     id="jabatan"
                     v-model="form.jabatan"
                     required
-                    class="mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                    class="mt-1 block w-full rounded-lg border-gray-300 focus:border-stone-500 focus:ring-stone-500"
                 >
                     <option value="" disabled>Pilih jabatan...</option>
                     <option value="lurah">Lurah</option>
@@ -147,7 +147,7 @@ const verifyOtp = () => {
             <div class="mt-4 flex items-center justify-between">
                 <Link
                     :href="route('login')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-stone-500 focus:ring-offset-2"
                 >
                     Already registered?
                 </Link>
