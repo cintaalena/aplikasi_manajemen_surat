@@ -139,7 +139,7 @@ class LetterArchiveController extends Controller
 
     public function show(Letter $letter)
     {
-        $letter->load('printedBy');
+        $letter->load('printedBy', 'documents');
 
         return Inertia::render('ArsipSurat/Show', [
             'letter' => [
@@ -153,7 +153,28 @@ class LetterArchiveController extends Controller
                 'printed_by'    => $letter->printedBy
                     ? ['id' => $letter->printedBy->id, 'name' => $letter->printedBy->name]
                     : null,
+                'documents'     => $letter->documents->map(fn($doc) => [
+                    'id'            => $doc->id,
+                    'doc_key'       => $doc->doc_key,
+                    'doc_label'     => $doc->doc_label,
+                    'original_name' => $doc->original_name,
+                    'mime_type'     => $doc->mime_type,
+                    'file_size'     => $doc->file_size,
+                    'url'           => $doc->url,
+                ]),
             ],
+        ]);
+    }
+
+    /**
+     * Render pratinjau/cetak surat dalam format Blade (untuk print).
+     */
+    public function pratinjau(Letter $letter)
+    {
+        $letter->load('printedBy');
+
+        return view('letters.pratinjau', [
+            'letter' => $letter,
         ]);
     }
 }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ $letter->title }} – {{ $letter->no_surat }}</title>
+  <title><?php echo e($letter->title); ?> – <?php echo e($letter->no_surat); ?></title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -167,27 +167,27 @@ $tanggalSurat = $p['tanggalSurat'] ?? $letter->printed_at?->format('Y-m-d') ?? d
 $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
 ?>
 
-{{-- Toolbar --}}
+
 <div class="toolbar">
   <button class="btn btn-print" onclick="window.print()">&#128438; Cetak / Simpan PDF</button>
-  <a class="btn btn-back" href="{{ route('arsip-surat.index') }}">← Kembali ke Arsip</a>
-  <span class="meta">{{ $letter->title }} &bull; {{ $letter->no_surat }}</span>
+  <a class="btn btn-back" href="<?php echo e(route('arsip-surat.index')); ?>">← Kembali ke Arsip</a>
+  <span class="meta"><?php echo e($letter->title); ?> &bull; <?php echo e($letter->no_surat); ?></span>
 </div>
 
 <div class="page">
 
-  {{-- ══════════════ KOP ══════════════ --}}
+  
   <table class="kop-table" cellspacing="0" cellpadding="0">
     <tbody>
       <tr>
         <td class="kop-logo-cell">
-          @php
+          <?php
             $logoPath = public_path('images/logo.png');
             $logoSrc  = file_exists($logoPath)
               ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
               : asset('images/logo.png');
-          @endphp
-          <img src="{{ $logoSrc }}" alt="Logo" class="kop-logo" />
+          ?>
+          <img src="<?php echo e($logoSrc); ?>" alt="Logo" class="kop-logo" />
         </td>
         <td class="kop-text">
           <div class="kop-line1">PEMERINTAH KOTA KUPANG</div>
@@ -204,11 +204,11 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
     <div class="rule-2"></div>
   </div>
 
-  {{-- ══════════════ DOMISILI ══════════════ --}}
-  @if($slug === 'keterangan-domisili')
+  
+  <?php if($slug === 'keterangan-domisili'): ?>
   <div class="judul">
     <div class="judul-utama">SURAT KETERANGAN DOMISILI</div>
-    <div class="judul-nomor">Nomor : {{ $letter->no_surat }}</div>
+    <div class="judul-nomor">Nomor : <?php echo e($letter->no_surat); ?></div>
   </div>
 
   <div class="paragraf">
@@ -216,18 +216,18 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
   </div>
 
   <div class="data-rows">
-    <div class="data-row"><div class="data-lbl">Nama</div><div class="data-sep">:</div><div class="data-val">{{ bl_titleCase($p['nama'] ?? '') ?: '____________________' }}</div></div>
-    <div class="data-row"><div class="data-lbl">NIK</div><div class="data-sep">:</div><div class="data-val">{{ $p['nik'] ?? '' ?: '____________________' }}</div></div>
+    <div class="data-row"><div class="data-lbl">Nama</div><div class="data-sep">:</div><div class="data-val"><?php echo e(bl_titleCase($p['nama'] ?? '') ?: '____________________'); ?></div></div>
+    <div class="data-row"><div class="data-lbl">NIK</div><div class="data-sep">:</div><div class="data-val"><?php echo e($p['nik'] ?? '' ?: '____________________'); ?></div></div>
     <div class="data-row">
       <div class="data-lbl">Kelahiran</div><div class="data-sep">:</div>
-      <div class="data-val">{{ $p['tempatLahir'] ?? '' }}{{ isset($p['tanggalLahir']) && $p['tanggalLahir'] ? ', '.bl_tanggalIndo($p['tanggalLahir']) : '' }}</div>
+      <div class="data-val"><?php echo e($p['tempatLahir'] ?? ''); ?><?php echo e(isset($p['tanggalLahir']) && $p['tanggalLahir'] ? ', '.bl_tanggalIndo($p['tanggalLahir']) : ''); ?></div>
     </div>
-    <div class="data-row"><div class="data-lbl">Jenis Kelamin</div><div class="data-sep">:</div><div class="data-val">{{ $p['jenisKelamin'] ?? '' ?: '________' }}</div></div>
-    <div class="data-row"><div class="data-lbl">Pekerjaan</div><div class="data-sep">:</div><div class="data-val">{{ $p['pekerjaan'] ?? '' ?: '________' }}</div></div>
+    <div class="data-row"><div class="data-lbl">Jenis Kelamin</div><div class="data-sep">:</div><div class="data-val"><?php echo e($p['jenisKelamin'] ?? '' ?: '________'); ?></div></div>
+    <div class="data-row"><div class="data-lbl">Pekerjaan</div><div class="data-sep">:</div><div class="data-val"><?php echo e($p['pekerjaan'] ?? '' ?: '________'); ?></div></div>
     <div class="data-row">
       <div class="data-lbl">Alamat</div><div class="data-sep">:</div>
       <div class="data-val">
-        @php
+        <?php
           $asalJalan = $p['alamatAsalJalan'] ?? '';
           $asalRt    = $p['alamatAsalRt']    ?? '';
           $asalRw    = $p['alamatAsalRw']    ?? '';
@@ -235,24 +235,25 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
           $asalKec   = $p['alamatAsalKecamatan'] ?? '';
           $asalKota  = $p['alamatAsalKota']  ?? 'Kota Kupang';
           $asalProv  = $p['alamatAsalProvinsi'] ?? '';
-        @endphp
-        @if($asalJalan || $asalRt || $asalRw || $asalKel || $asalKec)
-          {{ $asalJalan ? $asalJalan.', ' : '' }}RT.{{ $asalRt ?: '___' }}/RW.{{ $asalRw ?: '___' }} Kelurahan {{ $asalKel ?: '______' }} Kec. {{ $asalKec ?: '______' }} {{ $asalKota ?: 'Kota Kupang' }}{{ $asalProv ? ' Prov. '.$asalProv : '' }}
-        @else
+        ?>
+        <?php if($asalJalan || $asalRt || $asalRw || $asalKel || $asalKec): ?>
+          <?php echo e($asalJalan ? $asalJalan.', ' : ''); ?>RT.<?php echo e($asalRt ?: '___'); ?>/RW.<?php echo e($asalRw ?: '___'); ?> Kelurahan <?php echo e($asalKel ?: '______'); ?> Kec. <?php echo e($asalKec ?: '______'); ?> <?php echo e($asalKota ?: 'Kota Kupang'); ?><?php echo e($asalProv ? ' Prov. '.$asalProv : ''); ?>
+
+        <?php else: ?>
           RT.___/RW.___ Kelurahan ______ Kec. ______ Kota Kupang
-        @endif
+        <?php endif; ?>
       </div>
     </div>
     <div class="data-spasi"></div>
     <div class="data-row">
       <div class="data-lbl">A l a m a t&nbsp;&nbsp;Domisili</div><div class="data-sep">:</div>
-      <div class="data-val">RT.{{ $p['rt'] ?? '' ?: '___' }}/RW.{{ $p['rw'] ?? '' ?: '___' }} Kel. Fatubesi Kec. Kota Lama Kota Kupang</div>
+      <div class="data-val">RT.<?php echo e($p['rt'] ?? '' ?: '___'); ?>/RW.<?php echo e($p['rw'] ?? '' ?: '___'); ?> Kel. Fatubesi Kec. Kota Lama Kota Kupang</div>
     </div>
   </div>
 
   <div class="paragraf">
-    Berdasarkan laporan dan Rekomendasi dari Ketua RT.{{ bl_pad3($p['rt'] ?? '') }}, yang bersangkutan
-    berdomisili di RT.{{ bl_pad3($p['rt'] ?? '') }}/RW.{{ bl_pad3($p['rw'] ?? '') }} Kelurahan Fatubesi Kecamatan Kota Lama Kota Kupang.
+    Berdasarkan laporan dan Rekomendasi dari Ketua RT.<?php echo e(bl_pad3($p['rt'] ?? '')); ?>, yang bersangkutan
+    berdomisili di RT.<?php echo e(bl_pad3($p['rt'] ?? '')); ?>/RW.<?php echo e(bl_pad3($p['rw'] ?? '')); ?> Kelurahan Fatubesi Kecamatan Kota Lama Kota Kupang.
   </div>
   <div class="paragraf">
     Demikian Surat Keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.
@@ -260,24 +261,24 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
 
   <div class="ttd-wrapper">
     <div class="ttd">
-      <div class="ttd-tanggal">Kupang, {{ $tanggalSuratFmt }}</div>
-      @if($isLurah)
+      <div class="ttd-tanggal">Kupang, <?php echo e($tanggalSuratFmt); ?></div>
+      <?php if($isLurah): ?>
         <div class="ttd-jabatan">Lurah Fatubesi,</div>
-      @else
+      <?php else: ?>
         <div class="ttd-jabatan">An. Lurah Fatubesi,</div>
-        <div class="ttd-jabatan">{{ $ttdJabatan }}</div>
-      @endif
+        <div class="ttd-jabatan"><?php echo e($ttdJabatan); ?></div>
+      <?php endif; ?>
       <div class="ttd-space"></div>
-      <div class="ttd-nama">{{ $ttdNama }}</div>
-      @if($ttdNip)<div class="ttd-nip">NIP. {{ $ttdNip }}</div>@endif
+      <div class="ttd-nama"><?php echo e($ttdNama); ?></div>
+      <?php if($ttdNip): ?><div class="ttd-nip">NIP. <?php echo e($ttdNip); ?></div><?php endif; ?>
     </div>
   </div>
 
-  {{-- ══════════════ KELAHIRAN ══════════════ --}}
-  @elseif($slug === 'keterangan-kelahiran')
+  
+  <?php elseif($slug === 'keterangan-kelahiran'): ?>
   <div class="judul">
     <div class="judul-utama">SURAT KETERANGAN KELAHIRAN</div>
-    <div class="judul-nomor">Nomor : {{ $letter->no_surat }}</div>
+    <div class="judul-nomor">Nomor : <?php echo e($letter->no_surat); ?></div>
   </div>
 
   <div class="paragraf">
@@ -286,27 +287,27 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
 
   <table class="data-table" cellspacing="0" cellpadding="0">
     <tbody>
-      <tr><td class="lbl">Nama</td><td class="sep">:</td><td class="val">{{ bl_titleCase($p['nama'] ?? '') ?: '____________________' }}</td></tr>
-      <tr><td class="lbl">Jenis Kelamin</td><td class="sep">:</td><td class="val">{{ $p['jenisKelamin'] ?? '' ?: '____________________' }}</td></tr>
-      <tr><td class="lbl">Agama</td><td class="sep">:</td><td class="val">{{ $p['agama'] ?? '' ?: '____________________' }}</td></tr>
-      <tr><td class="lbl">Nama Ayah</td><td class="sep">:</td><td class="val">{{ bl_titleCase($p['namaAyah'] ?? '') ?: '________' }}</td></tr>
-      <tr><td class="lbl">Nama Ibu</td><td class="sep">:</td><td class="val">{{ bl_titleCase($p['namaIbu'] ?? '') ?: '________' }}</td></tr>
-      <tr><td class="lbl">Pekerjaan</td><td class="sep">:</td><td class="val">{{ $p['pekerjaan'] ?? '' ?: '________' }}</td></tr>
+      <tr><td class="lbl">Nama</td><td class="sep">:</td><td class="val"><?php echo e(bl_titleCase($p['nama'] ?? '') ?: '____________________'); ?></td></tr>
+      <tr><td class="lbl">Jenis Kelamin</td><td class="sep">:</td><td class="val"><?php echo e($p['jenisKelamin'] ?? '' ?: '____________________'); ?></td></tr>
+      <tr><td class="lbl">Agama</td><td class="sep">:</td><td class="val"><?php echo e($p['agama'] ?? '' ?: '____________________'); ?></td></tr>
+      <tr><td class="lbl">Nama Ayah</td><td class="sep">:</td><td class="val"><?php echo e(bl_titleCase($p['namaAyah'] ?? '') ?: '________'); ?></td></tr>
+      <tr><td class="lbl">Nama Ibu</td><td class="sep">:</td><td class="val"><?php echo e(bl_titleCase($p['namaIbu'] ?? '') ?: '________'); ?></td></tr>
+      <tr><td class="lbl">Pekerjaan</td><td class="sep">:</td><td class="val"><?php echo e($p['pekerjaan'] ?? '' ?: '________'); ?></td></tr>
       <tr>
         <td class="lbl">Alamat</td><td class="sep">:</td>
         <td class="val">
-          @php
+          <?php
             $alamatK = $p['alamat']     ?? '';
             $rtK     = $p['rt']         ?? '';
             $rwK     = $p['rw']         ?? '';
             $kelK    = $p['kelurahan']  ?? '';
             $kecK    = $p['kecamatan']  ?? '';
-          @endphp
-          @if($alamatK || $rtK || $rwK || $kelK || $kecK)
-            {{ $alamatK ? $alamatK.', ' : '' }}RT.{{ $rtK ?: '___' }}/RW.{{ $rwK ?: '___' }} Kelurahan {{ $kelK ?: '______' }} Kec. {{ $kecK ?: '______' }} Kota Kupang
-          @else
+          ?>
+          <?php if($alamatK || $rtK || $rwK || $kelK || $kecK): ?>
+            <?php echo e($alamatK ? $alamatK.', ' : ''); ?>RT.<?php echo e($rtK ?: '___'); ?>/RW.<?php echo e($rwK ?: '___'); ?> Kelurahan <?php echo e($kelK ?: '______'); ?> Kec. <?php echo e($kecK ?: '______'); ?> Kota Kupang
+          <?php else: ?>
             RT.___/RW.___ Kelurahan ______ Kec. ______ Kota Kupang
-          @endif
+          <?php endif; ?>
         </td>
       </tr>
       <tr class="spasi"><td colspan="3" style="height:10px;"></td></tr>
@@ -317,8 +318,8 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
     Sesuai dengan laporan dari orang tuanya bahwa yang bersangkutan lahir pada:
     <table class="data-table" cellspacing="0" cellpadding="0" style="margin-top:8px;">
       <tbody>
-        <tr><td class="lbl">Tanggal</td><td class="sep">:</td><td class="val">{{ $p['tanggalLahir'] ? bl_tanggalIndo($p['tanggalLahir']) : '____________________' }}</td></tr>
-        <tr><td class="lbl">Di</td><td class="sep">:</td><td class="val">{{ $p['tempatLahir'] ?? '' ?: '____________________' }}</td></tr>
+        <tr><td class="lbl">Tanggal</td><td class="sep">:</td><td class="val"><?php echo e($p['tanggalLahir'] ? bl_tanggalIndo($p['tanggalLahir']) : '____________________'); ?></td></tr>
+        <tr><td class="lbl">Di</td><td class="sep">:</td><td class="val"><?php echo e($p['tempatLahir'] ?? '' ?: '____________________'); ?></td></tr>
       </tbody>
     </table>
   </div>
@@ -329,24 +330,24 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
 
   <div class="ttd-wrapper">
     <div class="ttd">
-      <div class="ttd-tanggal">Kupang, {{ $tanggalSuratFmt }}</div>
-      @if($isLurah)
+      <div class="ttd-tanggal">Kupang, <?php echo e($tanggalSuratFmt); ?></div>
+      <?php if($isLurah): ?>
         <div class="ttd-jabatan">Lurah Fatubesi,</div>
-      @else
+      <?php else: ?>
         <div class="ttd-jabatan">An. Lurah Fatubesi,</div>
-        <div class="ttd-jabatan">{{ $ttdJabatan }}</div>
-      @endif
+        <div class="ttd-jabatan"><?php echo e($ttdJabatan); ?></div>
+      <?php endif; ?>
       <div class="ttd-space"></div>
-      <div class="ttd-nama">{{ $ttdNama }}</div>
-      @if($ttdNip)<div class="ttd-nip">NIP. {{ $ttdNip }}</div>@endif
+      <div class="ttd-nama"><?php echo e($ttdNama); ?></div>
+      <?php if($ttdNip): ?><div class="ttd-nip">NIP. <?php echo e($ttdNip); ?></div><?php endif; ?>
     </div>
   </div>
 
-  {{-- ══════════════ KEMATIAN ══════════════ --}}
-  @elseif($slug === 'keterangan-kematian')
+  
+  <?php elseif($slug === 'keterangan-kematian'): ?>
   <div class="judul">
     <div class="judul-utama">SURAT KETERANGAN KEMATIAN</div>
-    <div class="judul-nomor">Nomor : {{ $letter->no_surat }}</div>
+    <div class="judul-nomor">Nomor : <?php echo e($letter->no_surat); ?></div>
   </div>
 
   <div class="paragraf">
@@ -355,27 +356,27 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
 
   <table class="data-table" cellspacing="0" cellpadding="0">
     <tbody>
-      <tr><td class="lbl">Nama</td><td class="sep">:</td><td class="val">{{ bl_titleCase($p['nama'] ?? '') ?: '____________________' }}</td></tr>
-      <tr><td class="lbl">Jenis Kelamin</td><td class="sep">:</td><td class="val">{{ $p['jenisKelamin'] ?? '' ?: '____________________' }}</td></tr>
+      <tr><td class="lbl">Nama</td><td class="sep">:</td><td class="val"><?php echo e(bl_titleCase($p['nama'] ?? '') ?: '____________________'); ?></td></tr>
+      <tr><td class="lbl">Jenis Kelamin</td><td class="sep">:</td><td class="val"><?php echo e($p['jenisKelamin'] ?? '' ?: '____________________'); ?></td></tr>
       <tr>
         <td class="lbl nowrap">Tempat / Tgl. Lahir</td><td class="sep">:</td>
-        <td class="val nowrap">{{ $p['tempatLahir'] ?? '________' }}, {{ $p['tanggalLahir'] ? bl_tanggalIndo($p['tanggalLahir']) : '________' }}</td>
+        <td class="val nowrap"><?php echo e($p['tempatLahir'] ?? '________'); ?>, <?php echo e($p['tanggalLahir'] ? bl_tanggalIndo($p['tanggalLahir']) : '________'); ?></td>
       </tr>
-      <tr><td class="lbl">NIK</td><td class="sep">:</td><td class="val">{{ $p['nik'] ?? '' ?: '____________________' }}</td></tr>
-      <tr><td class="lbl">Agama</td><td class="sep">:</td><td class="val">{{ $p['agama'] ?? '' ?: '____________________' }}</td></tr>
-      <tr><td class="lbl">Alamat</td><td class="sep">:</td><td class="val">{{ $p['alamat'] ?? '' ?: '____________________' }}</td></tr>
+      <tr><td class="lbl">NIK</td><td class="sep">:</td><td class="val"><?php echo e($p['nik'] ?? '' ?: '____________________'); ?></td></tr>
+      <tr><td class="lbl">Agama</td><td class="sep">:</td><td class="val"><?php echo e($p['agama'] ?? '' ?: '____________________'); ?></td></tr>
+      <tr><td class="lbl">Alamat</td><td class="sep">:</td><td class="val"><?php echo e($p['alamat'] ?? '' ?: '____________________'); ?></td></tr>
     </tbody>
   </table>
 
   <div class="paragraf">
-    Telah meninggal dunia karena {{ $p['sebabKematian'] ?? '____________________' }} pada :
+    Telah meninggal dunia karena <?php echo e($p['sebabKematian'] ?? '____________________'); ?> pada :
   </div>
 
   <table class="data-table" cellspacing="0" cellpadding="0">
     <tbody>
-      <tr><td class="lbl">Hari/Tanggal</td><td class="sep">:</td><td class="val">{{ $p['tanggalMeninggal'] ? bl_tanggalIndo($p['tanggalMeninggal']) : '____________________' }}</td></tr>
-      <tr><td class="lbl">Umur</td><td class="sep">:</td><td class="val">{{ $p['umur'] ?? '' ?: '____________________' }}</td></tr>
-      <tr><td class="lbl">Tempat</td><td class="sep">:</td><td class="val">{{ $p['tempatMeninggal'] ?? '' ?: '____________________' }}</td></tr>
+      <tr><td class="lbl">Hari/Tanggal</td><td class="sep">:</td><td class="val"><?php echo e($p['tanggalMeninggal'] ? bl_tanggalIndo($p['tanggalMeninggal']) : '____________________'); ?></td></tr>
+      <tr><td class="lbl">Umur</td><td class="sep">:</td><td class="val"><?php echo e($p['umur'] ?? '' ?: '____________________'); ?></td></tr>
+      <tr><td class="lbl">Tempat</td><td class="sep">:</td><td class="val"><?php echo e($p['tempatMeninggal'] ?? '' ?: '____________________'); ?></td></tr>
     </tbody>
   </table>
 
@@ -385,24 +386,24 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
 
   <div class="ttd-wrapper">
     <div class="ttd">
-      <div class="ttd-tanggal">Kupang, {{ $tanggalSuratFmt }}</div>
-      @if($isLurah)
+      <div class="ttd-tanggal">Kupang, <?php echo e($tanggalSuratFmt); ?></div>
+      <?php if($isLurah): ?>
         <div class="ttd-jabatan">Lurah Fatubesi,</div>
-      @else
+      <?php else: ?>
         <div class="ttd-jabatan">An. Lurah Fatubesi,</div>
-        <div class="ttd-jabatan">{{ $ttdJabatan }}</div>
-      @endif
+        <div class="ttd-jabatan"><?php echo e($ttdJabatan); ?></div>
+      <?php endif; ?>
       <div class="ttd-space"></div>
-      <div class="ttd-nama">{{ $ttdNama }}</div>
-      @if($ttdNip)<div class="ttd-nip">NIP. {{ $ttdNip }}</div>@endif
+      <div class="ttd-nama"><?php echo e($ttdNama); ?></div>
+      <?php if($ttdNip): ?><div class="ttd-nip">NIP. <?php echo e($ttdNip); ?></div><?php endif; ?>
     </div>
   </div>
 
-  {{-- ══════════════ PINDAH ══════════════ --}}
-  @elseif($slug === 'keterangan-pindah')
+  
+  <?php elseif($slug === 'keterangan-pindah'): ?>
   <div class="judul">
     <div class="judul-utama">SURAT KETERANGAN PINDAH</div>
-    <div class="judul-nomor">Nomor : {{ $letter->no_surat }}</div>
+    <div class="judul-nomor">Nomor : <?php echo e($letter->no_surat); ?></div>
   </div>
 
   <div class="paragraf">
@@ -411,34 +412,34 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
 
   <table class="pindah-table" cellspacing="0" cellpadding="0" style="margin-top:14px;">
     <tbody>
-      <tr><td class="lbl" style="padding-left:24px;">Nama</td><td style="padding:0 10px 0 4px;">:</td><td>{{ bl_titleCase($p['nama'] ?? '') ?: '____________________' }}</td></tr>
-      <tr><td class="lbl" style="padding-left:24px;">Jenis Kelamin</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $p['jenisKelamin'] ?? '' ?: '________' }}</td></tr>
-      <tr><td class="lbl" style="padding-left:24px;">Tempat/Tgl. Lahir</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $p['tempatLahir'] ?? '' }}{{ isset($p['tanggalLahir']) && $p['tanggalLahir'] ? ', '.bl_tanggalIndo($p['tanggalLahir']) : '' }}</td></tr>
-      <tr><td class="lbl" style="padding-left:24px;">NIK</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $p['nik'] ?? '' ?: '____________________' }}</td></tr>
-      <tr><td class="lbl" style="padding-left:24px;">Status Perkawinan</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $p['statusPerkawinan'] ?? '' ?: '________' }}</td></tr>
-      <tr><td class="lbl" style="padding-left:24px;">Kewarganegaraan</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $p['kewarganegaraan'] ?? 'Indonesia' }}</td></tr>
-      <tr><td class="lbl" style="padding-left:24px;">Agama</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $p['agama'] ?? '' ?: '________' }}</td></tr>
-      <tr><td class="lbl" style="padding-left:24px;">Pekerjaan</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $p['pekerjaan'] ?? '' ?: '________' }}</td></tr>
-      <tr><td class="lbl" style="padding-left:24px;">Alamat Asal</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $p['alamatAsal'] ?? '' ?: '____________________' }}</td></tr>
+      <tr><td class="lbl" style="padding-left:24px;">Nama</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e(bl_titleCase($p['nama'] ?? '') ?: '____________________'); ?></td></tr>
+      <tr><td class="lbl" style="padding-left:24px;">Jenis Kelamin</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($p['jenisKelamin'] ?? '' ?: '________'); ?></td></tr>
+      <tr><td class="lbl" style="padding-left:24px;">Tempat/Tgl. Lahir</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($p['tempatLahir'] ?? ''); ?><?php echo e(isset($p['tanggalLahir']) && $p['tanggalLahir'] ? ', '.bl_tanggalIndo($p['tanggalLahir']) : ''); ?></td></tr>
+      <tr><td class="lbl" style="padding-left:24px;">NIK</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($p['nik'] ?? '' ?: '____________________'); ?></td></tr>
+      <tr><td class="lbl" style="padding-left:24px;">Status Perkawinan</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($p['statusPerkawinan'] ?? '' ?: '________'); ?></td></tr>
+      <tr><td class="lbl" style="padding-left:24px;">Kewarganegaraan</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($p['kewarganegaraan'] ?? 'Indonesia'); ?></td></tr>
+      <tr><td class="lbl" style="padding-left:24px;">Agama</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($p['agama'] ?? '' ?: '________'); ?></td></tr>
+      <tr><td class="lbl" style="padding-left:24px;">Pekerjaan</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($p['pekerjaan'] ?? '' ?: '________'); ?></td></tr>
+      <tr><td class="lbl" style="padding-left:24px;">Alamat Asal</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($p['alamatAsal'] ?? '' ?: '____________________'); ?></td></tr>
     </tbody>
   </table>
 
   <table class="pindah-table" cellspacing="0" cellpadding="0" style="margin-top:14px;">
     <tbody>
       <tr><td class="bold" style="min-width:160px;padding-left:24px;">Pindah ke</td><td style="padding:0 10px 0 4px;">:</td><td></td></tr>
-      <tr><td style="padding-left:48px;">Alamat</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $p['alamatTujuan'] ?? '' ?: '____________________' }}</td></tr>
-      <tr><td style="padding-left:48px;">Desa/Kelurahan</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $p['desaTujuan'] ?? '' ?: '____________________' }}</td></tr>
-      <tr><td style="padding-left:48px;">Kecamatan</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $p['kecamatanTujuan'] ?? '' ?: '____________________' }}</td></tr>
-      <tr><td style="padding-left:48px;">Kab/Kota</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $p['kabupatenTujuan'] ?? '' ?: '____________________' }}</td></tr>
-      <tr><td style="padding-left:48px;">Provinsi</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $p['provinsiTujuan'] ?? '' ?: '____________________' }}</td></tr>
-      <tr><td style="padding-left:24px;">Pada Tanggal</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $p['tanggalPindah'] ? bl_tanggalIndo($p['tanggalPindah']) : '____________________' }}</td></tr>
-      <tr><td style="padding-left:24px;">Alasan Pindah</td><td style="padding:0 10px 0 4px;">:</td><td><i>{{ $p['alasanPindah'] ?? '' ?: '____________________' }}</i></td></tr>
-      @php $pengikut = $p['pengikut'] ?? []; $jml = count($pengikut); @endphp
-      <tr><td style="padding-left:24px;">Pengikut</td><td style="padding:0 10px 0 4px;">:</td><td>{{ $jml }} ({{ bl_terbilang($jml) }}) Orang</td></tr>
+      <tr><td style="padding-left:48px;">Alamat</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($p['alamatTujuan'] ?? '' ?: '____________________'); ?></td></tr>
+      <tr><td style="padding-left:48px;">Desa/Kelurahan</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($p['desaTujuan'] ?? '' ?: '____________________'); ?></td></tr>
+      <tr><td style="padding-left:48px;">Kecamatan</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($p['kecamatanTujuan'] ?? '' ?: '____________________'); ?></td></tr>
+      <tr><td style="padding-left:48px;">Kab/Kota</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($p['kabupatenTujuan'] ?? '' ?: '____________________'); ?></td></tr>
+      <tr><td style="padding-left:48px;">Provinsi</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($p['provinsiTujuan'] ?? '' ?: '____________________'); ?></td></tr>
+      <tr><td style="padding-left:24px;">Pada Tanggal</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($p['tanggalPindah'] ? bl_tanggalIndo($p['tanggalPindah']) : '____________________'); ?></td></tr>
+      <tr><td style="padding-left:24px;">Alasan Pindah</td><td style="padding:0 10px 0 4px;">:</td><td><i><?php echo e($p['alasanPindah'] ?? '' ?: '____________________'); ?></i></td></tr>
+      <?php $pengikut = $p['pengikut'] ?? []; $jml = count($pengikut); ?>
+      <tr><td style="padding-left:24px;">Pengikut</td><td style="padding:0 10px 0 4px;">:</td><td><?php echo e($jml); ?> (<?php echo e(bl_terbilang($jml)); ?>) Orang</td></tr>
     </tbody>
   </table>
 
-  @if(count($pengikut) > 0)
+  <?php if(count($pengikut) > 0): ?>
   <table class="pengikut-table">
     <thead>
       <tr>
@@ -450,18 +451,18 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
       </tr>
     </thead>
     <tbody>
-      @foreach($pengikut as $i => $item)
+      <?php $__currentLoopData = $pengikut; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
       <tr>
-        <td class="center">{{ $i + 1 }}</td>
-        <td>{{ bl_titleCase($item['nama'] ?? '') }}</td>
-        <td>{{ $item['nik'] ?? '' }}</td>
-        <td>{{ $item['tempatLahir'] ?? '' }}{{ isset($item['tanggalLahir']) && $item['tanggalLahir'] ? ', '.bl_tanggalIndo($item['tanggalLahir']) : '' }}</td>
-        <td>{{ $item['hubungan'] ?? '' }}</td>
+        <td class="center"><?php echo e($i + 1); ?></td>
+        <td><?php echo e(bl_titleCase($item['nama'] ?? '')); ?></td>
+        <td><?php echo e($item['nik'] ?? ''); ?></td>
+        <td><?php echo e($item['tempatLahir'] ?? ''); ?><?php echo e(isset($item['tanggalLahir']) && $item['tanggalLahir'] ? ', '.bl_tanggalIndo($item['tanggalLahir']) : ''); ?></td>
+        <td><?php echo e($item['hubungan'] ?? ''); ?></td>
       </tr>
-      @endforeach
+      <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </tbody>
   </table>
-  @endif
+  <?php endif; ?>
 
   <div class="paragraf" style="text-align:center; margin-top:24px;">
     Demikian Surat Keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.
@@ -475,26 +476,27 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
       <div>______________________</div>
     </div>
     <div class="ttd">
-      <div class="ttd-tanggal">Kupang, {{ $tanggalSuratFmt }}</div>
-      @if($isLurah)
+      <div class="ttd-tanggal">Kupang, <?php echo e($tanggalSuratFmt); ?></div>
+      <?php if($isLurah): ?>
         <div class="ttd-jabatan">Lurah Fatubesi,</div>
-      @else
+      <?php else: ?>
         <div class="ttd-jabatan">An. Lurah Fatubesi,</div>
-        <div class="ttd-jabatan">{{ $ttdJabatan }}</div>
-      @endif
+        <div class="ttd-jabatan"><?php echo e($ttdJabatan); ?></div>
+      <?php endif; ?>
       <div class="ttd-space"></div>
-      <div class="ttd-nama">{{ $ttdNama }}</div>
-      @if($ttdNip)<div class="ttd-nip">NIP. {{ $ttdNip }}</div>@endif
+      <div class="ttd-nama"><?php echo e($ttdNama); ?></div>
+      <?php if($ttdNip): ?><div class="ttd-nip">NIP. <?php echo e($ttdNip); ?></div><?php endif; ?>
     </div>
   </div>
 
-  @else
+  <?php else: ?>
   <div style="margin-top:40px; text-align:center; color:#888; font-style:italic;">
-    Pratinjau tidak tersedia untuk jenis surat ini ({{ $slug }}).
+    Pratinjau tidak tersedia untuk jenis surat ini (<?php echo e($slug); ?>).
   </div>
-  @endif
+  <?php endif; ?>
 
 </div><!-- /page -->
 
 </body>
 </html>
+<?php /**PATH C:\xampp\htdocs\manajemen-surat-kelurahan-fatubesi\resources\views/letters/pratinjau.blade.php ENDPATH**/ ?>

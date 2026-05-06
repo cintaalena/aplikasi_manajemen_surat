@@ -160,7 +160,7 @@ function isPdf(mime) {
                 </div>
 
                 <!-- Preview -->
-                <div class="bg-gray-100 flex items-center justify-center" style="min-height: 140px;">
+                <div class="bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition" style="min-height: 140px;" @click="openViewer(doc)">
                   <template v-if="isImage(doc.mime_type)">
                     <img
                       :src="doc.url"

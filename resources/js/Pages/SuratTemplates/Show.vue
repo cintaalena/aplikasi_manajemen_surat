@@ -592,6 +592,8 @@ const showPrintConfirm = ref(false)
 const isSavingDraft = ref(false)   // true saat simpan PDF sementara (tanpa arsip)
 const isCapturing = ref(false)     // true saat mengambil HTML untuk Word export
 const printSheetRef = ref(null)
+const showExportMenu = ref(false)
+
 const handleAfterPrint = () => {
   printMode.value = false
   if (isSavingDraft.value) {
@@ -601,11 +603,15 @@ const handleAfterPrint = () => {
   showPrintConfirm.value = true
 }
 
+const closeExportMenu = () => { showExportMenu.value = false }
+
 onMounted(() => {
   window.addEventListener('afterprint', handleAfterPrint)
+  document.addEventListener('click', closeExportMenu)
 })
 onBeforeUnmount(() => {
   window.removeEventListener('afterprint', handleAfterPrint)
+  document.removeEventListener('click', closeExportMenu)
   previewResizeObserver?.disconnect()
 })
 
@@ -614,7 +620,6 @@ const saveAsPdfDraft = async () => {
   showExportMenu.value = false
 
   try {
-    validateDokDomisiliBeforePrint()
     validateDokKematianBeforePrint()
     validateDokKelahiranBeforePrint()
     validateDokPindahBeforePrint()
@@ -630,8 +635,19 @@ const saveAsPdfDraft = async () => {
   window.print()
 }
 
-// Simpan sementara sebagai Word — download .docx tanpa masuk arsip
+// Simpan sementara sebagai Word — download .doc tanpa masuk arsip
 const saveAsWord = async () => {
+  showExportMenu.value = false
+
+  try {
+    validateDokKematianBeforePrint()
+    validateDokKelahiranBeforePrint()
+    validateDokPindahBeforePrint()
+  } catch (e) {
+    alert(e.message)
+    return
+  }
+
   isCapturing.value = true
   await nextTick()
   await nextTick()
@@ -641,243 +657,35 @@ const saveAsWord = async () => {
     alert('Gagal mengambil konten surat. Silakan coba lagi.')
     return
   }
-
-  try {
-    // ── 1. Fetch gambar dari live DOM → base64 MIME parts (cid: embed) ────────
-    const liveImgs = Array.from(el.querySelectorAll('img'))
-    const uniqueSrcs = [...new Set(liveImgs.map(i => i.src).filter(s => s && !s.startsWith('data:')))]
-    const srcToCid = {}
-    const mimeParts = []
-    let n = 0
-
-    for (const src of uniqueSrcs) {
-      try {
-        const res = await fetch(src, { credentials: 'same-origin', cache: 'force-cache' })
-        if (!res.ok) continue
-        const blob = await res.blob()
-        const dataUrl = await new Promise(resolve => {
-          const reader = new FileReader()
-          reader.onloadend = () => resolve(reader.result)
-          reader.readAsDataURL(blob)
-        })
-        const sep = dataUrl.indexOf(',')
-        const mimeType = dataUrl.slice(5, sep).replace(';base64', '')
-        const b64 = dataUrl.slice(sep + 1)
-        const cid = `img${++n}@doc`
-        srcToCid[src] = cid
-        mimeParts.push({ cid, mimeType, b64 })
-      } catch (_) {}
-    }
-
-    // ── 2. Clone DOM ──────────────────────────────────────────────────────────
-    const clone = el.cloneNode(true)
-
-    // ── 3. Strip dekorasi print-area ──────────────────────────────────────────
-    clone.querySelectorAll('.print-area').forEach(a => {
-      a.style.cssText = 'border:none;border-radius:0;padding:0;margin:0;box-shadow:none;background:#fff;'
-    })
-
-    // ── 4. Ganti img src dengan cid: ──────────────────────────────────────────
-    clone.querySelectorAll('img').forEach(img => {
-      const cid = srcToCid[img.src]
-      if (cid) img.src = `cid:${cid}`
-      img.setAttribute('width', '80')
-      img.removeAttribute('height')
-      img.style.cssText = 'width:80px;height:auto;display:block;'
-    })
-
-    // ── 5. KOP table — HTML attr + inline style (Word lebih patuh ke attr) ────
-    clone.querySelectorAll('.kop').forEach(t => {
-      t.setAttribute('width', '100%')
-      t.setAttribute('cellspacing', '0')
-      t.setAttribute('cellpadding', '0')
-      t.style.cssText = 'width:100%;border-collapse:collapse;'
-    })
-    clone.querySelectorAll('.kop-logo').forEach(t => {
-      t.setAttribute('width', '90')
-      t.setAttribute('valign', 'middle')
-      t.style.cssText = 'width:90px;vertical-align:middle;'
-    })
-    clone.querySelectorAll('.kop-spacer').forEach(t => {
-      t.setAttribute('width', '90')
-      t.style.cssText = 'width:90px;'
-    })
-    clone.querySelectorAll('.kop-text').forEach(t => {
-      t.setAttribute('align', 'center')
-      t.setAttribute('valign', 'middle')
-      t.style.cssText = 'text-align:center;vertical-align:middle;font-family:Arial,Helvetica,sans-serif;'
-    })
-    clone.querySelectorAll('.kop-line1').forEach(e => {
-      e.style.cssText = 'display:block;font-family:Arial,Helvetica,sans-serif;font-size:14pt;font-weight:bold;line-height:1.2;'
-    })
-    clone.querySelectorAll('.kop-line2').forEach(e => {
-      e.style.cssText = 'display:block;font-family:Arial,Helvetica,sans-serif;font-size:9pt;line-height:1.4;margin-top:4px;'
-    })
-    clone.querySelectorAll('.kop-rule').forEach(e => { e.style.marginTop = '6px' })
-    clone.querySelectorAll('.rule-1').forEach(e => { e.style.cssText = 'border-top:2px solid #000;' })
-    clone.querySelectorAll('.rule-2').forEach(e => { e.style.cssText = 'border-top:1px solid #000;margin-top:2px;' })
-
-    // ── 6. Judul ──────────────────────────────────────────────────────────────
-    clone.querySelectorAll('.judul').forEach(e => { e.style.cssText = 'text-align:center;margin-top:14px;' })
-    clone.querySelectorAll('.judul-utama').forEach(e => {
-      e.style.cssText = 'display:block;font-weight:bold;text-decoration:underline;font-size:13pt;'
-    })
-    clone.querySelectorAll('.judul-nomor').forEach(e => { e.style.cssText = 'display:block;margin-top:2px;' })
-
-    // ── 7. Paragraf ───────────────────────────────────────────────────────────
-    clone.querySelectorAll('.paragraf').forEach(e => { e.style.cssText = 'margin-top:14px;line-height:1.6;' })
-    clone.querySelectorAll('.paragraf-isi').forEach(e => {
-      e.style.cssText = 'margin-top:14px;line-height:1.6;text-align:justify;'
-    })
-
-    // ── 8. Data rows flex → table ─────────────────────────────────────────────
-    clone.querySelectorAll('.data-rows').forEach(rows => {
-      const tbl = document.createElement('table')
-      tbl.setAttribute('cellspacing', '0')
-      tbl.setAttribute('cellpadding', '0')
-      tbl.setAttribute('width', '100%')
-      tbl.style.cssText = 'width:100%;border-collapse:collapse;margin-top:14px;'
-      const tbody = document.createElement('tbody')
-      Array.from(rows.children).forEach(child => {
-        const tr = document.createElement('tr')
-        if (child.classList.contains('data-spasi')) {
-          const td = document.createElement('td')
-          td.setAttribute('colspan', '3')
-          td.style.height = '8px'
-          tr.appendChild(td)
-        } else {
-          const lbl = child.querySelector('.data-lbl')
-          const sep = child.querySelector('.data-sep')
-          const val = child.querySelector('.data-val')
-          const tdL = document.createElement('td')
-          tdL.setAttribute('width', '170')
-          tdL.style.cssText = 'width:170px;padding-left:40px;vertical-align:top;white-space:nowrap;line-height:1.7;'
-          tdL.innerHTML = lbl ? lbl.innerHTML : ''
-          const tdS = document.createElement('td')
-          tdS.setAttribute('width', '14')
-          tdS.style.cssText = 'width:14px;vertical-align:top;line-height:1.7;'
-          tdS.innerHTML = sep ? sep.innerHTML : ':'
-          const tdV = document.createElement('td')
-          tdV.style.cssText = 'vertical-align:top;line-height:1.7;word-break:break-word;'
-          tdV.innerHTML = val ? val.innerHTML : ''
-          tr.appendChild(tdL)
-          tr.appendChild(tdS)
-          tr.appendChild(tdV)
-        }
-        tbody.appendChild(tr)
-      })
-      tbl.appendChild(tbody)
-      rows.parentNode.replaceChild(tbl, rows)
-    })
-
-    // ── 9. TTD wrapper flex → table 2 kolom (TTD kanan, spasi signature pas) ──
-    clone.querySelectorAll('.ttd-wrapper').forEach(wrapper => {
-      const ttdEl = wrapper.querySelector('.ttd')
-      if (!ttdEl) return
-      // Tanggal
-      ttdEl.querySelectorAll('.ttd-tanggal').forEach(e => {
-        e.style.cssText = 'display:block;margin-bottom:4px;'
-      })
-      // Jabatan: beri ruang tanda tangan di elemen terakhir saja
-      const jabEls = Array.from(ttdEl.querySelectorAll('.ttd-jabatan'))
-      jabEls.forEach((e, i) => {
-        e.style.cssText = (i === jabEls.length - 1)
-          ? 'display:block;margin-bottom:48px;'
-          : 'display:block;margin-bottom:2px;'
-      })
-      // Nama & NIP
-      ttdEl.querySelectorAll('.ttd-nama').forEach(e => {
-        e.style.cssText = 'display:block;font-weight:bold;text-decoration:underline;margin-bottom:2px;white-space:nowrap;'
-      })
-      ttdEl.querySelectorAll('.ttd-nip').forEach(e => { e.style.cssText = 'display:block;' })
-      ttdEl.style.cssText = 'text-align:center;line-height:1.5;'
-
-      const tbl = document.createElement('table')
-      tbl.setAttribute('width', '100%')
-      tbl.setAttribute('cellspacing', '0')
-      tbl.setAttribute('cellpadding', '0')
-      tbl.style.cssText = 'width:100%;margin-top:28px;border-collapse:collapse;'
-      const tbody = document.createElement('tbody')
-      const tr = document.createElement('tr')
-      const tdL = document.createElement('td')
-      tdL.setAttribute('width', '50%')
-      tdL.style.cssText = 'width:50%;'
-      const tdR = document.createElement('td')
-      tdR.setAttribute('width', '50%')
-      tdR.setAttribute('align', 'center')
-      tdR.style.cssText = 'width:50%;text-align:center;'
-      tdR.innerHTML = ttdEl.outerHTML
-      tr.appendChild(tdL)
-      tr.appendChild(tdR)
-      tbody.appendChild(tr)
-      tbl.appendChild(tbody)
-      wrapper.parentNode.replaceChild(tbl, wrapper)
-    })
-
-    // ── 10. Build MHTML (embed gambar sebagai MIME parts, bukan data: URI) ────
-    const boundary = `----=_NextPart_${Math.random().toString(36).slice(2).toUpperCase()}`
-
-    const htmlDoc = `<!DOCTYPE html>
+  const styles = Array.from(document.querySelectorAll('style'))
+    .map(s => s.textContent)
+    .join('\n')
+  const html = `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head>
-<meta charset="UTF-8">
-<meta name="ProgId" content="Word.Document">
-<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>90</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->
-<style>
-@page { size:A4 portrait; margin:20mm 22mm; }
-body { font-family:"Bookman Old Style",Bookman,serif; font-size:12pt; margin:0; padding:0; }
-table { border-collapse:collapse; }
-div,p { margin:0; padding:0; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="ProgId" content="Word.Document">
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+  <style>
+    @page { size: A4 portrait; margin: 20mm 22mm; }
+    body { font-family: "Bookman Old Style", serif; font-size: 12pt; margin: 0; padding: 0; }
+    ${styles}
+  </style>
 </head>
-<body>${clone.innerHTML}</body>
+<body>${el.innerHTML}</body>
 </html>`
-
-    const mhtmlLines = [
-      'MIME-Version: 1.0',
-      `Content-Type: multipart/related; type="text/html"; boundary="${boundary}"`,
-      '',
-      `--${boundary}`,
-      'Content-Type: text/html; charset="UTF-8"',
-      'Content-Transfer-Encoding: 8bit',
-      '',
-      htmlDoc,
-      '',
-    ]
-
-    mimeParts.forEach(({ cid, mimeType, b64 }) => {
-      mhtmlLines.push(`--${boundary}`)
-      mhtmlLines.push(`Content-Type: ${mimeType}`)
-      mhtmlLines.push('Content-Transfer-Encoding: base64')
-      mhtmlLines.push(`Content-ID: <${cid}>`)
-      mhtmlLines.push('')
-      // Wrap base64 per 76 karakter (standar MIME)
-      mhtmlLines.push((b64.match(/.{1,76}/g) ?? []).join('\r\n'))
-      mhtmlLines.push('')
-    })
-
-    mhtmlLines.push(`--${boundary}--`)
-
-    const mhtml = mhtmlLines.join('\r\n')
-    const outBlob = new Blob([mhtml], { type: 'message/rfc822' })
-    const url = URL.createObjectURL(outBlob)
-    const a = document.createElement('a')
-    a.href = url
-    const safeName = (form.judulSurat || 'surat').replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_')
-    a.download = `${safeName}_draft.doc`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  } catch (err) {
-    console.error('Gagal generate doc:', err)
-    alert('Gagal membuat file Word. Silakan coba lagi.')
-  } finally {
-    isCapturing.value = false
-  }
+  const blob = new Blob(['\ufeff', html], { type: 'application/msword' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  const safeName = (form.judulSurat || 'surat').replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_')
+  a.download = `${safeName}_draft.doc`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+  isCapturing.value = false
 }
-
-
 
 // ── Dokumen Persyaratan Surat Kelahiran ──────────────────────────────────────
 
@@ -1196,28 +1004,28 @@ const validateDokPindahBeforePrint = () => {
 const getPindahDokIds = () => PINDAH_DOCS.map(d => pindahDokState[d.key].id).filter(Boolean)
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Dokumen Persyaratan Surat Domisili ───────────────────────────────────────
+// ── Dokumen Persyaratan Surat Keterangan Domisili ─────────────────────────────
 
 const DOMISILI_DOCS = [
-  { key: 'fotoEKtp',             label: 'Fotocopy e-KTP',                    wajib: true },
-  { key: 'suratPengantarRw',     label: 'Surat Pengantar dari RW',            wajib: true },
+  { key: 'suratPengantarRtRwDom', label: 'Surat Pengantar RT/RW', wajib: true },
+  { key: 'fotoKtpDomisili',       label: 'Fotocopy KTP Pemohon',  wajib: true },
 ]
 
-const domisiliDokState = reactive(
+const domDokState = reactive(
   Object.fromEntries(DOMISILI_DOCS.map(d => [d.key, { id: null, url: null, isUploading: false, error: '' }]))
 )
 
-const handleDomisiliDokUpload = async (key, event) => {
+const handleDomDokUpload = async (key, event) => {
   const file = event.target.files?.[0]
   event.target.value = ''
   if (!file) return
   if (file.size > 5 * 1024 * 1024) {
-    domisiliDokState[key].error = 'Ukuran file terlalu besar. Maksimal 5 MB.'
+    domDokState[key].error = 'Ukuran file terlalu besar. Maksimal 5 MB.'
     return
   }
   const label = DOMISILI_DOCS.find(d => d.key === key)?.label ?? key
-  domisiliDokState[key].isUploading = true
-  domisiliDokState[key].error = ''
+  domDokState[key].isUploading = true
+  domDokState[key].error = ''
   try {
     const fd = new FormData()
     fd.append('file', file)
@@ -1234,17 +1042,17 @@ const handleDomisiliDokUpload = async (key, event) => {
       if (res.status === 419) throw new Error('Sesi Anda telah berakhir. Silakan muat ulang halaman lalu coba lagi.')
       throw new Error(data?.message ?? `Upload gagal (${res.status})`)
     }
-    domisiliDokState[key].id  = data.id
-    domisiliDokState[key].url = data.url
+    domDokState[key].id  = data.id
+    domDokState[key].url = data.url
   } catch (e) {
-    domisiliDokState[key].error = e.message ?? 'Gagal upload'
+    domDokState[key].error = e.message ?? 'Gagal upload'
   } finally {
-    domisiliDokState[key].isUploading = false
+    domDokState[key].isUploading = false
   }
 }
 
-const removeDomisiliDok = async (key) => {
-  const id = domisiliDokState[key].id
+const removeDomDok = async (key) => {
+  const id = domDokState[key].id
   if (id) {
     try {
       await fetch(`/surat/dokumen/${id}`, {
@@ -1254,41 +1062,21 @@ const removeDomisiliDok = async (key) => {
       })
     } catch { /* abaikan */ }
   }
-  domisiliDokState[key].id  = null
-  domisiliDokState[key].url = null
-  domisiliDokState[key].error = ''
+  domDokState[key].id  = null
+  domDokState[key].url = null
+  domDokState[key].error = ''
 }
 
 const validateDokDomisiliBeforePrint = () => {
   if (!isDomisili.value) return true
-  const missing = DOMISILI_DOCS.filter(d => d.wajib && !domisiliDokState[d.key].id).map(d => d.label)
+  const missing = DOMISILI_DOCS.filter(d => d.wajib && !domDokState[d.key].id).map(d => d.label)
   if (missing.length > 0) {
     throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
   }
   return true
 }
 
-const getDomisiliDokIds = () => DOMISILI_DOCS.map(d => domisiliDokState[d.key].id).filter(Boolean)
-
-// ── Direct-file upload helpers (dipanggil oleh CameraCapture) ────────────────
-// Masing-masing menerima File object langsung (tanpa event wrapper)
-
-const uploadDomisiliFile = (key, file) => {
-  const label = DOMISILI_DOCS.find(d => d.key === key)?.label ?? key
-  return handleDomisiliDokUpload(key, { target: { files: [file], value: '' } })
-}
-
-const uploadPindahFile = (key, file) => {
-  return handlePindahDokUpload(key, { target: { files: [file], value: '' } })
-}
-
-const uploadKematianFile = (key, file) => {
-  return handleDokUpload(key, { target: { files: [file], value: '' } })
-}
-
-const uploadKelahiranFile = (key, file) => {
-  return handleKelDokUpload(key, { target: { files: [file], value: '' } })
-}
+const getDomDokIds = () => DOMISILI_DOCS.map(d => domDokState[d.key].id).filter(Boolean)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const finalizeLetter = async (templateSlug) => {
@@ -1303,7 +1091,7 @@ const finalizeLetter = async (templateSlug) => {
   }
 
   if (isDomisili.value) {
-    body.doc_ids = getDomisiliDokIds()
+    body.doc_ids = getDomDokIds()
   } else if (isKematian.value) {
     body.doc_ids = getDokIds()
   } else if (isKelahiran.value) {
@@ -1359,6 +1147,13 @@ const printNow = async () => {
   }
 
   try {
+    validateDokDomisiliBeforePrint()
+  } catch (e) {
+    alert(e.message)
+    return
+  }
+
+  try {
     validateDokKematianBeforePrint()
   } catch (e) {
     alert(e.message)
@@ -1374,13 +1169,6 @@ const printNow = async () => {
 
   try {
     validateDokPindahBeforePrint()
-  } catch (e) {
-    alert(e.message)
-    return
-  }
-
-  try {
-    validateDokDomisiliBeforePrint()
   } catch (e) {
     alert(e.message)
     return
@@ -1437,27 +1225,49 @@ const confirmFinalize = async (confirmed) => {
         <div class="flex flex-wrap gap-2">
           <button
             type="button"
-            class="rounded-xl border border-green-200 bg-white px-4 py-2 text-sm font-semibold text-green-800 hover:bg-green-50 transition"
+            class="rounded-xl border border-purple-200 bg-white px-4 py-2 text-sm font-semibold text-purple-800 hover:bg-purple-50 transition"
             @click.prevent.stop="showPreview = !showPreview"
           >
             {{ showPreview ? 'Tutup View' : 'View' }}
           </button>
 
-          <!-- Simpan Sementara sebagai Word -->
-          <button
-            type="button"
-            class="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition flex items-center gap-1"
-            @click.prevent.stop="saveAsWord"
-          >
-            <span class="text-base">📝</span> Simpan Sementara
-          </button>
+          <!-- Dropdown: Simpan Sementara -->
+          <div class="relative" @click.stop>
+            <button
+              type="button"
+              class="rounded-xl border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 transition flex items-center gap-1"
+              @click.stop="showExportMenu = !showExportMenu"
+            >
+              Simpan Sementara
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            <div
+              v-if="showExportMenu"
+              class="absolute right-0 top-full mt-1 min-w-[190px] rounded-xl border border-gray-200 bg-white shadow-lg z-50 overflow-hidden"
+            >
+              <button
+                type="button"
+                class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-indigo-50 transition"
+                @click.stop="saveAsPdfDraft"
+              >
+                <span class="text-base">📄</span> Simpan sebagai PDF
+              </button>
+              <button
+                type="button"
+                class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-indigo-50 transition"
+                @click.stop="saveAsWord"
+              >
+                <span class="text-base">📝</span> Simpan sebagai Word
+              </button>
+            </div>
+          </div>
 
           <button
             type="button"
             :disabled="isPrinting || !selectedIndexCode"
             class="rounded-xl px-4 py-2 text-sm font-semibold text-white
-                   bg-green-700
-                   hover:bg-green-800 transition
+                   bg-gradient-to-r from-purple-600 to-fuchsia-500
+                   hover:from-purple-700 hover:to-fuchsia-600 transition
                    disabled:opacity-50 disabled:cursor-not-allowed"
             @click.prevent.stop="printNow"
           >
@@ -1470,7 +1280,7 @@ const confirmFinalize = async (confirmed) => {
 
       <div class="grid gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]" :class="showPreview ? '' : 'lg:grid-cols-2'">
         <!-- FORM -->
-        <div class="print:hidden rounded-2xl border border-green-100 bg-white p-5 shadow-sm">
+        <div class="print:hidden rounded-2xl border border-purple-100 bg-white p-5 shadow-sm">
           <div class="text-sm font-semibold text-gray-900">Form Data</div>
 
           <div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -1480,7 +1290,7 @@ const confirmFinalize = async (confirmed) => {
               <select
                 v-model="selectedGroupKey"
                 :disabled="isLoadingIndexes"
-                class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="" disabled>
                   {{ isLoadingIndexes ? 'Memuat kategori...' : (indexLoadError ? 'Error memuat data' : 'Pilih Kategori') }}
@@ -1501,7 +1311,7 @@ const confirmFinalize = async (confirmed) => {
               <select
                 v-model="selectedIndexCode"
                 :disabled="isLoadingIndexes || !selectedGroupKey || filteredIndexItems.length === 0"
-                class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="" disabled>
                   {{ isLoadingIndexes ? 'Memuat...' : (!selectedGroupKey ? 'Pilih kategori dulu' : 'Pilih Nomor Index') }}
@@ -1522,10 +1332,10 @@ const confirmFinalize = async (confirmed) => {
                 v-model="form.noSurat"
                 readonly
                 :placeholder="selectedIndexCode ? '' : 'Pilih nomor index untuk generate nomor surat'"
-                class="mt-1 w-full rounded-xl border-gray-200 bg-gray-50 focus:border-green-400 focus:ring-green-400"
+                class="mt-1 w-full rounded-xl border-gray-200 bg-gray-50 focus:border-purple-400 focus:ring-purple-400"
               />
               <p class="mt-1 text-xs text-gray-500">
-                <span v-if="!selectedIndexCode" class="text-green-600 font-semibold">⚠️ Pilih kategori dan nomor index terlebih dahulu.</span>
+                <span v-if="!selectedIndexCode" class="text-amber-600 font-semibold">⚠️ Pilih kategori dan nomor index terlebih dahulu.</span>
                 <span v-else>Nomor urut naik hanya saat <b>Cetak</b>. Saat edit, memakai nomor final terakhir.</span>
               </p>
             </div>
@@ -1536,7 +1346,7 @@ const confirmFinalize = async (confirmed) => {
               <input
                 type="date"
                 v-model="form.tanggalSurat"
-                class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
               />
             </div>
 
@@ -1546,7 +1356,7 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">NIK</label>
                 <input
                   v-model="form.nik"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -1557,7 +1367,7 @@ const confirmFinalize = async (confirmed) => {
                   @input="onNamaInput($event.target.value)"
                   @focus="searchPendudukByName(form.nama)"
                   autocomplete="off"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Ketik nama penduduk..."
                 />
 
@@ -1569,7 +1379,7 @@ const confirmFinalize = async (confirmed) => {
                     v-for="item in pendudukSuggestions"
                     :key="item.id"
                     type="button"
-                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-green-50"
+                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-purple-50"
                     @click="applyPendudukToForm(item)"
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
@@ -1594,7 +1404,7 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Jenis Kelamin</label>
                 <select
                   v-model="form.jenisKelamin"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 >
                   <option value="">Pilih</option>
                   <option>Laki-laki</option>
@@ -1606,7 +1416,7 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Tempat Lahir</label>
                 <input
                   v-model="form.tempatLahir"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -1615,7 +1425,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   type="date"
                   v-model="form.tanggalLahir"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -1623,7 +1433,7 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Pekerjaan</label>
                 <input
                   v-model="form.pekerjaan"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -1637,7 +1447,7 @@ const confirmFinalize = async (confirmed) => {
                       v-model="form.alamatAsalJalan"
                       type="text"
                       placeholder="Contoh: Jln. Alor"
-                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400 text-sm"
+                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
                     />
                   </div>
                   <div>
@@ -1646,7 +1456,7 @@ const confirmFinalize = async (confirmed) => {
                       v-model="form.alamatAsalRt"
                       type="text"
                       placeholder="001"
-                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400 text-sm"
+                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
                     />
                   </div>
                   <div>
@@ -1655,7 +1465,7 @@ const confirmFinalize = async (confirmed) => {
                       v-model="form.alamatAsalRw"
                       type="text"
                       placeholder="001"
-                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400 text-sm"
+                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
                     />
                   </div>
                   <div>
@@ -1664,7 +1474,7 @@ const confirmFinalize = async (confirmed) => {
                       v-model="form.alamatAsalKelurahan"
                       type="text"
                       placeholder="Contoh: Fatubesi"
-                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400 text-sm"
+                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
                     />
                   </div>
                   <div>
@@ -1673,7 +1483,7 @@ const confirmFinalize = async (confirmed) => {
                       v-model="form.alamatAsalKecamatan"
                       type="text"
                       placeholder="Contoh: Kota Lama"
-                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400 text-sm"
+                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
                     />
                   </div>
                   <div>
@@ -1682,7 +1492,7 @@ const confirmFinalize = async (confirmed) => {
                       v-model="form.alamatAsalKota"
                       type="text"
                       placeholder="Contoh: Kota Kupang"
-                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400 text-sm"
+                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
                     />
                   </div>
                   <div>
@@ -1691,7 +1501,7 @@ const confirmFinalize = async (confirmed) => {
                       v-model="form.alamatAsalProvinsi"
                       type="text"
                       placeholder="Contoh: Nusa Tenggara Timur"
-                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400 text-sm"
+                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
                     />
                   </div>
                 </div>
@@ -1702,7 +1512,7 @@ const confirmFinalize = async (confirmed) => {
                 <textarea
                   v-model="form.alamatDomisili"
                   rows="2"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 ></textarea>
               </div>
 
@@ -1710,7 +1520,7 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">RT</label>
                 <input
                   v-model="form.rt"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -1718,49 +1528,54 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">RW</label>
                 <input
                   v-model="form.rw"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
-              <!-- ══ DOKUMEN PERSYARATAN SURAT DOMISILI ══ -->
+              <!-- ══ DOKUMEN PERSYARATAN SURAT KETERANGAN DOMISILI ══ -->
               <div class="sm:col-span-2 mt-1">
-                <div class="rounded-xl border border-green-200 bg-green-50 p-4 space-y-3">
+                <div class="rounded-xl border border-purple-200 bg-purple-50 p-4 space-y-4">
                   <div class="flex items-start gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <div>
-                      <div class="text-sm font-semibold text-green-800">Dokumen Persyaratan</div>
-                      <p class="text-xs text-green-700 mt-0.5">Upload semua dokumen <span class="font-semibold">Wajib</span> sebelum surat dapat dicetak.</p>
+                      <div class="text-sm font-semibold text-purple-800">Dokumen Persyaratan</div>
+                      <p class="text-xs text-purple-700 mt-0.5">Semua dokumen <span class="font-semibold">Wajib</span> harus diupload sebelum surat dapat dicetak dan masuk arsip.</p>
                     </div>
                   </div>
 
                   <div
                     v-for="(doc, idx) in DOMISILI_DOCS"
                     :key="doc.key"
-                    class="rounded-lg bg-white border border-green-100 p-3 space-y-2"
+                    class="rounded-lg bg-white border border-purple-100 p-3"
                   >
-                    <div class="flex items-start gap-2">
-                      <span class="inline-flex items-center rounded-full bg-red-100 text-red-700 px-2 py-0.5 text-xs font-semibold flex-shrink-0 mt-0.5">Wajib</span>
-                      <span class="text-xs font-medium text-gray-700 leading-snug">{{ idx + 1 }}. {{ doc.label }}</span>
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
+                        <span class="text-xs font-medium text-gray-700">{{ idx + 1 }}. {{ doc.label }}</span>
+                      </div>
+                      <div v-if="domDokState[doc.key].isUploading" class="text-xs text-purple-600 italic">Mengupload...</div>
+                      <div v-else-if="!domDokState[doc.key].id" class="flex-shrink-0">
+                        <label class="cursor-pointer rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 transition">
+                          Pilih File
+                          <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDomDokUpload(doc.key, $event)" />
+                        </label>
+                      </div>
+                      <div v-else class="flex items-center gap-2 flex-shrink-0">
+                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                        <button type="button" @click="removeDomDok(doc.key)" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+                      </div>
                     </div>
-
-                    <div v-if="domisiliDokState[doc.key].isUploading" class="rounded-lg border-2 border-dashed border-green-300 bg-green-50 py-2 text-center text-xs text-green-700 font-medium">
-                      Mengupload...
+                    <p v-if="domDokState[doc.key].error" class="mt-1 text-xs text-red-600">{{ domDokState[doc.key].error }}</p>
+                    <div v-if="domDokState[doc.key].url" class="mt-2">
+                      <img v-if="!domDokState[doc.key].url.endsWith('.pdf')" :src="domDokState[doc.key].url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
+                      <a v-else :href="domDokState[doc.key].url" target="_blank" class="text-xs text-purple-600 underline">Lihat PDF</a>
                     </div>
-                    <div v-else-if="!domisiliDokState[doc.key].id" class="flex gap-2">
-                      <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-green-400 bg-green-50 py-2.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                        Klik untuk Upload File
-                        <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDomisiliDokUpload(doc.key, $event)" />
-                      </label>
-                    </div>
-                    <div v-else class="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-3 py-2">
-                      <span class="text-xs text-green-700 font-semibold">✓ File tersimpan</span>
-                      <button type="button" @click="removeDomisiliDok(doc.key)" class="text-xs text-red-500 hover:text-red-700 font-medium">Hapus</button>
-                    </div>
-                    <p v-if="domisiliDokState[doc.key].error" class="text-xs text-red-600">{{ domisiliDokState[doc.key].error }}</p>
                   </div>
+
                 </div>
               </div>
+              <!-- ══ AKHIR DOKUMEN PERSYARATAN DOMISILI ══ -->
+
             </template>
 
             <!-- Kelahiran Fields -->
@@ -1770,7 +1585,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.nama"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan nama lengkap"
                 />
               </div>
@@ -1779,7 +1594,7 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Jenis Kelamin</label>
                 <select
                   v-model="form.jenisKelamin"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 >
                   <option value="">Pilih Jenis Kelamin</option>
                   <option value="Laki-laki">Laki-laki</option>
@@ -1792,7 +1607,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.agama"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan agama"
                 />
               </div>
@@ -1802,7 +1617,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.tempatLahir"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan tempat lahir"
                 />
               </div>
@@ -1812,7 +1627,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.tanggalLahir"
                   type="date"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -1824,7 +1639,7 @@ const confirmFinalize = async (confirmed) => {
                   @focus="searchOrtu(form.namaAyah, ayahSuggestions, showAyahDropdown, isSearchingAyah)"
                   type="text"
                   autocomplete="off"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Ketik nama ayah..."
                 />
                 <div
@@ -1835,7 +1650,7 @@ const confirmFinalize = async (confirmed) => {
                     v-for="item in ayahSuggestions"
                     :key="item.id"
                     type="button"
-                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-green-50"
+                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-purple-50"
                     @click="applyAyah(item)"
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
@@ -1853,7 +1668,7 @@ const confirmFinalize = async (confirmed) => {
                   @focus="searchOrtu(form.namaIbu, ibuSuggestions, showIbuDropdown, isSearchingIbu)"
                   type="text"
                   autocomplete="off"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Ketik nama ibu..."
                 />
                 <div
@@ -1864,7 +1679,7 @@ const confirmFinalize = async (confirmed) => {
                     v-for="item in ibuSuggestions"
                     :key="item.id"
                     type="button"
-                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-green-50"
+                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-purple-50"
                     @click="applyIbu(item)"
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
@@ -1879,7 +1694,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.pekerjaan"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan pekerjaan"
                 />
               </div>
@@ -1889,7 +1704,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.alamat"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Contoh: Jl. Alor No.1 A"
                 />
               </div>
@@ -1899,7 +1714,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.rt"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="001"
                 />
               </div>
@@ -1909,7 +1724,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.rw"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="002"
                 />
               </div>
@@ -1919,7 +1734,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.kelurahan"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Fatubesi"
                 />
               </div>
@@ -1929,7 +1744,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.kecamatan"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Kota Lama"
                 />
               </div>
@@ -1965,7 +1780,7 @@ const confirmFinalize = async (confirmed) => {
                         <span class="text-xs text-gray-700"><strong>Kasus 3:</strong> Anak lahir <strong>di luar nikah</strong></span>
                       </label>
                     </div>
-                    <p v-if="!jenisPendaftaranKelahiran" class="text-xs text-green-700 font-medium pl-1">⚠ Pilih salah satu studi kasus di atas untuk melihat daftar dokumen yang diperlukan.</p>
+                    <p v-if="!jenisPendaftaranKelahiran" class="text-xs text-amber-700 font-medium pl-1">⚠ Pilih salah satu studi kasus di atas untuk melihat daftar dokumen yang diperlukan.</p>
                   </div>
 
                   <!-- Ringkasan syarat sesuai kasus -->
@@ -2000,8 +1815,8 @@ const confirmFinalize = async (confirmed) => {
                       <div v-if="kelDokState[doc.key].isUploading" class="rounded-lg border-2 border-dashed border-green-300 bg-green-50 py-2 text-center text-xs text-green-700 font-medium">
                         Mengupload...
                       </div>
-                      <div v-else-if="!kelDokState[doc.key].id" class="flex gap-2">
-                        <label class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-green-400 bg-green-50 py-2.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition">
+                      <div v-else-if="!kelDokState[doc.key].id">
+                        <label class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-green-400 bg-green-50 py-2.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition">
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                           Klik untuk Upload File
                           <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleKelDokUpload(doc.key, $event)" />
@@ -2014,7 +1829,7 @@ const confirmFinalize = async (confirmed) => {
                       <p v-if="kelDokState[doc.key].error" class="text-xs text-red-600">{{ kelDokState[doc.key].error }}</p>
                       <div v-if="kelDokState[doc.key].url" class="mt-1">
                         <img v-if="!kelDokState[doc.key].url.endsWith('.pdf')" :src="kelDokState[doc.key].url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
-                        <a v-else :href="kelDokState[doc.key].url" target="_blank" class="text-xs text-green-700 underline">Lihat PDF</a>
+                        <a v-else :href="kelDokState[doc.key].url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
                       </div>
                     </div>
                   </template>
@@ -2034,7 +1849,7 @@ const confirmFinalize = async (confirmed) => {
                   @focus="searchPendudukByName(form.nama)"
                   type="text"
                   autocomplete="off"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Ketik nama penduduk..."
                 />
 
@@ -2046,7 +1861,7 @@ const confirmFinalize = async (confirmed) => {
                     v-for="item in pendudukSuggestions"
                     :key="item.id"
                     type="button"
-                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-green-50"
+                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-purple-50"
                     @click="applyPendudukToForm(item)"
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
@@ -2083,7 +1898,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.nik"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan NIK"
                 />
               </div>
@@ -2093,7 +1908,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.tempatLahir"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan tempat lahir"
                 />
               </div>
@@ -2103,7 +1918,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.tanggalLahir"
                   type="date"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -2112,7 +1927,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.agama"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan agama"
                 />
               </div>
@@ -2122,7 +1937,7 @@ const confirmFinalize = async (confirmed) => {
                 <textarea
                   v-model="form.alamat"
                   rows="2"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan alamat"
                 ></textarea>
               </div>
@@ -2132,7 +1947,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.sebabKematian"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Contoh: sakit"
                 />
               </div>
@@ -2142,7 +1957,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.tanggalMeninggal"
                   type="date"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -2151,7 +1966,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.umur"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Contoh: 78 Tahun"
                 />
               </div>
@@ -2161,37 +1976,36 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.tempatMeninggal"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Contoh: Kupang"
                 />
               </div>
 
               <!-- ══ DOKUMEN PERSYARATAN SURAT KEMATIAN ══ -->
               <div class="sm:col-span-2 mt-1">
-                <div class="rounded-xl border border-green-200 bg-green-50 p-4 space-y-4">
+                <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-4">
                   <div class="flex items-start gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <div>
-                      <div class="text-sm font-semibold text-green-800">Dokumen Persyaratan</div>
-                      <p class="text-xs text-green-700 mt-0.5">Semua dokumen <span class="font-semibold">Wajib</span> harus diupload sebelum surat dapat dicetak dan masuk arsip.</p>
+                      <div class="text-sm font-semibold text-amber-800">Dokumen Persyaratan</div>
+                      <p class="text-xs text-amber-700 mt-0.5">Semua dokumen <span class="font-semibold">Wajib</span> harus diupload sebelum surat dapat dicetak dan masuk arsip.</p>
                     </div>
                   </div>
 
                   <!-- helper reusable: kartu upload per dokumen -->
                   <!-- 1. Surat Pengantar RT/RW -->
-                  <div class="rounded-lg bg-white border border-green-100 p-3">
+                  <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
                         <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
                         <span class="text-xs font-medium text-gray-700">1. Surat Pengantar RT/RW</span>
                       </div>
-                      <div v-if="dokState.suratPengantarRtRw.isUploading" class="text-xs text-green-600 italic">Mengupload...</div>
-                      <div v-else-if="!dokState.suratPengantarRtRw.id" class="flex items-center gap-1.5 flex-shrink-0">
-                        <label class="cursor-pointer rounded-lg bg-green-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-800 transition">
+                      <div v-if="dokState.suratPengantarRtRw.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
+                      <div v-else-if="!dokState.suratPengantarRtRw.id" class="flex-shrink-0">
+                        <label class="cursor-pointer rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition">
                           Pilih File
                           <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDokUpload('suratPengantarRtRw', $event)" />
                         </label>
-
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
                         <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
@@ -2201,12 +2015,12 @@ const confirmFinalize = async (confirmed) => {
                     <p v-if="dokState.suratPengantarRtRw.error" class="mt-1 text-xs text-red-600">{{ dokState.suratPengantarRtRw.error }}</p>
                     <div v-if="dokState.suratPengantarRtRw.url" class="mt-2">
                       <img v-if="!dokState.suratPengantarRtRw.url.endsWith('.pdf')" :src="dokState.suratPengantarRtRw.url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
-                      <a v-else :href="dokState.suratPengantarRtRw.url" target="_blank" class="text-xs text-green-700 underline">Lihat PDF</a>
+                      <a v-else :href="dokState.suratPengantarRtRw.url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
                     </div>
                   </div>
 
                   <!-- 2. Pilih jenis surat keterangan kematian (radio) lalu upload -->
-                  <div class="rounded-lg bg-white border border-green-100 p-3 space-y-3">
+                  <div class="rounded-lg bg-white border border-amber-100 p-3 space-y-3">
                     <div class="flex items-center gap-2">
                       <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Wajib</span>
                       <span class="text-xs font-medium text-gray-700">2. Keterangan Kematian</span>
@@ -2220,7 +2034,7 @@ const confirmFinalize = async (confirmed) => {
                           name="jenisSuratKematian"
                           value="dokter"
                           v-model="jenisSuratKematian"
-                          class="accent-green-600 h-4 w-4"
+                          class="accent-amber-600 h-4 w-4"
                         />
                         <span class="text-xs text-gray-700">Surat Keterangan Kematian dari <strong>Dokter / Bidan / Puskesmas</strong></span>
                       </label>
@@ -2230,24 +2044,23 @@ const confirmFinalize = async (confirmed) => {
                           name="jenisSuratKematian"
                           value="saksi"
                           v-model="jenisSuratKematian"
-                          class="accent-green-600 h-4 w-4"
+                          class="accent-amber-600 h-4 w-4"
                         />
                         <span class="text-xs text-gray-700">Surat Pernyataan dari <strong>2 Orang Saksi</strong> (pengganti surat dokter)</span>
                       </label>
                     </div>
-                    <p v-if="!jenisSuratKematian && !dokState.suratKetKematian.id" class="text-xs text-green-700 font-medium pl-1">⚠ Pilih salah satu di atas, lalu upload file.</p>
+                    <p v-if="!jenisSuratKematian && !dokState.suratKetKematian.id" class="text-xs text-amber-700 font-medium pl-1">⚠ Pilih salah satu di atas, lalu upload file.</p>
 
                     <!-- Upload setelah dipilih -->
-                    <div v-if="jenisSuratKematian || dokState.suratKetKematian.id" class="pl-2 border-l-2 border-green-300">
+                    <div v-if="jenisSuratKematian || dokState.suratKetKematian.id" class="pl-2 border-l-2 border-amber-300">
                       <div class="flex items-center justify-between gap-2 flex-wrap">
                         <span class="text-xs text-gray-600 italic">{{ labelKetKematian }}</span>
-                        <div v-if="dokState.suratKetKematian.isUploading" class="text-xs text-green-600 italic">Mengupload...</div>
-                        <div v-else-if="!dokState.suratKetKematian.id" class="flex items-center gap-1.5 flex-shrink-0">
-                          <label class="cursor-pointer rounded-lg bg-green-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-800 transition">
+                        <div v-if="dokState.suratKetKematian.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
+                        <div v-else-if="!dokState.suratKetKematian.id" class="flex-shrink-0">
+                          <label class="cursor-pointer rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition">
                             Pilih File
                             <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDokUpload('suratKetKematian', $event)" />
                           </label>
-
                         </div>
                         <div v-else class="flex items-center gap-2 flex-shrink-0">
                           <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
@@ -2257,25 +2070,24 @@ const confirmFinalize = async (confirmed) => {
                       <p v-if="dokState.suratKetKematian.error" class="mt-1 text-xs text-red-600">{{ dokState.suratKetKematian.error }}</p>
                       <div v-if="dokState.suratKetKematian.url" class="mt-2">
                         <img v-if="!dokState.suratKetKematian.url.endsWith('.pdf')" :src="dokState.suratKetKematian.url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
-                        <a v-else :href="dokState.suratKetKematian.url" target="_blank" class="text-xs text-green-700 underline">Lihat PDF</a>
+                        <a v-else :href="dokState.suratKetKematian.url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
                       </div>
                     </div>
                   </div>
 
                   <!-- 3. Fotocopy KTP Almarhum -->
-                  <div class="rounded-lg bg-white border border-green-100 p-3">
+                  <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
                         <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
                         <span class="text-xs font-medium text-gray-700">3. Fotocopy KTP Almarhum/Almarhumah</span>
                       </div>
-                      <div v-if="dokState.fotoKtpAlmarhum.isUploading" class="text-xs text-green-600 italic">Mengupload...</div>
-                      <div v-else-if="!dokState.fotoKtpAlmarhum.id" class="flex items-center gap-1.5 flex-shrink-0">
-                        <label class="cursor-pointer rounded-lg bg-green-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-800 transition">
+                      <div v-if="dokState.fotoKtpAlmarhum.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
+                      <div v-else-if="!dokState.fotoKtpAlmarhum.id" class="flex-shrink-0">
+                        <label class="cursor-pointer rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition">
                           Pilih File
                           <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDokUpload('fotoKtpAlmarhum', $event)" />
                         </label>
-
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
                         <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
@@ -2285,24 +2097,23 @@ const confirmFinalize = async (confirmed) => {
                     <p v-if="dokState.fotoKtpAlmarhum.error" class="mt-1 text-xs text-red-600">{{ dokState.fotoKtpAlmarhum.error }}</p>
                     <div v-if="dokState.fotoKtpAlmarhum.url" class="mt-2">
                       <img v-if="!dokState.fotoKtpAlmarhum.url.endsWith('.pdf')" :src="dokState.fotoKtpAlmarhum.url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
-                      <a v-else :href="dokState.fotoKtpAlmarhum.url" target="_blank" class="text-xs text-green-700 underline">Lihat PDF</a>
+                      <a v-else :href="dokState.fotoKtpAlmarhum.url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
                     </div>
                   </div>
 
                   <!-- 4. Fotocopy KK Almarhum -->
-                  <div class="rounded-lg bg-white border border-green-100 p-3">
+                  <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
                         <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
                         <span class="text-xs font-medium text-gray-700">4. Fotocopy Kartu Keluarga Almarhum/Almarhumah</span>
                       </div>
-                      <div v-if="dokState.fotoKkAlmarhum.isUploading" class="text-xs text-green-600 italic">Mengupload...</div>
-                      <div v-else-if="!dokState.fotoKkAlmarhum.id" class="flex items-center gap-1.5 flex-shrink-0">
-                        <label class="cursor-pointer rounded-lg bg-green-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-800 transition">
+                      <div v-if="dokState.fotoKkAlmarhum.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
+                      <div v-else-if="!dokState.fotoKkAlmarhum.id" class="flex-shrink-0">
+                        <label class="cursor-pointer rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition">
                           Pilih File
                           <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDokUpload('fotoKkAlmarhum', $event)" />
                         </label>
-
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
                         <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
@@ -2312,24 +2123,23 @@ const confirmFinalize = async (confirmed) => {
                     <p v-if="dokState.fotoKkAlmarhum.error" class="mt-1 text-xs text-red-600">{{ dokState.fotoKkAlmarhum.error }}</p>
                     <div v-if="dokState.fotoKkAlmarhum.url" class="mt-2">
                       <img v-if="!dokState.fotoKkAlmarhum.url.endsWith('.pdf')" :src="dokState.fotoKkAlmarhum.url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
-                      <a v-else :href="dokState.fotoKkAlmarhum.url" target="_blank" class="text-xs text-green-700 underline">Lihat PDF</a>
+                      <a v-else :href="dokState.fotoKkAlmarhum.url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
                     </div>
                   </div>
 
                   <!-- 5. Fotocopy KTP Pemohon -->
-                  <div class="rounded-lg bg-white border border-green-100 p-3">
+                  <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
                         <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
                         <span class="text-xs font-medium text-gray-700">5. Fotocopy KTP Pemohon (Pelapor)</span>
                       </div>
-                      <div v-if="dokState.fotoKtpPemohon.isUploading" class="text-xs text-green-600 italic">Mengupload...</div>
-                      <div v-else-if="!dokState.fotoKtpPemohon.id" class="flex items-center gap-1.5 flex-shrink-0">
-                        <label class="cursor-pointer rounded-lg bg-green-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-800 transition">
+                      <div v-if="dokState.fotoKtpPemohon.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
+                      <div v-else-if="!dokState.fotoKtpPemohon.id" class="flex-shrink-0">
+                        <label class="cursor-pointer rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition">
                           Pilih File
                           <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDokUpload('fotoKtpPemohon', $event)" />
                         </label>
-
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
                         <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
@@ -2339,24 +2149,23 @@ const confirmFinalize = async (confirmed) => {
                     <p v-if="dokState.fotoKtpPemohon.error" class="mt-1 text-xs text-red-600">{{ dokState.fotoKtpPemohon.error }}</p>
                     <div v-if="dokState.fotoKtpPemohon.url" class="mt-2">
                       <img v-if="!dokState.fotoKtpPemohon.url.endsWith('.pdf')" :src="dokState.fotoKtpPemohon.url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
-                      <a v-else :href="dokState.fotoKtpPemohon.url" target="_blank" class="text-xs text-green-700 underline">Lihat PDF</a>
+                      <a v-else :href="dokState.fotoKtpPemohon.url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
                     </div>
                   </div>
 
                   <!-- 6. Surat Pernyataan Pelapor -->
-                  <div class="rounded-lg bg-white border border-green-100 p-3">
+                  <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
                         <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
                         <span class="text-xs font-medium text-gray-700">6. Surat Pernyataan dari Pelapor (2 saksi &amp; RT)</span>
                       </div>
-                      <div v-if="dokState.suratPernyataanPelapor.isUploading" class="text-xs text-green-600 italic">Mengupload...</div>
-                      <div v-else-if="!dokState.suratPernyataanPelapor.id" class="flex items-center gap-1.5 flex-shrink-0">
-                        <label class="cursor-pointer rounded-lg bg-green-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-800 transition">
+                      <div v-if="dokState.suratPernyataanPelapor.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
+                      <div v-else-if="!dokState.suratPernyataanPelapor.id" class="flex-shrink-0">
+                        <label class="cursor-pointer rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition">
                           Pilih File
                           <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handleDokUpload('suratPernyataanPelapor', $event)" />
                         </label>
-
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
                         <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
@@ -2367,7 +2176,7 @@ const confirmFinalize = async (confirmed) => {
                     <p v-if="dokState.suratPernyataanPelapor.error" class="mt-1 text-xs text-red-600">{{ dokState.suratPernyataanPelapor.error }}</p>
                     <div v-if="dokState.suratPernyataanPelapor.url" class="mt-2">
                       <img v-if="!dokState.suratPernyataanPelapor.url.endsWith('.pdf')" :src="dokState.suratPernyataanPelapor.url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
-                      <a v-else :href="dokState.suratPernyataanPelapor.url" target="_blank" class="text-xs text-green-700 underline">Lihat PDF</a>
+                      <a v-else :href="dokState.suratPernyataanPelapor.url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
                     </div>
                   </div>
 
@@ -2388,7 +2197,7 @@ const confirmFinalize = async (confirmed) => {
                   @input="onNamaInput($event.target.value)"
                   @focus="searchPendudukByName(form.nama)"
                   autocomplete="off"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Ketik nama penduduk..."
                 />
 
@@ -2400,7 +2209,7 @@ const confirmFinalize = async (confirmed) => {
                     v-for="item in pendudukSuggestions"
                     :key="item.id"
                     type="button"
-                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-green-50"
+                    class="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm hover:bg-purple-50"
                     @click="applyPendudukToForm(item)"
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
@@ -2427,7 +2236,7 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Jenis Kelamin</label>
                 <select
                   v-model="form.jenisKelamin"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 >
                   <option value="">Pilih Jenis Kelamin</option>
                   <option value="Laki-laki">Laki-laki</option>
@@ -2440,7 +2249,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.nik"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan NIK"
                 />
               </div>
@@ -2450,7 +2259,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.tempatLahir"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan tempat lahir"
                 />
               </div>
@@ -2460,7 +2269,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.tanggalLahir"
                   type="date"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -2469,7 +2278,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.statusPerkawinan"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Contoh: Kawin"
                 />
               </div>
@@ -2479,7 +2288,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.kewarganegaraan"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Contoh: Indonesia"
                 />
               </div>
@@ -2489,7 +2298,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.agama"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan agama"
                 />
               </div>
@@ -2499,7 +2308,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.pekerjaan"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan pekerjaan"
                 />
               </div>
@@ -2509,14 +2318,14 @@ const confirmFinalize = async (confirmed) => {
                 <textarea
                   v-model="form.alamatAsal"
                   rows="2"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan alamat asal"
                 ></textarea>
               </div>
 
               <!-- ── ALAMAT TUJUAN (Cascading Wilayah) ── -->
               <div class="sm:col-span-2">
-                <p class="text-xs font-bold text-green-700 mb-2 mt-1">Alamat Tujuan Pindah</p>
+                <p class="text-xs font-bold text-purple-700 mb-2 mt-1">Alamat Tujuan Pindah</p>
               </div>
 
               <!-- Provinsi -->
@@ -2526,7 +2335,7 @@ const confirmFinalize = async (confirmed) => {
                   :value="form.provinsiTujuanId"
                   @change="onProvinsiChange($event.target.value)"
                   :disabled="isLoadingProv"
-                  class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
                   <option value="">{{ isLoadingProv ? 'Memuat provinsi...' : 'Pilih Provinsi' }}</option>
                   <option v-for="p in provinsiList" :key="p.id" :value="p.id">{{ p.nama }}</option>
@@ -2540,7 +2349,7 @@ const confirmFinalize = async (confirmed) => {
                   :value="form.kabupatenTujuanId"
                   @change="onKabupatenChange($event.target.value)"
                   :disabled="isLoadingKab || !form.provinsiTujuanId"
-                  class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
                   <option value="">
                     {{ isLoadingKab ? 'Memuat...' : (!form.provinsiTujuanId ? 'Pilih provinsi dulu' : 'Pilih Kabupaten/Kota') }}
@@ -2556,7 +2365,7 @@ const confirmFinalize = async (confirmed) => {
                   :value="form.kecamatanTujuanId"
                   @change="onKecamatanChange($event.target.value)"
                   :disabled="isLoadingKec || !form.kabupatenTujuanId"
-                  class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
                   <option value="">
                     {{ isLoadingKec ? 'Memuat...' : (!form.kabupatenTujuanId ? 'Pilih kabupaten dulu' : 'Pilih Kecamatan') }}
@@ -2572,7 +2381,7 @@ const confirmFinalize = async (confirmed) => {
                   :value="form.desaTujuanId"
                   @change="onDesaChange($event.target.value)"
                   :disabled="isLoadingDesa || !form.kecamatanTujuanId"
-                  class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
                   <option value="">
                     {{ isLoadingDesa ? 'Memuat...' : (!form.kecamatanTujuanId ? 'Pilih kecamatan dulu' : 'Pilih Desa/Kelurahan') }}
@@ -2587,7 +2396,7 @@ const confirmFinalize = async (confirmed) => {
                 <textarea
                   v-model="form.alamatTujuan"
                   rows="2"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Contoh: RT 005/RW 002, Jl. Soekarno No. 10"
                 ></textarea>
               </div>
@@ -2598,7 +2407,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.tanggalPindah"
                   type="date"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -2607,7 +2416,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.alasanPindah"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Contoh: Pindah Domisili"
                 />
               </div>
@@ -2618,7 +2427,7 @@ const confirmFinalize = async (confirmed) => {
                   <button
                     type="button"
                     @click="addPengikut"
-                    class="rounded-xl bg-green-700 px-3 py-2 text-sm font-medium text-white hover:bg-green-800"
+                    class="rounded-xl bg-purple-600 px-3 py-2 text-sm font-medium text-white hover:bg-purple-700"
                   >
                     + Tambah Pengikut
                   </button>
@@ -2648,7 +2457,7 @@ const confirmFinalize = async (confirmed) => {
                       <input
                         v-model="item.nama"
                         type="text"
-                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                         placeholder="Masukkan nama pengikut"
                       />
                     </div>
@@ -2658,7 +2467,7 @@ const confirmFinalize = async (confirmed) => {
                       <input
                         v-model="item.nik"
                         type="text"
-                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                         placeholder="Masukkan NIK pengikut"
                       />
                     </div>
@@ -2668,7 +2477,7 @@ const confirmFinalize = async (confirmed) => {
                       <input
                         v-model="item.tempatLahir"
                         type="text"
-                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                         placeholder="Contoh: Kupang"
                       />
                     </div>
@@ -2678,7 +2487,7 @@ const confirmFinalize = async (confirmed) => {
                       <input
                         v-model="item.tanggalLahir"
                         type="date"
-                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                       />
                     </div>
 
@@ -2687,7 +2496,7 @@ const confirmFinalize = async (confirmed) => {
                       <input
                         v-model="item.hubungan"
                         type="text"
-                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
+                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                         placeholder="Contoh: Anak"
                       />
                     </div>
@@ -2697,28 +2506,28 @@ const confirmFinalize = async (confirmed) => {
 
               <!-- ══ DOKUMEN PERSYARATAN SURAT PINDAH ══ -->
               <div class="mt-1">
-                <div class="rounded-xl border border-green-200 bg-green-50 p-4 space-y-4">
+                <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-4">
                   <div class="flex items-start gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <div>
-                      <div class="text-sm font-semibold text-green-800">Dokumen Persyaratan</div>
-                      <p class="text-xs text-green-700 mt-0.5">Semua dokumen <span class="font-semibold">Wajib</span> harus diupload sebelum surat dapat dicetak dan masuk arsip.</p>
+                      <div class="text-sm font-semibold text-blue-800">Dokumen Persyaratan</div>
+                      <p class="text-xs text-blue-700 mt-0.5">Semua dokumen <span class="font-semibold">Wajib</span> harus diupload sebelum surat dapat dicetak dan masuk arsip.</p>
                     </div>
                   </div>
 
                   <div
                     v-for="(doc, idx) in PINDAH_DOCS"
                     :key="doc.key"
-                    class="rounded-lg bg-white border border-green-100 p-3"
+                    class="rounded-lg bg-white border border-blue-100 p-3"
                   >
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
                         <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
                         <span class="text-xs font-medium text-gray-700">{{ idx + 1 }}. {{ doc.label }}</span>
                       </div>
-                      <div v-if="pindahDokState[doc.key].isUploading" class="text-xs text-green-700 italic">Mengupload...</div>
-                      <div v-else-if="!pindahDokState[doc.key].id" class="flex items-center gap-1.5 flex-shrink-0">
-                        <label class="cursor-pointer rounded-lg bg-green-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-800 transition">
+                      <div v-if="pindahDokState[doc.key].isUploading" class="text-xs text-blue-600 italic">Mengupload...</div>
+                      <div v-else-if="!pindahDokState[doc.key].id" class="flex-shrink-0">
+                        <label class="cursor-pointer rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition">
                           Pilih File
                           <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden" @change="handlePindahDokUpload(doc.key, $event)" />
                         </label>
@@ -2731,7 +2540,7 @@ const confirmFinalize = async (confirmed) => {
                     <p v-if="pindahDokState[doc.key].error" class="mt-1 text-xs text-red-600">{{ pindahDokState[doc.key].error }}</p>
                     <div v-if="pindahDokState[doc.key].url" class="mt-2">
                       <img v-if="!pindahDokState[doc.key].url.endsWith('.pdf')" :src="pindahDokState[doc.key].url" alt="Preview" class="max-h-32 rounded-lg border border-gray-200 object-contain" />
-                      <a v-else :href="pindahDokState[doc.key].url" target="_blank" class="text-xs text-green-700 underline">Lihat PDF</a>
+                      <a v-else :href="pindahDokState[doc.key].url" target="_blank" class="text-xs text-blue-600 underline">Lihat PDF</a>
                     </div>
                   </div>
 
@@ -2748,7 +2557,7 @@ const confirmFinalize = async (confirmed) => {
         <!-- PREVIEW (di page, untuk lihat saja) -->
         <div
           ref="previewContainerRef"
-          class="rounded-2xl border border-green-100 bg-white p-5 shadow-sm"
+          class="rounded-2xl border border-purple-100 bg-white p-5 shadow-sm"
           :class="{ 'opacity-60': !showPreview }"
         >
           <div class="print:hidden flex items-center justify-between">
@@ -2836,7 +2645,7 @@ const confirmFinalize = async (confirmed) => {
           <button
             type="button"
             :disabled="isPrinting"
-            class="rounded-xl px-4 py-2 text-sm font-semibold text-white bg-green-700 hover:bg-green-800 transition disabled:opacity-60"
+            class="rounded-xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:from-purple-700 hover:to-fuchsia-600 transition disabled:opacity-60"
             @click="confirmFinalize(true)"
           >
             {{ isPrinting ? 'Menyimpan...' : 'Ya, Berhasil Dicetak' }}
@@ -2845,8 +2654,6 @@ const confirmFinalize = async (confirmed) => {
       </div>
     </div>
   </Teleport>
-
-
 </template>
 
 <style>
