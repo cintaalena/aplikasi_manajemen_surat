@@ -62,7 +62,7 @@ const submit = () => {
 
         <div
             v-if="status"
-            class="mb-4 rounded-xl border border-purple-100 bg-purple-50 px-4 py-3 text-sm text-purple-800"
+            class="mb-4 rounded-xl border border-green-100 bg-green-50 px-4 py-3 text-sm text-green-800"
         >
             {{ status }}
         </div>
@@ -83,7 +83,7 @@ const submit = () => {
                     v-model="form.name"
                     required
                     autofocus
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                 >
                     <option value="" disabled>-- Pilih Nama --</option>
                     <option v-for="staffName in staffNames" :key="staffName" :value="staffName">

@@ -18,5 +18,11 @@ export default {
         },
     },
 
+    safelist: [
+        'bg-sky-50', 'bg-sky-500', 'border-sky-200', 'text-sky-700', 'text-sky-800', 'text-sky-900', 'hover:bg-sky-50/60', 'hover:text-sky-900',
+        'bg-violet-50', 'bg-violet-100', 'border-violet-200', 'text-violet-900', 'hover:bg-violet-50/60', 'hover:text-violet-900',
+        'bg-teal-500',
+    ],
+
     plugins: [forms],
 };

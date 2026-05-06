@@ -8,12 +8,12 @@
         <!-- PWA Meta -->
         <meta name="application-name" content="Surat Fatubesi">
         <meta name="description" content="Sistem manajemen surat keterangan Kelurahan Fatubesi">
-        <meta name="theme-color" content="#7c3aed">
+        <meta name="theme-color" content="#2E7D32">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="apple-mobile-web-app-title" content="Surat Fatubesi">
-        <meta name="msapplication-TileColor" content="#7c3aed">
+        <meta name="msapplication-TileColor" content="#2E7D32">
         <meta name="msapplication-TileImage" content="/images/icons/icon-144x144.png">
 
         <!-- Manifest -->

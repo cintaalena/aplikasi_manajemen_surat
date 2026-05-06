@@ -86,7 +86,7 @@ const submit = () => {
           </button>
         </div>
 
-        <div class="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
+        <div class="rounded-2xl border border-green-100 bg-white p-6 shadow-sm">
           <form @submit.prevent="submit" class="space-y-6">
 
             <!-- Identitas Keluarga -->
@@ -99,7 +99,7 @@ const submit = () => {
                   <input
                     v-model="form.kode_keluarga"
                     type="text"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
                     placeholder="Masukkan No. KK"
                   />
                   <p v-if="form.errors.kode_keluarga" class="mt-1 text-xs text-red-600">{{ form.errors.kode_keluarga }}</p>
@@ -110,7 +110,7 @@ const submit = () => {
                   <input
                     v-model="form.nama_kepala_keluarga"
                     type="text"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
                     placeholder="Nama kepala keluarga"
                   />
                   <p v-if="form.errors.nama_kepala_keluarga" class="mt-1 text-xs text-red-600">{{ form.errors.nama_kepala_keluarga }}</p>
@@ -121,7 +121,7 @@ const submit = () => {
                   <input
                     v-model="form.rt"
                     type="text"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
                     placeholder="Contoh: 001"
                   />
                   <p v-if="form.errors.rt" class="mt-1 text-xs text-red-600">{{ form.errors.rt }}</p>
@@ -132,7 +132,7 @@ const submit = () => {
                   <input
                     v-model="form.rw"
                     type="text"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
                     placeholder="Contoh: 001"
                   />
                   <p v-if="form.errors.rw" class="mt-1 text-xs text-red-600">{{ form.errors.rw }}</p>
@@ -143,7 +143,7 @@ const submit = () => {
                   <input
                     v-model="form.dusun"
                     type="text"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
                     placeholder="Masukkan dusun"
                   />
                   <p v-if="form.errors.dusun" class="mt-1 text-xs text-red-600">{{ form.errors.dusun }}</p>
@@ -154,7 +154,7 @@ const submit = () => {
                   <textarea
                     v-model="form.alamat"
                     rows="3"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
                     placeholder="Masukkan alamat"
                   ></textarea>
                   <p v-if="form.errors.alamat" class="mt-1 text-xs text-red-600">{{ form.errors.alamat }}</p>
@@ -169,19 +169,19 @@ const submit = () => {
               <div class="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label class="text-xs font-semibold text-gray-700">NIK</label>
-                  <input v-model="form.nik" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.nik" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" />
                   <p v-if="form.errors.nik" class="mt-1 text-xs text-red-600">{{ form.errors.nik }}</p>
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Nama</label>
-                  <input v-model="form.nama" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.nama" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" />
                   <p v-if="form.errors.nama" class="mt-1 text-xs text-red-600">{{ form.errors.nama }}</p>
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">JK</label>
-                  <select v-model="form.jenis_kelamin" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400">
+                  <select v-model="form.jenis_kelamin" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400">
                     <option value="">Pilih JK</option>
                     <option value="L">Laki-laki</option>
                     <option value="P">Perempuan</option>
@@ -191,7 +191,7 @@ const submit = () => {
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Hubungan dengan Kepala Keluarga</label>
-                  <select v-model="form.hubungan" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400">
+                  <select v-model="form.hubungan" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400">
                     <option value="">Pilih hubungan</option>
                     <option value="Kepala Keluarga">Kepala Keluarga</option>
                     <option value="Istri">Istri</option>
@@ -210,12 +210,12 @@ const submit = () => {
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Tempat Lahir</label>
-                  <input v-model="form.tempat_lahir" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.tempat_lahir" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" />
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Tanggal Lahir</label>
-                  <input v-model="form.tanggal_lahir" type="date" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.tanggal_lahir" type="date" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" />
                 </div>
 
                 <div>
@@ -225,7 +225,7 @@ const submit = () => {
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Status</label>
-                  <select v-model="form.status_perkawinan" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400">
+                  <select v-model="form.status_perkawinan" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400">
                     <option value="">Pilih status</option>
                     <option value="Belum Kawin">Belum Kawin</option>
                     <option value="Kawin">Kawin</option>
@@ -236,12 +236,12 @@ const submit = () => {
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Agama</label>
-                  <input v-model="form.agama" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.agama" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" />
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Golongan Darah</label>
-                  <select v-model="form.golongan_darah" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400">
+                  <select v-model="form.golongan_darah" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400">
                     <option value="">Pilih golongan darah</option>
                     <option value="A">A</option>
                     <option value="B">B</option>
@@ -252,27 +252,27 @@ const submit = () => {
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Kewarganegaraan</label>
-                  <input v-model="form.kewarganegaraan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.kewarganegaraan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" />
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Etnis/Suku</label>
-                  <input v-model="form.etnis" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.etnis" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" />
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Pendidikan</label>
-                  <input v-model="form.pendidikan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.pendidikan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" />
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Pekerjaan</label>
-                  <input v-model="form.pekerjaan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.pekerjaan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" />
                 </div>
 
                 <div class="sm:col-span-2">
                   <label class="text-xs font-semibold text-gray-700">Keterangan Hidup / Meninggal</label>
-                  <select v-model="form.status_kehidupan" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400">
+                  <select v-model="form.status_kehidupan" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400">
                     <option value="Hidup">Hidup</option>
                     <option value="Meninggal">Meninggal Dunia</option>
                   </select>
@@ -293,7 +293,7 @@ const submit = () => {
               <button
                 type="submit"
                 :disabled="form.processing"
-                class="rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 disabled:opacity-50"
+                class="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 disabled:opacity-50"
               >
                 {{ form.processing ? 'Menyimpan...' : 'Simpan Perubahan' }}
               </button>

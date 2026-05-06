@@ -15,6 +15,7 @@ const flashSuccess = computed(() => page.props.flash?.success)
 const flashError = computed(() => page.props.flash?.error)
 
 const userRole = computed(() => page.props.auth?.user?.role ?? 'staff')
+const canEdit   = computed(() => userRole.value === 'staff' || userRole.value === 'admin')
 const canDelete = computed(() => userRole.value === 'staff' || userRole.value === 'admin')
 
 const deletePenduduk = (p) => {
@@ -177,7 +178,7 @@ const importCsv = () => {
               <label class="text-xs text-gray-500">Pencarian</label>
               <input
                 v-model="filtersForm.q"
-                class="mt-1 w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                class="mt-1 w-full rounded-lg border-gray-300 focus:border-stone-500 focus:ring-stone-500"
                 placeholder="NIK / Nama / No KK / Alamat"
               />
             </div>
@@ -186,7 +187,7 @@ const importCsv = () => {
               <label class="text-xs text-gray-500">Dusun</label>
               <select
                 v-model="filtersForm.dusun"
-                class="mt-1 w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                class="mt-1 w-full rounded-lg border-gray-300 focus:border-stone-500 focus:ring-stone-500"
               >
                 <option value="">Semua</option>
                 <option v-for="d in dusunOptions" :key="d" :value="d">
@@ -199,7 +200,7 @@ const importCsv = () => {
               <label class="text-xs text-gray-500">RT</label>
               <input
                 v-model="filtersForm.rt"
-                class="mt-1 w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                class="mt-1 w-full rounded-lg border-gray-300 focus:border-stone-500 focus:ring-stone-500"
                 placeholder="contoh: 001"
               />
             </div>
@@ -208,7 +209,7 @@ const importCsv = () => {
               <label class="text-xs text-gray-500">RW</label>
               <input
                 v-model="filtersForm.rw"
-                class="mt-1 w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                class="mt-1 w-full rounded-lg border-gray-300 focus:border-stone-500 focus:ring-stone-500"
                 placeholder="contoh: 001"
               />
             </div>
@@ -217,7 +218,7 @@ const importCsv = () => {
               <label class="text-xs text-gray-500">Status</label>
               <select
                 v-model="filtersForm.status_kehidupan"
-                class="mt-1 w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                class="mt-1 w-full rounded-lg border-gray-300 focus:border-stone-500 focus:ring-stone-500"
               >
                 <option value="">Semua</option>
                 <option value="Hidup">Hidup</option>
@@ -229,7 +230,7 @@ const importCsv = () => {
               <label class="text-xs text-gray-500">Per Halaman</label>
               <select
                 v-model="filtersForm.perPage"
-                class="mt-1 w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                class="mt-1 w-full rounded-lg border-gray-300 focus:border-stone-500 focus:ring-stone-500"
               >
                 <option :value="10">10</option>
                 <option :value="20">20</option>
@@ -243,15 +244,16 @@ const importCsv = () => {
             <div class="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                class="rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600"
+                class="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800"
                 @click="resetFilters"
               >
                 Reset Filter
               </button>
 
               <button
+                v-if="canEdit"
                 type="button"
-                class="rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600"
+                class="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800"
                 @click="router.visit(route('penduduk.create'))"
               >
                 + Tambah Penduduk
@@ -261,7 +263,7 @@ const importCsv = () => {
             <div class="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                class="rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600"
+                class="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800"
                 @click="exportCsv"
               >
                 Export CSV
@@ -276,8 +278,9 @@ const importCsv = () => {
               />
 
               <button
+                v-if="canEdit"
                 type="button"
-                class="rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 disabled:opacity-60"
+                class="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 disabled:opacity-60"
                 :disabled="importing"
                 @click="openFilePicker"
               >
@@ -304,7 +307,7 @@ const importCsv = () => {
             <table class="min-w-[2400px] w-full text-sm">
               <thead class="sticky top-0 border-b bg-gray-50">
                 <tr class="text-left text-gray-600">
-                  <th class="px-3 py-3">Aksi</th>
+                  <th v-if="canEdit" class="px-3 py-3">Aksi</th>
                   <th class="px-3 py-3">RT</th>
                   <th class="px-3 py-3">RW</th>
                   <th class="px-3 py-3">Dusun</th>
@@ -336,7 +339,7 @@ const importCsv = () => {
                   :key="p.id"
                   class="border-b hover:bg-gray-50"
                 >
-                  <td class="px-3 py-3">
+                  <td v-if="canEdit" class="px-3 py-3">
                     <div class="flex items-center gap-1.5">
                       <button
                         type="button"
@@ -411,7 +414,7 @@ const importCsv = () => {
                 v-for="(link, i) in penduduks.links"
                 :key="i"
                 class="rounded-lg border px-3 py-1.5 hover:bg-gray-50"
-                :class="link.active ? 'border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700' : ''"
+                :class="link.active ? 'border-stone-600 bg-stone-700 text-white hover:bg-stone-800' : ''"
                 :disabled="!link.url"
                 v-html="link.label"
                 @click="goPage(link.url)"

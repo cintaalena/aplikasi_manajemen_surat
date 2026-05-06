@@ -20,7 +20,7 @@ const templates = [
         v-for="item in templates"
         :key="item.slug"
         :href="route('surat-templates.show', item.slug)"
-        class="block rounded-xl border border-purple-100 bg-white p-5 shadow-sm transition hover:border-purple-300 hover:shadow-md"
+        class="block rounded-xl border border-green-100 bg-white p-5 shadow-sm transition hover:border-green-300 hover:shadow-md"
       >
         <div class="text-base font-semibold text-gray-900">{{ item.label }}</div>
         <div class="mt-1 text-sm text-gray-500">Klik untuk membuat surat</div>

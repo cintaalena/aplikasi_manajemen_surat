@@ -71,12 +71,14 @@ class LetterArchiveController extends Controller
         $validated = $request->validate([
             'no_surat'  => ['required', 'string', 'max:100', 'unique:letters,no_surat'],
             'title'     => ['required', 'string', 'max:255'],
-            'files'     => ['nullable', 'array', 'max:10'],
+            'files'     => ['required', 'array', 'min:1', 'max:10'],
             'files.*'   => ['file', 'mimes:jpeg,jpg,png,webp,pdf', 'max:5120'],
         ], [
             'no_surat.required' => 'Nomor surat wajib diisi.',
             'no_surat.unique'   => 'Nomor surat sudah ada di arsip.',
             'title.required'    => 'Judul surat wajib diisi.',
+            'files.required'    => 'File berkas surat wajib diupload minimal 1 file.',
+            'files.min'         => 'File berkas surat wajib diupload minimal 1 file.',
             'files.*.mimes'     => 'File harus berupa JPG, PNG, WEBP, atau PDF.',
             'files.*.max'       => 'Ukuran file maksimal 5 MB.',
         ]);

@@ -94,7 +94,7 @@ const submitReset = () => {
             <div class="flex items-center justify-between">
                 <h1 class="text-xl font-bold text-gray-900">Manajemen Pengguna</h1>
                 <button
-                    class="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 transition"
+                    class="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 transition"
                     @click="showCreate = true"
                 >
                     + Tambah Pengguna
@@ -131,8 +131,8 @@ const submitReset = () => {
                                 <span
                                     class="rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase"
                                     :class="user.role === 'lurah'
-                                        ? 'bg-purple-100 text-purple-700'
-                                        : 'bg-indigo-100 text-indigo-700'"
+                                        ? 'bg-green-100 text-green-700'
+                                        : 'bg-stone-100 text-stone-700'"
                                 >{{ roleLabel(user.role) }}</span>
                             </td>
                             <td class="px-4 py-3 text-center">
@@ -146,7 +146,7 @@ const submitReset = () => {
                             <td class="px-4 py-3 text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     <button
-                                        class="rounded px-2.5 py-1 text-xs font-medium text-white bg-indigo-500 hover:bg-indigo-600 transition"
+                                        class="rounded px-2.5 py-1 text-xs font-medium text-white bg-stone-500 hover:bg-stone-700 transition"
                                         @click="openEdit(user)"
                                     >Edit</button>
                                     <button
@@ -180,24 +180,24 @@ const submitReset = () => {
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
                             <input v-model="createForm.name" type="text" required
-                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-purple-500 focus:ring-purple-500" />
+                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500" />
                             <p v-if="createForm.errors.name" class="mt-1 text-xs text-red-600">{{ createForm.errors.name }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">NIP (opsional)</label>
                             <input v-model="createForm.nip" type="text"
-                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-purple-500 focus:ring-purple-500" />
+                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Email</label>
                             <input v-model="createForm.email" type="email" required
-                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-purple-500 focus:ring-purple-500" />
+                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500" />
                             <p v-if="createForm.errors.email" class="mt-1 text-xs text-red-600">{{ createForm.errors.email }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Jabatan</label>
                             <select v-model="createForm.jabatan" required
-                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500">
                                 <option value="" disabled>-- Pilih Jabatan --</option>
                                 <option v-for="j in jabatanOptions" :key="j.value" :value="j.value">{{ j.label }}</option>
                             </select>
@@ -206,7 +206,7 @@ const submitReset = () => {
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Role</label>
                             <select v-model="createForm.role" required
-                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500">
                                 <option value="staff">Staff</option>
                                 <option value="lurah">Lurah</option>
                             </select>
@@ -214,14 +214,14 @@ const submitReset = () => {
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Password</label>
                             <input v-model="createForm.password" type="password" required
-                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-purple-500 focus:ring-purple-500" />
+                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500" />
                             <p v-if="createForm.errors.password" class="mt-1 text-xs text-red-600">{{ createForm.errors.password }}</p>
                         </div>
                         <div class="flex justify-end gap-3 pt-2">
                             <button type="button" @click="showCreate = false"
                                 class="rounded-lg border px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition">Batal</button>
                             <button type="submit" :disabled="createForm.processing"
-                                class="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 transition disabled:opacity-50">
+                                class="rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 transition disabled:opacity-50">
                                 Simpan
                             </button>
                         </div>
@@ -241,25 +241,25 @@ const submitReset = () => {
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
                             <input v-model="editForm.name" type="text" required
-                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-purple-500 focus:ring-purple-500" />
+                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500" />
                             <p v-if="editForm.errors.name" class="mt-1 text-xs text-red-600">{{ editForm.errors.name }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">NIP (opsional)</label>
                             <input v-model="editForm.nip" type="text"
-                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-purple-500 focus:ring-purple-500" />
+                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Jabatan</label>
                             <select v-model="editForm.jabatan" required
-                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500">
                                 <option v-for="j in jabatanOptions" :key="j.value" :value="j.value">{{ j.label }}</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Role</label>
                             <select v-model="editForm.role" required
-                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500">
                                 <option value="staff">Staff</option>
                                 <option value="lurah">Lurah</option>
                             </select>
@@ -268,7 +268,7 @@ const submitReset = () => {
                             <button type="button" @click="showEdit = false"
                                 class="rounded-lg border px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition">Batal</button>
                             <button type="submit" :disabled="editForm.processing"
-                                class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition disabled:opacity-50">
+                                class="rounded-lg bg-stone-700 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-800 transition disabled:opacity-50">
                                 Perbarui
                             </button>
                         </div>
@@ -289,7 +289,7 @@ const submitReset = () => {
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Password Baru</label>
                             <input v-model="resetForm.password" type="password" required
-                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-purple-500 focus:ring-purple-500" />
+                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500" />
                             <p v-if="resetForm.errors.password" class="mt-1 text-xs text-red-600">{{ resetForm.errors.password }}</p>
                         </div>
                         <div class="flex justify-end gap-3 pt-2">

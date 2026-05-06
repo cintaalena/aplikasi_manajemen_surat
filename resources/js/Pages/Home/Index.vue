@@ -216,7 +216,7 @@ const educationGroupTotals = computed(() => {
               type="button"
               @click="refreshData"
               :disabled="loading"
-              class="inline-flex items-center gap-2 rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm font-semibold text-purple-700 shadow-sm transition hover:bg-purple-50 disabled:cursor-not-allowed disabled:opacity-60"
+              class="inline-flex items-center gap-2 rounded-xl border border-green-200 bg-white px-4 py-2.5 text-sm font-semibold text-green-700 shadow-sm transition hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 4a8 8 0 0 1 7.75 6h-2.08A6 6 0 1 0 18 13h-3l4-4 4 4h-3a8 8 0 1 1-8-9Z"/>
@@ -275,28 +275,28 @@ const educationGroupTotals = computed(() => {
 
           <!-- Cards Ringkasan Cepat -->
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm">
+            <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
               <div class="text-sm text-gray-500">Surat hari ini</div>
               <div class="text-3xl font-bold text-gray-900">
                 {{ loading ? '...' : metrics?.letters?.today ?? 0 }}
               </div>
             </div>
 
-            <div class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm">
+            <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
               <div class="text-sm text-gray-500">Surat minggu ini</div>
               <div class="text-3xl font-bold text-gray-900">
                 {{ loading ? '...' : metrics?.letters?.week ?? 0 }}
               </div>
             </div>
 
-            <div class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm">
+            <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
               <div class="text-sm text-gray-500">Surat bulan ini</div>
               <div class="text-3xl font-bold text-gray-900">
                 {{ loading ? '...' : metrics?.letters?.month ?? 0 }}
               </div>
             </div>
 
-            <div class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm">
+            <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
               <div class="text-sm text-gray-500">Surat tahun ini</div>
               <div class="text-3xl font-bold text-gray-900">
                 {{ loading ? '...' : metrics?.letters?.year ?? 0 }}
@@ -305,7 +305,7 @@ const educationGroupTotals = computed(() => {
           </div>
 
           <!-- Tabel Ringkasan 12 Bulan Terakhir -->
-          <div class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm">
+          <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
             <h2 class="text-lg font-semibold text-gray-800">Ringkasan 12 Bulan Terakhir</h2>
             <p class="text-sm text-gray-500 mb-3">Klik baris bulan untuk melihat detail surat bulan tersebut.</p>
 
@@ -314,7 +314,7 @@ const educationGroupTotals = computed(() => {
             <div v-else class="overflow-x-auto">
               <table class="min-w-full text-sm">
                 <thead>
-                  <tr class="bg-purple-50 text-gray-600">
+                  <tr class="bg-green-50 text-gray-600">
                     <th class="px-4 py-2 text-left font-semibold">Bulan</th>
                     <th class="px-4 py-2 text-center font-semibold">Jumlah Surat</th>
                     <th class="px-4 py-2 text-center font-semibold">Aksi</th>
@@ -327,22 +327,22 @@ const educationGroupTotals = computed(() => {
                     :class="[
                       idx % 2 === 0 ? 'bg-white' : 'bg-gray-50',
                       selectedYear === row.year && selectedMonth === row.month
-                        ? 'ring-2 ring-inset ring-purple-400'
+                        ? 'ring-2 ring-inset ring-green-500'
                         : '',
                     ]"
-                    class="border-t border-gray-100 hover:bg-purple-50 transition-colors cursor-pointer"
+                    class="border-t border-gray-100 hover:bg-green-50 transition-colors cursor-pointer"
                     @click="selectedYear = row.year; selectedMonth = row.month"
                   >
                     <td class="px-4 py-3 font-medium text-gray-700">{{ row.month_label }}</td>
                     <td class="px-4 py-3 text-center">
-                      <span class="inline-block min-w-[2.5rem] rounded-full bg-purple-100 text-purple-700 font-bold px-3 py-0.5">
+                      <span class="inline-block min-w-[2.5rem] rounded-full bg-green-100 text-green-700 font-bold px-3 py-0.5">
                         {{ row.total }}
                       </span>
                     </td>
                     <td class="px-4 py-3 text-center">
                       <button
                         type="button"
-                        class="rounded-lg border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 transition"
+                        class="rounded-lg border border-green-200 bg-green-50 px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-100 transition"
                         @click.stop="selectedYear = row.year; selectedMonth = row.month"
                       >
                         Lihat Detail
@@ -367,14 +367,14 @@ const educationGroupTotals = computed(() => {
               <div class="flex items-center gap-2 flex-wrap">
                 <select
                   v-model.number="selectedYear"
-                  class="rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-purple-400 focus:outline-none"
+                  class="rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none"
                 >
                   <option v-for="y in availableYears" :key="y" :value="y">{{ y }}</option>
                 </select>
 
                 <select
                   v-model.number="selectedMonth"
-                  class="rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-purple-400 focus:outline-none"
+                  class="rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none"
                 >
                   <option v-for="(name, idx) in monthNames" :key="idx+1" :value="idx+1">
                     {{ name }}
@@ -421,7 +421,7 @@ const educationGroupTotals = computed(() => {
                         <span
                           v-for="ts in w.template_summary"
                           :key="ts.template_slug"
-                          class="hidden sm:inline-block rounded-full bg-purple-100 text-purple-700 text-xs font-medium px-2 py-0.5"
+                          class="hidden sm:inline-block rounded-full bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5"
                         >
                           {{ ts.label }}: {{ ts.total }}
                         </span>
@@ -471,7 +471,7 @@ const educationGroupTotals = computed(() => {
                                 {{ letter.no_surat }}
                               </td>
                               <td class="px-4 py-2">
-                                <span class="rounded-full bg-purple-100 text-purple-700 text-xs font-medium px-2 py-0.5 whitespace-nowrap">
+                                <span class="rounded-full bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 whitespace-nowrap">
                                   {{ letter.label }}
                                 </span>
                               </td>
@@ -503,7 +503,7 @@ const educationGroupTotals = computed(() => {
                       <div class="font-semibold text-gray-800 truncate">{{ t.label }}</div>
                       <div class="text-xs text-gray-400 truncate">{{ t.template_slug }}</div>
                     </div>
-                    <span class="ml-4 rounded-full bg-purple-100 text-purple-700 font-bold px-3 py-0.5 text-sm">
+                    <span class="ml-4 rounded-full bg-green-100 text-green-700 font-bold px-3 py-0.5 text-sm">
                       {{ t.total }}
                     </span>
                   </div>
@@ -517,7 +517,7 @@ const educationGroupTotals = computed(() => {
           </div>
 
           <!-- Top Surat 30 hari terakhir -->
-          <div class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm">
+          <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
             <h2 class="text-lg font-semibold text-gray-800">
               Surat paling sering dibuat (30 hari terakhir)
             </h2>
@@ -551,7 +551,7 @@ const educationGroupTotals = computed(() => {
         <div v-if="activeTab === 'penduduk'" class="space-y-6">
 
           <!-- Ringkasan Penduduk -->
-          <div class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm">
+          <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
             <h2 class="text-lg font-semibold text-gray-800">Penduduk Kelurahan Fatubesi</h2>
             <p class="text-sm text-gray-500">
               Update otomatis mengikuti perubahan data (polling 15 detik).
@@ -610,7 +610,7 @@ const educationGroupTotals = computed(() => {
           </div>
 
           <!-- Agama -->
-          <div class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm">
+          <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
             <h2 class="text-lg font-semibold text-gray-800">Pengelompokan Berdasarkan Agama</h2>
             <p class="text-sm text-gray-500">
               Data jumlah penduduk berdasarkan agama yang terdaftar di Kelurahan Fatubesi.
@@ -666,7 +666,7 @@ const educationGroupTotals = computed(() => {
         <!-- TAB: GENDER -->
         <!-- ========================================================= -->
         <div v-if="activeTab === 'gender'" class="space-y-6">
-          <div class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm">
+          <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
             <h2 class="text-lg font-semibold text-gray-800">
               Pengelompokan Penduduk Berdasarkan Jenis Kelamin per RT/RW
             </h2>
@@ -684,11 +684,11 @@ const educationGroupTotals = computed(() => {
               <div
                 v-for="group in groupedGenderByRw"
                 :key="group.rw"
-                class="rounded-xl border border-purple-50 overflow-hidden"
+                class="rounded-xl border border-green-50 overflow-hidden"
               >
-                <div class="bg-purple-600 px-4 py-2 flex items-center justify-between">
+                <div class="bg-green-700 px-4 py-2 flex items-center justify-between">
                   <span class="text-white font-bold">RW {{ fmt(group.rw) }}</span>
-                  <div class="flex gap-4 text-sm text-purple-100">
+                  <div class="flex gap-4 text-sm text-green-100">
                     <span>&#9794; {{ group.subtotal.laki_laki }}</span>
                     <span>&#9792; {{ group.subtotal.perempuan }}</span>
                     <span class="text-white font-semibold">Total: {{ group.subtotal.total }}</span>
@@ -698,7 +698,7 @@ const educationGroupTotals = computed(() => {
                 <div class="overflow-x-auto">
                   <table class="min-w-full text-sm">
                     <thead>
-                      <tr class="bg-purple-50 text-gray-600">
+                      <tr class="bg-green-50 text-gray-600">
                         <th class="px-4 py-2 text-left font-semibold">Lokasi</th>
                         <th class="px-4 py-2 text-center font-semibold text-blue-600">&#9794; Laki-laki</th>
                         <th class="px-4 py-2 text-center font-semibold text-pink-500">&#9792; Perempuan</th>
@@ -711,7 +711,7 @@ const educationGroupTotals = computed(() => {
                         v-for="(rt, idx) in group.rts"
                         :key="rt.rt"
                         :class="idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'"
-                        class="border-t border-gray-100 hover:bg-purple-50 transition-colors"
+                        class="border-t border-gray-100 hover:bg-green-50 transition-colors"
                       >
                         <td class="px-4 py-3 font-medium text-gray-700">
                           RT {{ fmt(rt.rt) }} / RW {{ fmt(rt.rw) }}
@@ -731,8 +731,8 @@ const educationGroupTotals = computed(() => {
                         </td>
                       </tr>
 
-                      <tr class="border-t-2 border-purple-200 bg-purple-50 font-bold">
-                        <td class="px-4 py-3 text-purple-700">Total RW {{ fmt(group.rw) }}</td>
+                      <tr class="border-t-2 border-green-200 bg-green-50 font-bold">
+                        <td class="px-4 py-3 text-green-700">Total RW {{ fmt(group.rw) }}</td>
                         <td class="px-4 py-3 text-center">
                           <span class="inline-block min-w-[2.5rem] rounded-full bg-blue-200 text-blue-800 font-bold px-2 py-0.5">
                             {{ group.subtotal.laki_laki }}
@@ -743,7 +743,7 @@ const educationGroupTotals = computed(() => {
                             {{ group.subtotal.perempuan }}
                           </span>
                         </td>
-                        <td class="px-4 py-3 text-center text-purple-800 font-bold text-base">
+                        <td class="px-4 py-3 text-center text-green-800 font-bold text-base">
                           {{ group.subtotal.total }}
                         </td>
                       </tr>
@@ -752,19 +752,19 @@ const educationGroupTotals = computed(() => {
                 </div>
               </div>
 
-              <div class="rounded-xl border-2 border-purple-300 bg-purple-600 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div class="rounded-xl border-2 border-green-300 bg-green-700 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <span class="text-white font-bold">Grand Total Seluruh RT/RW</span>
                 <div class="flex gap-6 text-sm font-semibold">
                   <div class="flex flex-col items-center">
-                    <span class="text-purple-200 text-xs">&#9794; Laki-laki</span>
+                    <span class="text-green-200 text-xs">&#9794; Laki-laki</span>
                     <span class="text-white text-xl font-bold">{{ metrics?.population?.total_laki_laki ?? 0 }}</span>
                   </div>
                   <div class="flex flex-col items-center">
-                    <span class="text-purple-200 text-xs">&#9792; Perempuan</span>
+                    <span class="text-green-200 text-xs">&#9792; Perempuan</span>
                     <span class="text-white text-xl font-bold">{{ metrics?.population?.total_perempuan ?? 0 }}</span>
                   </div>
                   <div class="flex flex-col items-center">
-                    <span class="text-purple-200 text-xs">Total Jiwa</span>
+                    <span class="text-green-200 text-xs">Total Jiwa</span>
                     <span class="text-white text-xl font-bold">{{ metrics?.population?.jumlah_jiwa ?? 0 }}</span>
                   </div>
                 </div>
@@ -1053,10 +1053,10 @@ const educationGroupTotals = computed(() => {
         <!-- TAB: PEKERJAAN -->
         <!-- ========================================================= -->
         <div v-if="activeTab === 'pekerjaan'" class="space-y-6">
-          <div class="rounded-2xl border border-cyan-100 bg-white p-4 shadow-sm">
+          <div class="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
             <div class="flex items-start gap-3">
-              <div class="mt-0.5 flex-shrink-0 w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-cyan-600" viewBox="0 0 24 24" fill="currentColor">
+              <div class="mt-0.5 flex-shrink-0 w-10 h-10 rounded-xl bg-stone-100 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-stone-700" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M10 2a1 1 0 0 0-1 1v2H7a3 3 0 0 0-3 3v2h16V8a3 3 0 0 0-3-3h-2V3a1 1 0 1 0-2 0v2h-2V3a1 1 0 0 0-1-1zM4 12v7a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-7H4z"/>
                 </svg>
               </div>
@@ -1081,7 +1081,7 @@ const educationGroupTotals = computed(() => {
             <div v-else class="mt-4 overflow-x-auto">
               <table class="min-w-full text-sm border border-gray-200">
                 <thead>
-                  <tr class="bg-cyan-100 text-gray-700">
+                  <tr class="bg-stone-100 text-gray-700">
                     <th class="border border-gray-300 px-4 py-3 text-left font-semibold">
                       Pekerjaan / Profesi
                     </th>
@@ -1121,7 +1121,7 @@ const educationGroupTotals = computed(() => {
                     </td>
                   </tr>
 
-                  <tr class="bg-cyan-200 font-bold text-gray-800">
+                  <tr class="bg-stone-200 font-bold text-gray-800">
                     <td class="border border-gray-300 px-4 py-3 text-center">
                       TOTAL
                     </td>
@@ -1145,10 +1145,10 @@ const educationGroupTotals = computed(() => {
         <!-- TAB: PENDIDIKAN -->
         <!-- ========================================================= -->
         <div v-if="activeTab === 'pendidikan'" class="space-y-6">
-          <div class="rounded-2xl border border-indigo-100 bg-white p-4 shadow-sm">
+          <div class="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
             <div class="flex items-start gap-3">
-              <div class="mt-0.5 flex-shrink-0 w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-indigo-600" viewBox="0 0 24 24" fill="currentColor">
+              <div class="mt-0.5 flex-shrink-0 w-10 h-10 rounded-xl bg-stone-100 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-stone-700" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 3 1 9l11 6 9-4.91V17h2V9L12 3zm-7 9.18V17l7 4 7-4v-4.82l-7 3.82-7-3.82z"/>
                 </svg>
               </div>
@@ -1172,7 +1172,7 @@ const educationGroupTotals = computed(() => {
             <div v-else class="mt-4 overflow-x-auto">
               <table class="min-w-full text-sm border border-gray-200">
                 <thead>
-                  <tr class="bg-indigo-100 text-gray-700">
+                  <tr class="bg-stone-100 text-gray-700">
                     <th class="border border-gray-300 px-4 py-3 text-center font-semibold">
                       Tingkat Pendidikan
                     </th>
@@ -1212,7 +1212,7 @@ const educationGroupTotals = computed(() => {
                     </td>
                   </tr>
 
-                  <tr class="bg-indigo-200 font-bold text-gray-800">
+                  <tr class="bg-stone-200 font-bold text-gray-800">
                     <td class="border border-gray-300 px-4 py-3 text-center">
                       TOTAL
                     </td>

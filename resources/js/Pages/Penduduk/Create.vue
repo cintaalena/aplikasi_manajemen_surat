@@ -175,14 +175,14 @@ const toTitleCase = (str) => {
           </button>
         </div>
 
-        <div class="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
+        <div class="rounded-2xl border border-green-100 bg-white p-6 shadow-sm">
           <form @submit.prevent="submitPenduduk" class="space-y-6">
             <div class="rounded-2xl border border-gray-200 p-4">
               <label class="flex items-center gap-3">
                 <input
                   v-model="form.is_kepala_keluarga"
                   type="checkbox"
-                  class="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  class="rounded border-gray-300 text-green-600 focus:ring-green-500"
                 />
                 <span class="text-sm font-semibold text-gray-800">
                   Data ini adalah Kepala Keluarga
@@ -199,7 +199,7 @@ const toTitleCase = (str) => {
       <input
         v-model="form.kode_keluarga"
         type="text"
-        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+        class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
         placeholder="Masukkan No. KK"
       />
       <p v-if="form.errors.kode_keluarga" class="mt-1 text-xs text-red-600">
@@ -212,7 +212,7 @@ const toTitleCase = (str) => {
       <input
         v-model="form.rt"
         type="text"
-        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+        class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
         placeholder="Contoh: 001"
       />
       <p v-if="form.errors.rt" class="mt-1 text-xs text-red-600">
@@ -225,7 +225,7 @@ const toTitleCase = (str) => {
       <input
         v-model="form.rw"
         type="text"
-        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+        class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
         placeholder="Contoh: 001"
       />
       <p v-if="form.errors.rw" class="mt-1 text-xs text-red-600">
@@ -238,7 +238,7 @@ const toTitleCase = (str) => {
           <input
             v-model="form.dusun"
             type="text"
-            class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+            class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
             placeholder="Masukkan dusun"
             @blur="form.dusun = toTitleCase(form.dusun)"
           />
@@ -252,7 +252,7 @@ const toTitleCase = (str) => {
           <textarea
             v-model="form.alamat"
             rows="3"
-            class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+            class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
             placeholder="Masukkan alamat"
             @blur="form.alamat = toTitleCase(form.alamat)"
           ></textarea>
@@ -271,7 +271,7 @@ const toTitleCase = (str) => {
                 <input
                   v-model="headQuery"
                   type="text"
-                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400"
                   placeholder="Ketik nama kepala keluarga / No. KK"
                   autocomplete="off"
                 />
@@ -293,7 +293,7 @@ const toTitleCase = (str) => {
                     :key="item.kode_keluarga"
                     type="button"
                     @click="pilihKepalaKeluarga(item)"
-                    class="block w-full border-b border-gray-100 px-4 py-3 text-left hover:bg-purple-50"
+                    class="block w-full border-b border-gray-100 px-4 py-3 text-left hover:bg-green-50"
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama_kepala_keluarga }}</div>
                     <div class="text-xs text-gray-600">
@@ -320,19 +320,19 @@ const toTitleCase = (str) => {
               <div class="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label class="text-xs font-semibold text-gray-700">NIK</label>
-                  <input v-model="form.nik" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.nik" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" />
                   <p v-if="form.errors.nik" class="mt-1 text-xs text-red-600">{{ form.errors.nik }}</p>
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Nama</label>
-                  <input v-model="form.nama" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" @blur="form.nama = toTitleCase(form.nama)" />
+                  <input v-model="form.nama" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" @blur="form.nama = toTitleCase(form.nama)" />
                   <p v-if="form.errors.nama" class="mt-1 text-xs text-red-600">{{ form.errors.nama }}</p>
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">JK</label>
-                  <select v-model="form.jenis_kelamin" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400">
+                  <select v-model="form.jenis_kelamin" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400">
                     <option value="">Pilih JK</option>
                     <option value="L">Laki-laki</option>
                     <option value="P">Perempuan</option>
@@ -345,7 +345,7 @@ const toTitleCase = (str) => {
                   <select
                     v-model="form.hubungan"
                     :disabled="form.is_kepala_keluarga"
-                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 disabled:bg-gray-50"
+                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400 disabled:bg-gray-50"
                   >
                     <option value="">Pilih hubungan</option>
                     <option value="Kepala Keluarga">Kepala Keluarga</option>
@@ -365,12 +365,12 @@ const toTitleCase = (str) => {
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Tempat Lahir</label>
-                  <input v-model="form.tempat_lahir" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" @blur="form.tempat_lahir = toTitleCase(form.tempat_lahir)" />
+                  <input v-model="form.tempat_lahir" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" @blur="form.tempat_lahir = toTitleCase(form.tempat_lahir)" />
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Tanggal Lahir</label>
-                  <input v-model="form.tanggal_lahir" type="date" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" />
+                  <input v-model="form.tanggal_lahir" type="date" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" />
                 </div>
 
                 <div>
@@ -380,7 +380,7 @@ const toTitleCase = (str) => {
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Status</label>
-                  <select v-model="form.status_perkawinan" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400">
+                  <select v-model="form.status_perkawinan" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400">
                     <option value="">Pilih status</option>
                     <option value="Belum Kawin">Belum Kawin</option>
                     <option value="Kawin">Kawin</option>
@@ -391,12 +391,12 @@ const toTitleCase = (str) => {
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Agama</label>
-                  <input v-model="form.agama" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" @blur="form.agama = toTitleCase(form.agama)" />
+                  <input v-model="form.agama" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" @blur="form.agama = toTitleCase(form.agama)" />
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Golongan Darah</label>
-                  <select v-model="form.golongan_darah" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400">
+                  <select v-model="form.golongan_darah" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400">
                     <option value="">Pilih golongan darah</option>
                     <option value="A">A</option>
                     <option value="B">B</option>
@@ -407,22 +407,22 @@ const toTitleCase = (str) => {
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Kewarganegaraan</label>
-                  <input v-model="form.kewarganegaraan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" @blur="form.kewarganegaraan = toTitleCase(form.kewarganegaraan)" />
+                  <input v-model="form.kewarganegaraan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" @blur="form.kewarganegaraan = toTitleCase(form.kewarganegaraan)" />
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Etnis/Suku</label>
-                  <input v-model="form.etnis" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" @blur="form.etnis = toTitleCase(form.etnis)" />
+                  <input v-model="form.etnis" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" @blur="form.etnis = toTitleCase(form.etnis)" />
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Pendidikan</label>
-                  <input v-model="form.pendidikan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" @blur="form.pendidikan = toTitleCase(form.pendidikan)" />
+                  <input v-model="form.pendidikan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" @blur="form.pendidikan = toTitleCase(form.pendidikan)" />
                 </div>
 
                 <div>
                   <label class="text-xs font-semibold text-gray-700">Pekerjaan</label>
-                  <input v-model="form.pekerjaan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400" @blur="form.pekerjaan = toTitleCase(form.pekerjaan)" />
+                  <input v-model="form.pekerjaan" type="text" class="mt-1 w-full rounded-xl border-gray-200 focus:border-green-400 focus:ring-green-400" @blur="form.pekerjaan = toTitleCase(form.pekerjaan)" />
                 </div>
               </div>
             </div>
@@ -439,7 +439,7 @@ const toTitleCase = (str) => {
               <button
                 type="submit"
                 :disabled="form.processing"
-                class="rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 disabled:opacity-50"
+                class="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 disabled:opacity-50"
               >
                 {{ form.processing ? 'Menyimpan...' : 'Simpan Data Penduduk' }}
               </button>

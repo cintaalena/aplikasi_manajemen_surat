@@ -57,16 +57,15 @@ class SecureSession
     }
 
     /**
-     * Generate unique fingerprint based on user agent + IP subnet
+     * Generate unique fingerprint based on user agent only.
+     * IP-based fingerprinting is removed to prevent false positives caused by
+     * IPv4/IPv6 dual-stack switching (e.g. ::1 vs 127.0.0.1 on localhost),
+     * mobile network changes, and CGNAT environments.
      */
     private function generateFingerprint(Request $request): string
     {
         $userAgent = $request->userAgent() ?? '';
-        $ip = $request->ip();
-        
-        // Use /24 subnet to allow some IP changes (dynamic IP, mobile networks)
-        $ipSubnet = substr($ip, 0, strrpos($ip, '.'));
-        
-        return hash('sha256', $userAgent . $ipSubnet . config('app.key'));
+
+        return hash('sha256', $userAgent . config('app.key'));
     }
 }

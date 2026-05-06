@@ -92,7 +92,7 @@ function isPdf(mime) {
         </div>
         <button
           type="button"
-          class="rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white hover:from-purple-700 hover:to-fuchsia-600 shadow-sm transition whitespace-nowrap"
+          class="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 shadow-sm transition whitespace-nowrap"
           onclick="window.print()"
         >
           Cetak / PDF

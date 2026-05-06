@@ -1,8 +1,10 @@
 <script setup>
 import { Link, usePage, router } from '@inertiajs/vue3'
 import { computed, ref, watchEffect, onMounted, onUnmounted } from 'vue'
+import { useAsset } from '@/composables/useAsset'
 
 const page = usePage()
+const { asset } = useAsset()
 
 const isCurrent = (name) => {
   try { 
@@ -238,24 +240,23 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-white via-white to-purple-50">
+  <div class="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50 to-white">
     <div class="mx-auto max-w-7xl px-4 py-6">
       <div class="grid gap-6 lg:grid-cols-12">
         <!-- Sidebar -->
 <aside class="lg:col-span-3">
-  <div class="rounded-2xl border border-purple-100 bg-white/80 backdrop-blur shadow-sm overflow-hidden">
-    <div class="p-4 border-b border-purple-100">
+  <div class="rounded-2xl border border-green-100 bg-white/80 backdrop-blur shadow-sm overflow-hidden">
+    <div class="p-4 border-b border-green-100">
       <div class="flex items-center gap-3">
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 to-fuchsia-500 shadow shadow-purple-200">
-          <span class="text-white text-sm font-bold">KF</span>
-        </div>
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 border border-green-200 overflow-hidden shadow shadow-green-100">
+          <img :src="asset('images/logo_kalpataru.jpg')" alt="KF" class="h-8 w-8 object-contain" /></div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2">
             <span
               class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
               :class="{
-                'bg-purple-100 text-purple-700': userRole === 'lurah',
-                'bg-indigo-100 text-indigo-700': userRole === 'staff',
+                'bg-green-100 text-green-700': userRole === 'lurah',
+                'bg-amber-100 text-amber-700': userRole === 'staff',
                 'bg-red-100 text-red-700': userRole === 'admin',
               }"
             >{{ userRole }}</span>
@@ -272,7 +273,7 @@ onUnmounted(() => {
             type="button"
             @click="toggleNotif"
             class="relative flex h-9 w-9 items-center justify-center rounded-xl border transition"
-            :class="notifOpen ? 'bg-purple-100 border-purple-300 text-purple-700' : 'bg-white border-purple-100 text-gray-500 hover:bg-purple-50 hover:text-purple-700'"
+            :class="notifOpen ? 'bg-green-100 border-green-300 text-green-700' : 'bg-white border-green-100 text-gray-500 hover:bg-green-50 hover:text-green-700'"
             title="Notifikasi Arsip"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -292,15 +293,15 @@ onUnmounted(() => {
       <Link
         :href="route('dashboard')"
         class="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition border"
-        :class="isCurrent('dashboard')
-          ? 'bg-purple-50 text-purple-800 border-purple-200'
-          : 'bg-white text-gray-700 border-transparent hover:bg-purple-50/60 hover:text-purple-900'"
+        :style="isCurrent('dashboard')
+          ? 'background:#e0f2fe;color:#0369a1;border-color:#7dd3fc'
+          : 'background:#fff;color:#374151;border-color:transparent'"
       >
         <span class="flex items-center gap-2">
-          <span class="h-2.5 w-2.5 rounded-full bg-purple-500"></span>
+          <span class="h-2.5 w-2.5 rounded-full flex-shrink-0" style="background-color:#0ea5e9"></span>
           Home
         </span>
-        <span v-if="isCurrent('dashboard')" class="text-xs text-purple-700">Aktif</span>
+        <span v-if="isCurrent('dashboard')" class="text-xs" style="color:#0369a1">Aktif</span>
       </Link>
 
             <!-- TEMPLATE SURAT (EXPANDABLE) — hanya untuk staff & admin -->
@@ -308,13 +309,13 @@ onUnmounted(() => {
         <button
           type="button"
           class="w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition border"
-          :class="onTemplatePage
-            ? 'bg-indigo-50 text-indigo-900 border-indigo-200'
-            : 'bg-white text-gray-700 border-transparent hover:bg-indigo-50/60 hover:text-indigo-900'"
+          :style="onTemplatePage
+            ? 'background:#ede9fe;color:#4c1d95;border-color:#c4b5fd'
+            : 'background:#fff;color:#374151;border-color:transparent'"
           @click="templatesOpen = !templatesOpen"
         >
           <span class="flex items-center gap-2">
-            <span class="h-2.5 w-2.5 rounded-full bg-indigo-500"></span>
+            <span class="h-2.5 w-2.5 rounded-full flex-shrink-0" style="background-color:#8b5cf6"></span>
             Template Surat ({{ templates.length }})
           </span>
           <span class="text-xs">
@@ -330,8 +331,8 @@ onUnmounted(() => {
               :href="route('surat-templates.show', { slug: t.slug })"
               class="block rounded-xl px-4 py-2 text-sm transition border"
               :class="isTemplateActive(t.slug)
-                ? 'bg-fuchsia-50 text-fuchsia-900 border-fuchsia-200'
-                : 'bg-white text-gray-700 border-transparent hover:bg-fuchsia-50/60 hover:text-fuchsia-900'"
+                ? 'bg-violet-50 text-violet-900 border-violet-200'
+                : 'bg-white text-gray-700 border-transparent hover:bg-violet-50/60 hover:text-violet-900'"
             >
               {{ t.label }}
             </Link>
@@ -339,7 +340,7 @@ onUnmounted(() => {
 
           <Link
             :href="route('surat-templates.index')"
-            class="mt-2 block rounded-xl px-4 py-2 text-xs font-semibold text-indigo-900 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 transition"
+            class="mt-2 block rounded-xl px-4 py-2 text-xs font-semibold text-violet-900 bg-violet-50 border border-violet-200 hover:bg-violet-100 transition"
           >
             Lihat Ringkasan Template
           </Link>
@@ -413,7 +414,7 @@ onUnmounted(() => {
 
         <!-- Main -->
         <main class="lg:col-span-9">
-          <div class="rounded-2xl border border-purple-100 bg-white/80 backdrop-blur shadow-sm">
+          <div class="rounded-2xl border border-green-100 bg-white/80 backdrop-blur shadow-sm">
             <div class="p-6">
               <slot>
               </slot>
@@ -426,14 +427,14 @@ onUnmounted(() => {
 
   <!-- Notification Panel — Teleport ke body agar tidak terpotong sidebar -->
   <Teleport to="body">
-    <div v-if="notifOpen" :style="panelStyle" class="rounded-2xl border border-purple-100 bg-white shadow-2xl">
-      <div class="flex items-center justify-between border-b border-purple-50 px-4 py-3">
+    <div v-if="notifOpen" :style="panelStyle" class="rounded-2xl border border-green-100 bg-white shadow-2xl">
+      <div class="flex items-center justify-between border-b border-green-50 px-4 py-3">
         <span class="text-sm font-semibold text-gray-800">Notifikasi Arsip</span>
         <button
           v-if="unreadCount > 0"
           type="button"
           @click="markAllRead"
-          class="text-xs font-medium text-purple-600 hover:text-purple-800 transition"
+          class="text-xs font-medium text-green-600 hover:text-green-800 transition"
         >Tandai semua dibaca</button>
       </div>
 
@@ -446,10 +447,10 @@ onUnmounted(() => {
           :key="notif.id"
           type="button"
           @click="markRead(notif); notifOpen = false"
-          class="w-full text-left px-4 py-3 transition hover:bg-purple-50/60 flex items-start gap-3"
-          :class="{ 'bg-purple-50/40': !notif.is_read }"
+          class="w-full text-left px-4 py-3 transition hover:bg-green-50/60 flex items-start gap-3"
+          :class="{ 'bg-green-50/40': !notif.is_read }"
         >
-          <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full" :class="notif.is_read ? 'bg-gray-200' : 'bg-purple-500'"></span>
+          <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full" :class="notif.is_read ? 'bg-gray-200' : 'bg-green-500'"></span>
           <div class="flex-1">
             <p class="text-sm leading-snug break-words" :class="notif.is_read ? 'text-gray-500' : 'text-gray-800 font-medium'">
               {{ notif.message }}
@@ -459,11 +460,11 @@ onUnmounted(() => {
         </button>
       </div>
 
-      <div class="border-t border-purple-50 px-4 py-2 text-center">
+      <div class="border-t border-green-50 px-4 py-2 text-center">
         <Link
           :href="route('arsip-surat.index')"
           @click="notifOpen = false"
-          class="text-xs font-medium text-purple-600 hover:text-purple-800 transition"
+          class="text-xs font-medium text-green-600 hover:text-green-800 transition"
         >Lihat Arsip Surat →</Link>
       </div>
     </div>
