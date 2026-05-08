@@ -85,6 +85,11 @@ const form = reactive({
   agama: '',
   namaAyah: '',
   namaIbu: '',
+  ayah_id: null,
+  ibu_id: null,
+  kode_keluarga: '',
+  nama_kepala_keluarga: '',
+  dusun: '',
   alamat: '',
   alamatAsal: '',
   alamatAsalJalan: '',
@@ -426,6 +431,14 @@ const showAyahDropdown = ref(false)
 const isSearchingAyah = ref(false)
 let ayahSearchTimer = null
 
+// Checkbox: ayah tidak terdata di database, isi manual
+const ayahTidakTerdataChecked = ref(false)
+const showAyahTidakTerdataNotice = computed(() =>
+  String(form.namaAyah || '').trim().length >= 2 &&
+  !form.ayah_id &&
+  !isSearchingAyah.value
+)
+
 const ibuSuggestions = ref([])
 const showIbuDropdown = ref(false)
 const isSearchingIbu = ref(false)
@@ -457,16 +470,46 @@ const searchOrtu = async (keyword, suggestions, showDropdown, isSearching) => {
 
 const onAyahInput = (value) => {
   form.namaAyah = value
+  form.ayah_id = null
+  ayahTidakTerdataChecked.value = false
   showAyahDropdown.value = false
   clearTimeout(ayahSearchTimer)
   if (!value || value.trim().length < 2) { ayahSuggestions.value = []; return }
   ayahSearchTimer = setTimeout(() => searchOrtu(value, ayahSuggestions, showAyahDropdown, isSearchingAyah), 300)
 }
 
-const applyAyah = (p) => {
-  form.namaAyah = p.nama ?? ''
-  showAyahDropdown.value = false
-  ayahSuggestions.value = []
+const applyAyah = async (p) => {
+  form.namaAyah             = p.nama ?? ''
+  form.ayah_id              = p.id ?? null
+  form.kode_keluarga        = p.kode_keluarga ?? ''
+  form.nama_kepala_keluarga = p.nama_kepala_keluarga ?? ''
+  form.dusun                = p.dusun ?? ''
+  form.pekerjaan            = p.pekerjaan ?? ''
+  form.rt                   = p.rt ?? ''
+  form.rw                   = p.rw ?? ''
+  form.alamat               = p.alamat ?? ''
+  form.kelurahan            = 'Fatubesi'
+  form.kecamatan            = 'Kota Lama'
+  showAyahDropdown.value    = false
+  ayahSuggestions.value     = []
+
+  // Otomatis cari istri dari KK yang sama dan isi kolom ibu
+  const kode = p.kode_keluarga ?? ''
+  if (kode) {
+    try {
+      const res = await fetch(`/penduduk/cari-istri?kode_keluarga=${encodeURIComponent(kode)}`, {
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'include',
+      })
+      const istri = await res.json().catch(() => null)
+      if (istri && istri.id) {
+        form.namaIbu          = istri.nama ?? ''
+        form.ibu_id           = istri.id ?? null
+        showIbuDropdown.value = false
+        ibuSuggestions.value  = []
+      }
+    } catch { /* abaikan jika gagal */ }
+  }
 }
 
 const onIbuInput = (value) => {
@@ -478,9 +521,29 @@ const onIbuInput = (value) => {
 }
 
 const applyIbu = (p) => {
-  form.namaIbu = p.nama ?? ''
+  form.namaIbu          = p.nama ?? ''
+  form.ibu_id           = p.id ?? null
   showIbuDropdown.value = false
-  ibuSuggestions.value = []
+  ibuSuggestions.value  = []
+
+  // Hanya isi pekerjaan, alamat, rt, rw, kelurahan, kecamatan dari ibu
+  // jika ayah TIDAK terdata di database (tidak ada ayah_id) DAN
+  // user tidak memilih opsi "isi manual data ayah yang tidak terdata"
+  if (!form.ayah_id && !ayahTidakTerdataChecked.value) {
+    form.pekerjaan  = p.pekerjaan ?? ''
+    form.rt         = p.rt ?? ''
+    form.rw         = p.rw ?? ''
+    form.alamat     = p.alamat ?? ''
+    form.kelurahan  = 'Fatubesi'
+    form.kecamatan  = 'Kota Lama'
+
+    // Isi juga kode_keluarga dari ibu jika belum ada
+    if (!form.kode_keluarga) {
+      form.kode_keluarga        = p.kode_keluarga ?? ''
+      form.nama_kepala_keluarga = p.nama_kepala_keluarga ?? ''
+      form.dusun                = p.dusun ?? ''
+    }
+  }
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -589,103 +652,20 @@ onMounted(async () => {
 
 // Tampilkan dialog konfirmasi setelah print selesai
 const showPrintConfirm = ref(false)
-const isSavingDraft = ref(false)   // true saat simpan PDF sementara (tanpa arsip)
-const isCapturing = ref(false)     // true saat mengambil HTML untuk Word export
 const printSheetRef = ref(null)
-const showExportMenu = ref(false)
 
 const handleAfterPrint = () => {
   printMode.value = false
-  if (isSavingDraft.value) {
-    isSavingDraft.value = false
-    return // skip konfirmasi & arsip untuk simpan sementara
-  }
   showPrintConfirm.value = true
 }
 
-const closeExportMenu = () => { showExportMenu.value = false }
-
 onMounted(() => {
   window.addEventListener('afterprint', handleAfterPrint)
-  document.addEventListener('click', closeExportMenu)
 })
 onBeforeUnmount(() => {
   window.removeEventListener('afterprint', handleAfterPrint)
-  document.removeEventListener('click', closeExportMenu)
   previewResizeObserver?.disconnect()
 })
-
-// Simpan sementara sebagai PDF — cetak ke PDF tanpa masuk arsip
-const saveAsPdfDraft = async () => {
-  showExportMenu.value = false
-
-  try {
-    validateDokKematianBeforePrint()
-    validateDokKelahiranBeforePrint()
-    validateDokPindahBeforePrint()
-  } catch (e) {
-    alert(e.message)
-    return
-  }
-
-  isSavingDraft.value = true
-  showPreview.value = true
-  printMode.value = true
-  await nextTick()
-  window.print()
-}
-
-// Simpan sementara sebagai Word — download .doc tanpa masuk arsip
-const saveAsWord = async () => {
-  showExportMenu.value = false
-
-  try {
-    validateDokKematianBeforePrint()
-    validateDokKelahiranBeforePrint()
-    validateDokPindahBeforePrint()
-  } catch (e) {
-    alert(e.message)
-    return
-  }
-
-  isCapturing.value = true
-  await nextTick()
-  await nextTick()
-  const el = printSheetRef.value
-  if (!el) {
-    isCapturing.value = false
-    alert('Gagal mengambil konten surat. Silakan coba lagi.')
-    return
-  }
-  const styles = Array.from(document.querySelectorAll('style'))
-    .map(s => s.textContent)
-    .join('\n')
-  const html = `<!DOCTYPE html>
-<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-<head>
-  <meta charset="UTF-8">
-  <meta name="ProgId" content="Word.Document">
-  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
-  <style>
-    @page { size: A4 portrait; margin: 20mm 22mm; }
-    body { font-family: "Bookman Old Style", serif; font-size: 12pt; margin: 0; padding: 0; }
-    ${styles}
-  </style>
-</head>
-<body>${el.innerHTML}</body>
-</html>`
-  const blob = new Blob(['\ufeff', html], { type: 'application/msword' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  const safeName = (form.judulSurat || 'surat').replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_')
-  a.download = `${safeName}_draft.doc`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-  isCapturing.value = false
-}
 
 // ── Dokumen Persyaratan Surat Kelahiran ──────────────────────────────────────
 
@@ -1218,7 +1198,7 @@ const confirmFinalize = async (confirmed) => {
         <div>
           <h1 class="text-xl font-bold text-gray-900">{{ form.judulSurat }}</h1>
           <p class="mt-1 text-sm text-gray-600">
-            Isi form → <b>View</b> untuk preview → <b>Simpan Sementara</b> untuk draft → <b>Cetak</b> untuk arsip.
+            Isi form → <b>View</b> untuk preview → <b>Cetak</b> untuk arsip.
           </p>
         </div>
 
@@ -1231,43 +1211,12 @@ const confirmFinalize = async (confirmed) => {
             {{ showPreview ? 'Tutup View' : 'View' }}
           </button>
 
-          <!-- Dropdown: Simpan Sementara -->
-          <div class="relative" @click.stop>
-            <button
-              type="button"
-              class="rounded-xl border border-indigo-200 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 transition flex items-center gap-1"
-              @click.stop="showExportMenu = !showExportMenu"
-            >
-              Simpan Sementara
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-            </button>
-            <div
-              v-if="showExportMenu"
-              class="absolute right-0 top-full mt-1 min-w-[190px] rounded-xl border border-gray-200 bg-white shadow-lg z-50 overflow-hidden"
-            >
-              <button
-                type="button"
-                class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-indigo-50 transition"
-                @click.stop="saveAsPdfDraft"
-              >
-                <span class="text-base">📄</span> Simpan sebagai PDF
-              </button>
-              <button
-                type="button"
-                class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-indigo-50 transition"
-                @click.stop="saveAsWord"
-              >
-                <span class="text-base">📝</span> Simpan sebagai Word
-              </button>
-            </div>
-          </div>
-
           <button
             type="button"
             :disabled="isPrinting || !selectedIndexCode"
             class="rounded-xl px-4 py-2 text-sm font-semibold text-white
-                   bg-gradient-to-r from-purple-600 to-fuchsia-500
-                   hover:from-purple-700 hover:to-fuchsia-600 transition
+                   bg-gradient-to-r from-green-600 to-emerald-500
+                   hover:from-green-700 hover:to-emerald-600 transition
                    disabled:opacity-50 disabled:cursor-not-allowed"
             @click.prevent.stop="printNow"
           >
@@ -1455,8 +1404,10 @@ const confirmFinalize = async (confirmed) => {
                     <input
                       v-model="form.alamatAsalRt"
                       type="text"
+                      inputmode="numeric"
                       placeholder="001"
                       class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
+                      @input="form.alamatAsalRt = $event.target.value.replace(/\D/g, '')"
                     />
                   </div>
                   <div>
@@ -1464,8 +1415,10 @@ const confirmFinalize = async (confirmed) => {
                     <input
                       v-model="form.alamatAsalRw"
                       type="text"
+                      inputmode="numeric"
                       placeholder="001"
                       class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 text-sm"
+                      @input="form.alamatAsalRw = $event.target.value.replace(/\D/g, '')"
                     />
                   </div>
                   <div>
@@ -1520,7 +1473,10 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">RT</label>
                 <input
                   v-model="form.rt"
+                  type="text"
+                  inputmode="numeric"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  @input="form.rt = $event.target.value.replace(/\D/g, '')"
                 />
               </div>
 
@@ -1528,7 +1484,10 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">RW</label>
                 <input
                   v-model="form.rw"
+                  type="text"
+                  inputmode="numeric"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
+                  @input="form.rw = $event.target.value.replace(/\D/g, '')"
                 />
               </div>
 
@@ -1658,6 +1617,24 @@ const confirmFinalize = async (confirmed) => {
                   </button>
                 </div>
                 <p v-if="isSearchingAyah" class="mt-1 text-xs text-gray-500">Mencari...</p>
+
+                <!-- Notifikasi: ayah tidak terdata di database -->
+                <div
+                  v-if="showAyahTidakTerdataNotice"
+                  class="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5"
+                >
+                  <label class="flex cursor-pointer items-start gap-2.5">
+                    <input
+                      type="checkbox"
+                      v-model="ayahTidakTerdataChecked"
+                      class="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-amber-400 text-amber-600 accent-amber-600"
+                    />
+                    <span class="text-xs leading-snug text-amber-800">
+                      <span class="font-semibold">Nama ayah tidak terdata di database.</span>
+                      Centang jika ingin tetap menggunakan nama ayah ini dan isi data secara manual.
+                    </span>
+                  </label>
+                </div>
               </div>
 
               <div class="relative">
@@ -1714,8 +1691,10 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.rt"
                   type="text"
+                  inputmode="numeric"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="001"
+                  @input="form.rt = $event.target.value.replace(/\D/g, '')"
                 />
               </div>
 
@@ -1724,8 +1703,10 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.rw"
                   type="text"
+                  inputmode="numeric"
                   class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="002"
+                  @input="form.rw = $event.target.value.replace(/\D/g, '')"
                 />
               </div>
 
@@ -2645,7 +2626,7 @@ const confirmFinalize = async (confirmed) => {
           <button
             type="button"
             :disabled="isPrinting"
-            class="rounded-xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:from-purple-700 hover:to-fuchsia-600 transition disabled:opacity-60"
+            class="rounded-xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 transition disabled:opacity-60"
             @click="confirmFinalize(true)"
           >
             {{ isPrinting ? 'Menyimpan...' : 'Ya, Berhasil Dicetak' }}

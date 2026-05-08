@@ -48,7 +48,7 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
       <tbody>
         <tr>
           <td class="kop-logo">
-            <img :src="asset('images/logo.png')" alt="Logo" class="logo" />
+            <img src="/images/logo_kop.png" alt="Logo" class="logo" />
           </td>
           <td class="kop-text">
             <div class="kop-line1">PEMERINTAH KOTA KUPANG</div>
@@ -181,6 +181,7 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
   height: auto;
   display: block;
   margin: 0;
+  mix-blend-mode: multiply;
 }
 .kop-spacer{
   width: 140px;
@@ -219,7 +220,7 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
     width:100%; 
     margin-top:14px; 
     line-height:1.7;
-    table-layout: auto;
+    table-layout: fixed;
     }
 
 .data-lanjutan{ 
@@ -241,7 +242,9 @@ white-space: nowrap;
 
 .val{ 
 vertical-align:top;
-white-space: nowrap;
+white-space: normal;
+word-break: break-word;
+overflow-wrap: break-word;
 } 
 
 .ttd-wrapper{

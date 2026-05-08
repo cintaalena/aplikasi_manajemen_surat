@@ -156,6 +156,102 @@ class LetterController extends Controller
             }
         }
 
+        // Jika surat kelahiran → otomatis simpan data bayi ke tabel penduduk
+        if ($templateSlug === 'keterangan-kelahiran') {
+            $p = $validated['payload'];
+            $nama = trim((string) ($p['nama'] ?? ''));
+            $jk   = ($p['jenisKelamin'] ?? '') === 'Laki-laki' ? 'L' : (($p['jenisKelamin'] ?? '') === 'Perempuan' ? 'P' : null);
+
+            if ($nama !== '' && $jk !== null) {
+                $nikBayi = trim((string) ($p['nik'] ?? ''));
+                $nikBayi = $nikBayi !== '' ? $nikBayi : null;
+
+                // Hindari duplikat jika sudah pernah disimpan (NIK sama)
+                $sudahAda = $nikBayi ? Penduduk::where('nik', $nikBayi)->exists() : false;
+
+                if (!$sudahAda) {
+                    // ── Tentukan keluarga bayi ─────────────────────────────
+                    // Prioritas 1: Ayah terdata di database
+                    $kodeKeluarga = null;
+                    $namaKepala   = null;
+                    $dusun        = null;
+                    $alamat       = trim((string) ($p['alamat'] ?? '')) ?: null;
+                    $rtRaw        = preg_replace('/\D/', '', (string) ($p['rt'] ?? ''));
+                    $rwRaw        = preg_replace('/\D/', '', (string) ($p['rw'] ?? ''));
+                    $rt           = $rtRaw !== '' ? str_pad($rtRaw, 3, '0', STR_PAD_LEFT) : null;
+                    $rw           = $rwRaw !== '' ? str_pad($rwRaw, 3, '0', STR_PAD_LEFT) : null;
+
+                    $ayahId = $p['ayah_id'] ?? null;
+                    $ibuId  = $p['ibu_id']  ?? null;
+
+                    if ($ayahId) {
+                        // Ayah terdata → masuk keluarga ayah
+                        $ayah = Penduduk::select(
+                            'kode_keluarga', 'nama_kepala_keluarga', 'dusun', 'alamat', 'rt', 'rw'
+                        )->find($ayahId);
+
+                        if ($ayah) {
+                            $kodeKeluarga = $ayah->kode_keluarga;
+                            $namaKepala   = $ayah->nama_kepala_keluarga;
+                            $dusun        = $ayah->dusun;
+                            $alamat       = $alamat ?: $ayah->alamat;
+                            $rt           = $rt ?: ($ayah->rt ? str_pad($ayah->rt, 3, '0', STR_PAD_LEFT) : null);
+                            $rw           = $rw ?: ($ayah->rw ? str_pad($ayah->rw, 3, '0', STR_PAD_LEFT) : null);
+                        }
+                    } elseif ($ibuId) {
+                        // Ayah tidak terdata, tapi ibu terdata → masuk keluarga ibu
+                        $ibu = Penduduk::select(
+                            'kode_keluarga', 'nama_kepala_keluarga', 'dusun', 'alamat', 'rt', 'rw'
+                        )->find($ibuId);
+
+                        if ($ibu) {
+                            $kodeKeluarga = $ibu->kode_keluarga;
+                            $namaKepala   = $ibu->nama_kepala_keluarga;
+                            $dusun        = $ibu->dusun;
+                            $alamat       = $alamat ?: $ibu->alamat;
+                            $rt           = $rt ?: ($ibu->rt ? str_pad($ibu->rt, 3, '0', STR_PAD_LEFT) : null);
+                            $rw           = $rw ?: ($ibu->rw ? str_pad($ibu->rw, 3, '0', STR_PAD_LEFT) : null);
+                        }
+                    } else {
+                        // Tidak ada ayah/ibu terdata → pakai data payload langsung
+                        $kodeKeluarga = trim((string) ($p['kode_keluarga'] ?? '')) ?: null;
+                        $namaKepala   = trim((string) ($p['nama_kepala_keluarga'] ?? '')) ?: null;
+                        $dusun        = trim((string) ($p['dusun'] ?? '')) ?: null;
+                    }
+
+                    // Hitung no_urut berikutnya dalam KK yang sama
+                    $noUrut = 1;
+                    if ($kodeKeluarga) {
+                        $maxUrut = Penduduk::where('kode_keluarga', $kodeKeluarga)
+                            ->max('no_urut');
+                        $noUrut = $maxUrut ? ((int) $maxUrut + 1) : 1;
+                    }
+
+                    Penduduk::create([
+                        'nik'                  => $nikBayi,
+                        'nama'                 => $nama,
+                        'jenis_kelamin'        => $jk,
+                        'agama'                => trim((string) ($p['agama'] ?? '')) ?: null,
+                        'tempat_lahir'         => trim((string) ($p['tempatLahir'] ?? '')) ?: null,
+                        'tanggal_lahir'        => trim((string) ($p['tanggalLahir'] ?? '')) ?: null,
+                        'usia'                 => 0,
+                        'no_urut'              => $noUrut,
+                        'hubungan'             => 'Anak',
+                        'status_perkawinan'    => 'Belum Kawin',
+                        'pekerjaan'            => null,
+                        'alamat'               => $alamat,
+                        'rt'                   => $rt,
+                        'rw'                   => $rw,
+                        'dusun'                => $dusun,
+                        'kode_keluarga'        => $kodeKeluarga,
+                        'nama_kepala_keluarga' => $namaKepala,
+                        'kewarganegaraan'      => 'WNI',
+                        'status_kehidupan'     => 'Hidup',
+                    ]);
+                }
+            }
+        }
+
         $this->notifyLurah($letter);
 
         return response()->json([

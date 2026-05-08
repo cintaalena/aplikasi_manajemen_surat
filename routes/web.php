@@ -65,6 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/penduduk/export', [PendudukController::class, 'export'])->name('penduduk.export');
     Route::get('/penduduk/search-by-name', [PendudukController::class, 'searchByName'])->name('penduduk.searchByName');
     Route::get('/penduduk/search-kepala-keluarga', [PendudukController::class, 'searchKepalaKeluarga'])->name('penduduk.searchKepalaKeluarga');
+    Route::get('/penduduk/cari-istri', [PendudukController::class, 'cariIstri'])->name('penduduk.cariIstri');
 
     Route::middleware('role:staff,admin')->group(function () {
         Route::get('/penduduk/create', [PendudukController::class, 'create'])->name('penduduk.create');

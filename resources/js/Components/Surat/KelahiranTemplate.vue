@@ -55,7 +55,7 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
       <tbody>
         <tr>
           <td class="kop-logo">
-            <img :src="asset('images/logo.png')" alt="Logo" class="logo" />
+            <img src="/images/logo_kop.png" alt="Logo" class="logo" />
           </td>
           <td class="kop-text">
             <div class="kop-line1">PEMERINTAH KOTA KUPANG</div>
@@ -187,7 +187,8 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
   width: 120px;          /* realistis untuk kop */
   height: auto;
   display: block;
-  margin: 0;            
+  margin: 0;
+  mix-blend-mode: multiply;
 }
 .kop-spacer{
   width: 140px;          /* samakan dengan kolom logo biar header center */
@@ -229,9 +230,9 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
 
 /* Data */
 .data{ width:100%; table-layout:fixed; margin-top:14px; line-height:1.7; }
-.lbl{ width:170px; padding-left:48px; vertical-align:top; }
-.sep{ width:12px; vertical-align:top; }
-.val{ vertical-align:top; word-wrap:break-word; overflow-wrap:break-word; }
+.lbl{ width:170px; padding-left:48px; vertical-align:top; white-space: nowrap; }
+.sep{ width:12px; vertical-align:top; white-space: nowrap; }
+.val{ vertical-align:top; white-space: normal; word-break: break-word; overflow-wrap: break-word; word-wrap: break-word; }
 .subline{ margin-left:0; }
 .spasi{ height:10px; }
 
