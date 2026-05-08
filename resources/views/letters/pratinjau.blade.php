@@ -26,9 +26,9 @@
 
     /* ── KOP ─────────────────────────────── */
     .kop-table { width: 100%; table-layout: fixed; border-collapse: collapse; }
-    .kop-logo-cell { width: 110px; vertical-align: middle; text-align: left; }
-    .kop-spacer-cell { width: 110px; }
-    .kop-logo { width: 90px; height: auto; display: block; }
+    .kop-logo-cell { width: 140px; vertical-align: middle; text-align: left; }
+    .kop-spacer-cell { width: 140px; }
+    .kop-logo { width: 120px; height: auto; display: block; mix-blend-mode: multiply; }
     .kop-text { text-align: center; font-family: Arial, Helvetica, sans-serif; }
     .kop-line1 { font-size: 16pt; font-weight: 700; line-height: 1.15; letter-spacing: 0.2px; }
     .kop-line2 { font-size: 10pt; font-weight: 400; margin-top: 4px; }
@@ -47,17 +47,17 @@
     /* ── DATA rows (flex) ────────────────── */
     .data-rows { margin-top: 14px; }
     .data-row { display: flex; align-items: flex-start; line-height: 1.7; }
-    .data-lbl { flex: 0 0 200px; padding-left: 36px; word-break: keep-all; }
-    .data-sep { flex: 0 0 14px; }
+    .data-lbl { flex: 0 0 190px; padding-left: 48px; word-break: keep-all; }
+    .data-sep { flex: 0 0 12px; }
     .data-val { flex: 1; word-break: break-word; }
     .data-spasi { height: 10px; }
 
     /* ── DATA table ──────────────────────── */
-    .data-table { margin-top: 10px; border-collapse: collapse; }
+    .data-table { margin-top: 10px; border-collapse: collapse; table-layout: fixed; width: 100%; }
     .data-table td { vertical-align: top; line-height: 1.7; }
-    .data-table .lbl { white-space: nowrap; padding-right: 4px; min-width: 180px; padding-left: 24px; }
-    .data-table .sep { padding-right: 10px; }
-    .data-table .val { }
+    .data-table .lbl { white-space: nowrap; padding-right: 4px; width: 200px; padding-left: 48px; }
+    .data-table .sep { width: 20px; padding-right: 10px; }
+    .data-table .val { word-break: break-word; overflow-wrap: break-word; }
     .data-table .spasi td { height: 10px; }
     .nowrap { white-space: nowrap; }
 
@@ -75,11 +75,11 @@
     .bold { font-weight: bold; }
 
     /* ── TTD ─────────────────────────────── */
-    .ttd-wrapper { display: flex; justify-content: flex-end; margin-top: 40px; }
+    .ttd-wrapper { margin-top: 40px; text-align: right; }
     .ttd-wrapper-split { display: flex; justify-content: space-between; margin-top: 40px; }
-    .ttd { width: 280px; text-align: center; line-height: 1.7; }
+    .ttd { display: inline-block; text-align: center; line-height: 1.7; min-width: 240px; }
     .ttd-tanggal { margin-bottom: 4px; }
-    .ttd-jabatan { }
+    .ttd-jabatan { margin-bottom: 4px; }
     .ttd-space { height: 70px; }
     .ttd-nama { font-weight: bold; text-decoration: underline; white-space: nowrap; }
     .ttd-nip { }
@@ -182,10 +182,10 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
       <tr>
         <td class="kop-logo-cell">
           @php
-            $logoPath = public_path('images/logo.png');
-            $logoSrc  = file_exists($logoPath)
+            $logoPath = public_path('images/logo_kop.png');
+            $logoSrc = file_exists($logoPath)
               ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
-              : asset('images/logo.png');
+              : asset('images/logo_kop.png');
           @endphp
           <img src="{{ $logoSrc }}" alt="Logo" class="kop-logo" />
         </td>
@@ -215,40 +215,42 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
     Yang bertanda tangan di bawah ini Lurah Fatubesi menerangkan dengan sebenarnya bahwa:
   </div>
 
-  <div class="data-rows">
-    <div class="data-row"><div class="data-lbl">Nama</div><div class="data-sep">:</div><div class="data-val">{{ bl_titleCase($p['nama'] ?? '') ?: '____________________' }}</div></div>
-    <div class="data-row"><div class="data-lbl">NIK</div><div class="data-sep">:</div><div class="data-val">{{ $p['nik'] ?? '' ?: '____________________' }}</div></div>
-    <div class="data-row">
-      <div class="data-lbl">Kelahiran</div><div class="data-sep">:</div>
-      <div class="data-val">{{ $p['tempatLahir'] ?? '' }}{{ isset($p['tanggalLahir']) && $p['tanggalLahir'] ? ', '.bl_tanggalIndo($p['tanggalLahir']) : '' }}</div>
-    </div>
-    <div class="data-row"><div class="data-lbl">Jenis Kelamin</div><div class="data-sep">:</div><div class="data-val">{{ $p['jenisKelamin'] ?? '' ?: '________' }}</div></div>
-    <div class="data-row"><div class="data-lbl">Pekerjaan</div><div class="data-sep">:</div><div class="data-val">{{ $p['pekerjaan'] ?? '' ?: '________' }}</div></div>
-    <div class="data-row">
-      <div class="data-lbl">Alamat</div><div class="data-sep">:</div>
-      <div class="data-val">
-        @php
-          $asalJalan = $p['alamatAsalJalan'] ?? '';
-          $asalRt    = $p['alamatAsalRt']    ?? '';
-          $asalRw    = $p['alamatAsalRw']    ?? '';
-          $asalKel   = $p['alamatAsalKelurahan'] ?? '';
-          $asalKec   = $p['alamatAsalKecamatan'] ?? '';
-          $asalKota  = $p['alamatAsalKota']  ?? 'Kota Kupang';
-          $asalProv  = $p['alamatAsalProvinsi'] ?? '';
-        @endphp
-        @if($asalJalan || $asalRt || $asalRw || $asalKel || $asalKec)
-          {{ $asalJalan ? $asalJalan.', ' : '' }}RT.{{ $asalRt ?: '___' }}/RW.{{ $asalRw ?: '___' }} Kelurahan {{ $asalKel ?: '______' }} Kec. {{ $asalKec ?: '______' }} {{ $asalKota ?: 'Kota Kupang' }}{{ $asalProv ? ' Prov. '.$asalProv : '' }}
-        @else
-          RT.___/RW.___ Kelurahan ______ Kec. ______ Kota Kupang
-        @endif
-      </div>
-    </div>
-    <div class="data-spasi"></div>
-    <div class="data-row">
-      <div class="data-lbl">A l a m a t&nbsp;&nbsp;Domisili</div><div class="data-sep">:</div>
-      <div class="data-val">RT.{{ $p['rt'] ?? '' ?: '___' }}/RW.{{ $p['rw'] ?? '' ?: '___' }} Kel. Fatubesi Kec. Kota Lama Kota Kupang</div>
-    </div>
-  </div>
+  <table class="data-table" cellspacing="0" cellpadding="0" style="margin-top:14px;">
+    <tbody>
+      <tr><td class="lbl">Nama</td><td class="sep">:</td><td class="val">{{ bl_titleCase($p['nama'] ?? '') ?: '____________________' }}</td></tr>
+      <tr><td class="lbl">NIK</td><td class="sep">:</td><td class="val">{{ $p['nik'] ?? '' ?: '____________________' }}</td></tr>
+      <tr>
+        <td class="lbl">Kelahiran</td><td class="sep">:</td>
+        <td class="val">{{ $p['tempatLahir'] ?? '' }}{{ isset($p['tanggalLahir']) && $p['tanggalLahir'] ? ', '.bl_tanggalIndo($p['tanggalLahir']) : '' }}</td>
+      </tr>
+      <tr><td class="lbl">Jenis Kelamin</td><td class="sep">:</td><td class="val">{{ $p['jenisKelamin'] ?? '' ?: '________' }}</td></tr>
+      <tr><td class="lbl">Pekerjaan</td><td class="sep">:</td><td class="val">{{ $p['pekerjaan'] ?? '' ?: '________' }}</td></tr>
+      <tr>
+        <td class="lbl">Alamat</td><td class="sep">:</td>
+        <td class="val">
+          @php
+            $asalJalan = $p['alamatAsalJalan'] ?? '';
+            $asalRt    = $p['alamatAsalRt']    ?? '';
+            $asalRw    = $p['alamatAsalRw']    ?? '';
+            $asalKel   = $p['alamatAsalKelurahan'] ?? '';
+            $asalKec   = $p['alamatAsalKecamatan'] ?? '';
+            $asalKota  = $p['alamatAsalKota']  ?? 'Kota Kupang';
+            $asalProv  = $p['alamatAsalProvinsi'] ?? '';
+          @endphp
+          @if($asalJalan || $asalRt || $asalRw || $asalKel || $asalKec)
+            {{ $asalJalan ? $asalJalan.', ' : '' }}RT.{{ $asalRt ?: '___' }}/RW.{{ $asalRw ?: '___' }} Kelurahan {{ $asalKel ?: '______' }} Kec. {{ $asalKec ?: '______' }} {{ $asalKota ?: 'Kota Kupang' }}{{ $asalProv ? ' Prov. '.$asalProv : '' }}
+          @else
+            RT.___/RW.___ Kelurahan ______ Kec. ______ Kota Kupang
+          @endif
+        </td>
+      </tr>
+      <tr><td colspan="3" style="height:10px;"></td></tr>
+      <tr>
+        <td class="lbl" style="white-space:nowrap;">A l a m a t&nbsp;&nbsp;Domisili</td><td class="sep">:</td>
+        <td class="val">RT.{{ $p['rt'] ?? '' ?: '___' }}/RW.{{ $p['rw'] ?? '' ?: '___' }} Kel. Fatubesi Kec. Kota Lama Kota Kupang</td>
+      </tr>
+    </tbody>
+  </table>
 
   <div class="paragraf">
     Berdasarkan laporan dan Rekomendasi dari Ketua RT.{{ bl_pad3($p['rt'] ?? '') }}, yang bersangkutan

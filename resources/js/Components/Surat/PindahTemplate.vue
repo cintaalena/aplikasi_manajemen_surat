@@ -54,7 +54,7 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
         <tbody>
             <tr>
             <td class="w-20">
-                <img :src="asset('images/logo.png')" class="w-16 mx-auto" />
+                <img :src="asset('images/logo_kop.png')" class="w-16 mx-auto" style="mix-blend-mode: multiply;" />
             </td>
             <td>
                 <div class="font-bold text-[16px] uppercase">

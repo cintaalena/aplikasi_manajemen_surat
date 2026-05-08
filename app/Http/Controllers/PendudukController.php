@@ -36,6 +36,9 @@ class PendudukController extends Controller
                 'alamat',
                 'rt',
                 'rw',
+                'dusun',
+                'kode_keluarga',
+                'nama_kepala_keluarga',
                 'status_perkawinan',
                 'kewarganegaraan',
             ])
@@ -61,6 +64,9 @@ class PendudukController extends Controller
                     'alamat' => $p->alamat,
                     'rt' => $p->rt,
                     'rw' => $p->rw,
+                    'dusun' => $p->dusun,
+                    'kode_keluarga' => $p->kode_keluarga,
+                    'nama_kepala_keluarga' => $p->nama_kepala_keluarga,
                     'status_perkawinan' => $p->status_perkawinan,
                     'kewarganegaraan' => $p->kewarganegaraan,
                 ];
@@ -610,6 +616,28 @@ class PendudukController extends Controller
         return redirect()
             ->route('penduduk.index')
             ->with('success', "Data penduduk {$nama} berhasil dihapus.");
+    }
+
+    public function cariIstri(Request $request)
+    {
+        $kode = trim((string) $request->query('kode_keluarga', ''));
+
+        if ($kode === '') {
+            return response()->json(null);
+        }
+
+        $istri = Penduduk::query()
+            ->select([
+                'id', 'nik', 'nama', 'pekerjaan',
+                'rt', 'rw', 'alamat', 'dusun',
+                'kode_keluarga', 'nama_kepala_keluarga',
+            ])
+            ->where('kode_keluarga', $kode)
+            ->whereIn('hubungan', ['Istri', 'istri', 'ISTRI'])
+            ->where('status_kehidupan', '!=', 'Meninggal')
+            ->first();
+
+        return response()->json($istri);
     }
 
     public function searchKepalaKeluarga(Request $request)
