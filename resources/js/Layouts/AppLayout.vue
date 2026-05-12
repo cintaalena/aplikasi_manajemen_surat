@@ -137,7 +137,7 @@ let initialized  = false
 const seenIds    = new Set()   // ID notifikasi yang sudah pernah diterima browser
 
 const fetchNotifications = async () => {
-  if (userRole.value !== 'lurah') return
+  if (userRole.value !== 'lurah' && userRole.value !== 'staff') return
   try {
     const res = await fetch(route('notifications.index'), {
       headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
@@ -209,6 +209,16 @@ const markRead = async (notif) => {
   }).catch(() => {})
 }
 
+const openNotif = (notif) => {
+  markRead(notif)
+  notifOpen.value = false
+  if (userRole.value === 'staff') {
+    router.visit(route('disposisi-tugas.index'))
+  } else {
+    router.visit(route('arsip-surat.index'))
+  }
+}
+
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
   const d = new Date(dateStr)
@@ -216,7 +226,7 @@ const formatDate = (dateStr) => {
 }
 
 onMounted(async () => {
-  if (userRole.value === 'lurah') {
+  if (userRole.value === 'lurah' || userRole.value === 'staff') {
     document.addEventListener('click', initAudioContext, { once: true })
 
     // Fetch pertama — tunggu hasilnya
@@ -225,8 +235,14 @@ onMounted(async () => {
     // Jika user membuka halaman arsip langsung (mis. dari bookmark atau link sidebar),
     // otomatis tandai semua notifikasi sebagai dibaca.
     try {
-      if (route().current('arsip-surat.index') || route().current('arsip-surat.show')) {
-        if (unreadCount.value > 0) markAllRead()
+      if (userRole.value === 'lurah') {
+        if (route().current('arsip-surat.index') || route().current('arsip-surat.show')) {
+          if (unreadCount.value > 0) markAllRead()
+        }
+      } else if (userRole.value === 'staff') {
+        if (route().current('disposisi-tugas.index')) {
+          if (unreadCount.value > 0) markAllRead()
+        }
       }
     } catch (e) {}
 
@@ -266,15 +282,15 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Notification Bell — hanya lurah -->
-        <div v-if="userRole === 'lurah'" class="shrink-0">
+        <!-- Notification Bell — lurah & staff -->
+        <div v-if="userRole === 'lurah' || userRole === 'staff'" class="shrink-0">
           <button
             ref="bellRef"
             type="button"
             @click="toggleNotif"
             class="relative flex h-9 w-9 items-center justify-center rounded-xl border transition"
             :class="notifOpen ? 'bg-green-100 border-green-300 text-green-700' : 'bg-white border-green-100 text-gray-500 hover:bg-green-50 hover:text-green-700'"
-            title="Notifikasi Arsip"
+            title="Notifikasi"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -362,6 +378,26 @@ onUnmounted(() => {
         <span v-if="onArsipPage" class="text-xs text-amber-700">Aktif</span>
       </Link>
 
+      <!-- DISPOSISI TUGAS — hanya staff -->
+      <Link
+        v-if="userRole === 'staff'"
+        :href="route('disposisi-tugas.index')"
+        class="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition border"
+        :class="isCurrent('disposisi-tugas.index')
+          ? 'bg-blue-50 text-blue-900 border-blue-200'
+          : 'bg-white text-gray-700 border-transparent hover:bg-blue-50/60 hover:text-blue-900'"
+      >
+        <span class="flex items-center gap-2">
+          <span class="h-2.5 w-2.5 rounded-full bg-blue-500"></span>
+          Disposisi Tugas
+        </span>
+        <span
+          v-if="unreadCount > 0 && !isCurrent('disposisi-tugas.index')"
+          class="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white"
+        >{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+        <span v-else-if="isCurrent('disposisi-tugas.index')" class="text-xs text-blue-700">Aktif</span>
+      </Link>
+
 
       <!-- PENDUDUK -->
       <a
@@ -429,7 +465,7 @@ onUnmounted(() => {
   <Teleport to="body">
     <div v-if="notifOpen" :style="panelStyle" class="rounded-2xl border border-green-100 bg-white shadow-2xl">
       <div class="flex items-center justify-between border-b border-green-50 px-4 py-3">
-        <span class="text-sm font-semibold text-gray-800">Notifikasi Arsip</span>
+        <span class="text-sm font-semibold text-gray-800">{{ userRole === 'staff' ? 'Notifikasi Disposisi' : 'Notifikasi Arsip' }}</span>
         <button
           v-if="unreadCount > 0"
           type="button"
@@ -446,7 +482,7 @@ onUnmounted(() => {
           v-for="notif in notifications"
           :key="notif.id"
           type="button"
-          @click="markRead(notif); notifOpen = false"
+          @click="openNotif(notif)"
           class="w-full text-left px-4 py-3 transition hover:bg-green-50/60 flex items-start gap-3"
           :class="{ 'bg-green-50/40': !notif.is_read }"
         >
@@ -462,6 +498,13 @@ onUnmounted(() => {
 
       <div class="border-t border-green-50 px-4 py-2 text-center">
         <Link
+          v-if="userRole === 'staff'"
+          :href="route('disposisi-tugas.index')"
+          @click="notifOpen = false"
+          class="text-xs font-medium text-blue-600 hover:text-blue-800 transition"
+        >Lihat Disposisi Tugas →</Link>
+        <Link
+          v-else
           :href="route('arsip-surat.index')"
           @click="notifOpen = false"
           class="text-xs font-medium text-green-600 hover:text-green-800 transition"

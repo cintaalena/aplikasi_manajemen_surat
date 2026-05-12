@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\LetterController;
 use App\Http\Controllers\Api\LetterDocumentController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\LetterNotificationController;
+use App\Http\Controllers\DisposisiController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -33,8 +34,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('surat-templates.index');
 
     Route::get('/template-surat/{slug}', function (string $slug) {
+        $lurahUser = \App\Models\User::where('jabatan', 'lurah')->first(['id', 'name', 'nip', 'jabatan']);
         return Inertia::render('SuratTemplates/Show', [
-            'slug' => $slug,
+            'slug'      => $slug,
+            'lurahUser' => $lurahUser,
         ]);
     })->name('surat-templates.show');
 
@@ -54,6 +57,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/arsip-surat', [LetterArchiveController::class, 'index'])->name('arsip-surat.index');
     Route::get('/arsip-surat/{letter}', [LetterArchiveController::class, 'show'])->name('arsip-surat.show');
     Route::get('/arsip-surat/{letter}/pratinjau', [LetterArchiveController::class, 'pratinjau'])->name('arsip-surat.pratinjau');
+    Route::post('/arsip-surat/{letter}/viewed', [LetterArchiveController::class, 'markViewed'])->name('arsip-surat.viewed');
 
     // Tambah arsip manual — staff & admin saja
     Route::post('/arsip-surat', [LetterArchiveController::class, 'store'])
@@ -98,13 +102,27 @@ Route::middleware('auth')->group(function () {
     Route::delete('/surat/dokumen/{document}', [LetterDocumentController::class, 'destroy'])
         ->name('surat.dokumen.destroy');
 
-    // ── Notifikasi — lurah saja ────────────────────────────────────────────
-    Route::middleware('role:lurah')->group(function () {
+    // ── Notifikasi — lurah & staff ────────────────────────────────────────────
+    Route::middleware('role:lurah,staff')->group(function () {
         Route::get('/notifications', [LetterNotificationController::class, 'index'])->name('notifications.index');
         Route::get('/notifications/stream', [LetterNotificationController::class, 'stream'])->name('notifications.stream');
         Route::post('/notifications/mark-all-read', [LetterNotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
         Route::patch('/notifications/{notification}/mark-read', [LetterNotificationController::class, 'markRead'])->name('notifications.mark-read');
     });
+
+    // ── Disposisi Surat — lurah mendisposisi, staff melihat tugas ─────────
+    Route::get('/disposisi/staff-list', [DisposisiController::class, 'staffList'])
+        ->middleware('role:lurah')
+        ->name('disposisi.staff-list');
+    Route::post('/arsip-surat/{letter}/disposisi', [DisposisiController::class, 'store'])
+        ->middleware('role:lurah')
+        ->name('disposisi.store');
+    Route::get('/disposisi-tugas', [DisposisiController::class, 'index'])
+        ->middleware('role:staff')
+        ->name('disposisi-tugas.index');
+    Route::patch('/disposisi-tugas/{disposisi}/selesai', [DisposisiController::class, 'markSelesai'])
+        ->middleware('role:staff')
+        ->name('disposisi-tugas.selesai');
 
     // ── Admin — manajemen pengguna ──────────────────────────────────────────
     Route::prefix('admin')->middleware('role:admin')->group(function () {
