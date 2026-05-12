@@ -6,11 +6,31 @@ import { ref, computed } from 'vue'
 const props = defineProps({
   filters: Object,
   letters: Object,
+  viewed_ids: Array,
 })
 
 const page = usePage()
 const flashSuccess = computed(() => page.props.flash?.success)
 const flashError   = computed(() => page.props.flash?.error)
+
+const userRole = computed(() => page.props.auth?.user?.role ?? 'staff')
+
+// Set ID surat yang sudah dilihat — diupdate secara lokal saat user berinteraksi
+const localViewedIds = ref(new Set(props.viewed_ids ?? []))
+
+function isViewed(id) {
+  return localViewedIds.value.has(id)
+}
+
+function markAsViewed(id) {
+  if (localViewedIds.value.has(id)) return
+  localViewedIds.value = new Set([...localViewedIds.value, id])
+  router.post(route('arsip-surat.viewed', id), {}, {
+    preserveScroll: true,
+    preserveState: true,
+    only: [],
+  })
+}
 
 // ── Filter / Pencarian ──────────────────────────────────────────────
 const form = ref({
@@ -110,6 +130,7 @@ const viewDoc    = ref(null)
 
 function toggleRow(id) {
   expandedId.value = expandedId.value === id ? null : id
+  markAsViewed(id)
 }
 function openViewer(doc) {
   viewDoc.value = doc
@@ -122,6 +143,51 @@ function isImage(mime) {
 }
 function isPdf(mime) {
   return mime === 'application/pdf'
+}
+
+// ── Disposisi Surat (hanya lurah) ─────────────────────────────────
+const showDisposisiModal = ref(false)
+const disposisiLetterId  = ref(null)
+const disposisiLetterTitle = ref('')
+const staffList          = ref([])
+const staffLoading       = ref(false)
+
+const disposisiForm = useForm({
+  to_user_id: '',
+  catatan:    '',
+})
+
+async function openDisposisi(row) {
+  disposisiLetterId.value   = row.id
+  disposisiLetterTitle.value = row.title
+  disposisiForm.reset()
+  showDisposisiModal.value = true
+  if (staffList.value.length === 0) {
+    staffLoading.value = true
+    try {
+      const res = await fetch(route('disposisi.staff-list'), {
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
+      })
+      if (res.ok) staffList.value = await res.json()
+    } finally {
+      staffLoading.value = false
+    }
+  }
+}
+
+function closeDisposisi() {
+  showDisposisiModal.value = false
+  disposisiForm.reset()
+}
+
+function submitDisposisi() {
+  disposisiForm.post(route('disposisi.store', { letter: disposisiLetterId.value }), {
+    preserveScroll: true,
+    onSuccess: () => {
+      closeDisposisi()
+    },
+  })
 }</script>
 
 <template>
@@ -136,6 +202,7 @@ function isPdf(mime) {
           </p>
         </div>
         <button
+          v-if="userRole !== 'lurah'"
           type="button"
           class="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 shadow-sm transition whitespace-nowrap"
           @click="showManualForm = !showManualForm"
@@ -158,9 +225,9 @@ function isPdf(mime) {
         {{ flashError }}
       </div>
 
-      <!-- Form tambah surat manual -->
+      <!-- Form tambah surat manual — hanya staff & admin -->
       <div
-        v-if="showManualForm"
+        v-if="showManualForm && userRole !== 'lurah'"
         class="rounded-2xl border border-green-200 bg-white p-5 shadow-sm space-y-4"
       >
         <h2 class="text-sm font-bold text-gray-800">Tambah Surat Masuk Manual</h2>
@@ -390,7 +457,11 @@ function isPdf(mime) {
             <template v-for="(row, idx) in letters.data" :key="row.id">
               <!-- Baris utama arsip surat -->
               <tr
-                :class="idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'"
+                :class="[
+                  !isViewed(row.id)
+                    ? 'bg-blue-50 border-l-4 border-l-blue-400'
+                    : (idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'),
+                ]"
                 class="border-t border-gray-100 hover:bg-green-50 transition-colors"
               >
                 <td class="p-3 text-gray-600 whitespace-nowrap text-xs">
@@ -400,7 +471,15 @@ function isPdf(mime) {
                   {{ row.no_surat ?? '-' }}
                 </td>
                 <td class="p-3 text-gray-700 max-w-xs">
-                  {{ row.title ?? '-' }}
+                  <div class="flex items-center gap-2">
+                    <span>{{ row.title ?? '-' }}</span>
+                    <span
+                      v-if="!isViewed(row.id)"
+                      class="inline-block rounded-full bg-blue-500 text-white text-xs font-bold px-2 py-0.5 leading-tight whitespace-nowrap flex-shrink-0"
+                    >
+                      Baru
+                    </span>
+                  </div>
                 </td>
                 <td class="p-3 text-gray-700 text-xs whitespace-nowrap">
                   {{ row.printed_by?.name ?? '-' }}
@@ -427,6 +506,7 @@ function isPdf(mime) {
                       target="_blank"
                       rel="noopener noreferrer"
                       class="inline-block rounded-lg bg-green-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-800 shadow-sm transition whitespace-nowrap"
+                      @click="markAsViewed(row.id)"
                     >
                       Lihat Surat
                     </a>
@@ -448,6 +528,16 @@ function isPdf(mime) {
                       ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <span v-else-if="row.is_manual" class="text-gray-300 text-xs">—</span>
+                    <!-- Tombol Disposisi — hanya lurah -->
+                    <button
+                      v-if="userRole === 'lurah'"
+                      type="button"
+                      class="inline-flex items-center gap-1 rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800 hover:bg-blue-100 transition whitespace-nowrap"
+                      @click="openDisposisi(row)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                      Disposisi
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -627,6 +717,74 @@ function isPdf(mime) {
         </div>
       </div>
     </Teleport>
+
+  <!-- Modal Disposisi Surat — hanya lurah -->
+  <Teleport to="body">
+    <div v-if="showDisposisiModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <!-- Overlay -->
+      <div class="absolute inset-0 bg-black/40" @click="closeDisposisi"></div>
+      <!-- Panel -->
+      <div class="relative w-full max-w-md rounded-2xl border border-blue-100 bg-white shadow-2xl z-10">
+        <div class="flex items-center justify-between border-b border-blue-50 px-5 py-4">
+          <h2 class="text-base font-bold text-gray-900">Disposisi Surat</h2>
+          <button type="button" @click="closeDisposisi" class="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="px-5 py-4 space-y-4">
+          <p class="text-sm text-gray-600">
+            Disposisikan surat <span class="font-semibold text-gray-900">"{{ disposisiLetterTitle }}"</span> kepada:
+          </p>
+
+          <!-- Pilih staff -->
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-gray-600">Tujuan Disposisi <span class="text-red-500">*</span></label>
+            <div v-if="staffLoading" class="text-sm text-gray-400 italic">Memuat daftar staff...</div>
+            <select
+              v-else
+              v-model="disposisiForm.to_user_id"
+              class="rounded-xl border-gray-200 text-sm focus:border-blue-400 focus:ring-blue-400"
+            >
+              <option value="">-- Pilih Staff --</option>
+              <option v-for="s in staffList" :key="s.id" :value="s.id">
+                {{ s.name }}{{ s.jabatan ? ' — ' + s.jabatan : '' }}
+              </option>
+            </select>
+            <p v-if="disposisiForm.errors.to_user_id" class="text-xs text-red-600">{{ disposisiForm.errors.to_user_id }}</p>
+          </div>
+
+          <!-- Catatan disposisi -->
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-gray-600">Catatan <span class="text-gray-400 font-normal">(opsional)</span></label>
+            <textarea
+              v-model="disposisiForm.catatan"
+              rows="3"
+              placeholder="Contoh: Tolong tindak lanjuti segera..."
+              class="rounded-xl border-gray-200 text-sm focus:border-blue-400 focus:ring-blue-400 resize-none"
+            ></textarea>
+            <p v-if="disposisiForm.errors.catatan" class="text-xs text-red-600">{{ disposisiForm.errors.catatan }}</p>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 border-t border-blue-50 px-5 py-3">
+          <button
+            type="button"
+            class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+            @click="closeDisposisi"
+          >Batal</button>
+          <button
+            type="button"
+            :disabled="disposisiForm.processing || !disposisiForm.to_user_id"
+            class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed"
+            @click="submitDisposisi"
+          >
+            {{ disposisiForm.processing ? 'Mengirim...' : 'Kirim Disposisi' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 
   </AppLayout>
 </template>

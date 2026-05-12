@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Letter;
 use App\Models\LetterDocument;
 use App\Models\LetterNotification;
+use App\Models\LetterView;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -48,6 +49,12 @@ class LetterArchiveController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        // Ambil ID surat yang sudah dilihat oleh user saat ini
+        $viewedIds = LetterView::where('user_id', $request->user()->id)
+            ->whereIn('letter_id', $letters->pluck('id')->toArray())
+            ->pluck('letter_id')
+            ->toArray();
+
         return Inertia::render('ArsipSurat/Index', [
             'filters' => [
                 'no_surat'  => $no_surat,
@@ -55,8 +62,22 @@ class LetterArchiveController extends Controller
                 'date_from' => $date_from,
                 'date_to'   => $date_to,
             ],
-            'letters' => $letters,
+            'letters'    => $letters,
+            'viewed_ids' => $viewedIds,
         ]);
+    }
+
+    /**
+     * Tandai surat sebagai sudah dilihat oleh user yang sedang login.
+     */
+    public function markViewed(Request $request, Letter $letter)
+    {
+        LetterView::firstOrCreate([
+            'letter_id' => $letter->id,
+            'user_id'   => $request->user()->id,
+        ]);
+
+        return response()->json(['ok' => true]);
     }
 
     private const ALLOWED_MIMES = [
@@ -120,7 +141,8 @@ class LetterArchiveController extends Controller
 
         $this->notifyLurah($letter);
 
-        return back()->with('success', 'Surat berhasil ditambahkan ke arsip.');
+        return redirect()->route('arsip-surat.index')
+            ->with('success', 'Surat berhasil ditambahkan ke arsip.');
     }
 
     private function notifyLurah(Letter $letter): void
