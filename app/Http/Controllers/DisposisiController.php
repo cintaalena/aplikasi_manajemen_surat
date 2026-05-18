@@ -57,6 +57,7 @@ class DisposisiController extends Controller
                 'fromUser:id,name,jabatan',
             ])
             ->where('to_user_id', $request->user()->id)
+            ->whereIn('status', ['pending', 'diterima'])
             ->orderByDesc('created_at')
             ->paginate(15)
             ->withQueryString();
@@ -67,7 +68,35 @@ class DisposisiController extends Controller
     }
 
     /**
-     * Staff menandai disposisi sebagai selesai.
+     * Staff mengkonfirmasi bahwa tugas disposisi sudah diterima.
+     * Notifikasi dikirim ke lurah pengirim.
+     */
+    public function markDiterima(Request $request, LetterDisposition $disposisi)
+    {
+        if ($disposisi->to_user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        if ($disposisi->status !== 'pending') {
+            return back()->with('error', 'Tugas sudah dikonfirmasi sebelumnya.');
+        }
+
+        $disposisi->load('letter:id,no_surat,title');
+        $disposisi->update(['status' => 'diterima']);
+
+        // Kirim notifikasi ke lurah bahwa tugas sudah diterima
+        LetterNotification::create([
+            'user_id'   => $disposisi->from_user_id,
+            'letter_id' => $disposisi->letter_id,
+            'message'   => $request->user()->name . " telah mengkonfirmasi penerimaan tugas disposisi surat \"{$disposisi->letter->title}\" (No. {$disposisi->letter->no_surat}).",
+            'is_read'   => false,
+        ]);
+
+        return back()->with('success', 'Tugas berhasil dikonfirmasi diterima. Lurah telah dinotifikasi.');
+    }
+
+    /**
+     * Staff menandai disposisi sebagai selesai (tugas hilang dari daftar).
      */
     public function markSelesai(Request $request, LetterDisposition $disposisi)
     {
@@ -75,9 +104,22 @@ class DisposisiController extends Controller
             abort(403);
         }
 
+        if ($disposisi->status !== 'diterima') {
+            return back()->with('error', 'Konfirmasi penerimaan tugas terlebih dahulu sebelum menandai selesai.');
+        }
+
+        $disposisi->load('letter:id,no_surat,title');
         $disposisi->update(['status' => 'selesai']);
 
-        return back()->with('success', 'Tugas disposisi ditandai sebagai selesai.');
+        // Kirim notifikasi ke lurah bahwa tugas sudah selesai dikerjakan
+        LetterNotification::create([
+            'user_id'   => $disposisi->from_user_id,
+            'letter_id' => $disposisi->letter_id,
+            'message'   => $request->user()->name . " telah menyelesaikan tugas disposisi surat \"{$disposisi->letter->title}\" (No. {$disposisi->letter->no_surat}).",
+            'is_read'   => false,
+        ]);
+
+        return back()->with('success', 'Tugas disposisi selesai dan telah dihapus dari daftar tugas Anda. Lurah telah dinotifikasi.');
     }
 
     /**

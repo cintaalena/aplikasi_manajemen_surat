@@ -18,6 +18,7 @@ const dashboardTabs = [
   { key: 'usia', label: 'Pengelompokan Berdasarkan Usia' },
   { key: 'pekerjaan', label: 'Pengelompokan Berdasarkan Pekerjaan' },
   { key: 'pendidikan', label: 'Pengelompokan Berdasarkan Pendidikan' },
+  { key: 'laporan', label: 'Laporan & Rekap Surat' },
 ]
 
 const activeTabLabel = computed(() => {
@@ -199,6 +200,61 @@ const educationGroupTotals = computed(() => {
     jumlah: 0,
   }
 })
+
+// ── Laporan & Rekap Surat ─────────────────────────────────────────────────────
+const jenisSuratOptions = [
+  { value: '', label: 'Semua Jenis Surat' },
+  { value: 'keterangan-domisili', label: 'Surat Keterangan Domisili' },
+  { value: 'keterangan-kematian', label: 'Surat Keterangan Kematian' },
+  { value: 'keterangan-kelahiran', label: 'Surat Keterangan Kelahiran' },
+  { value: 'keterangan-usaha', label: 'Surat Keterangan Usaha' },
+  { value: 'keterangan-kelakuan-baik', label: 'Surat Keterangan Kelakuan Baik' },
+  { value: 'keterangan-umum', label: 'Surat Keterangan (Umum)' },
+]
+
+const laporanFilter = ref({
+  jenis: '',
+  bulan: '',
+  tahun: '',
+  date_from: '',
+  date_to: '',
+})
+
+const laporanData   = ref(null)
+const laporanLoading = ref(false)
+const laporanError   = ref('')
+
+const fetchLaporan = async () => {
+  try {
+    laporanLoading.value = true
+    laporanError.value   = ''
+    const params = new URLSearchParams()
+    if (laporanFilter.value.jenis)     params.set('jenis',     laporanFilter.value.jenis)
+    if (laporanFilter.value.bulan)     params.set('bulan',     laporanFilter.value.bulan)
+    if (laporanFilter.value.tahun)     params.set('tahun',     laporanFilter.value.tahun)
+    if (laporanFilter.value.date_from) params.set('date_from', laporanFilter.value.date_from)
+    if (laporanFilter.value.date_to)   params.set('date_to',   laporanFilter.value.date_to)
+
+    const url = route('dashboard.rekap-surat') + (params.toString() ? '?' + params.toString() : '')
+    const res = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      credentials: 'same-origin',
+    })
+    if (!res.ok) throw new Error('Gagal mengambil data rekap surat.')
+    laporanData.value = await res.json()
+  } catch (e) {
+    laporanError.value = e?.message ?? 'Terjadi kesalahan.'
+  } finally {
+    laporanLoading.value = false
+  }
+}
+
+const resetLaporanFilter = () => {
+  laporanFilter.value = { jenis: '', bulan: '', tahun: '', date_from: '', date_to: '' }
+  laporanData.value = null
+  laporanError.value = ''
+}
+// ─────────────────────────────────────────────────────────────────────────────
 </script>
 
 <template>
@@ -1231,6 +1287,188 @@ const educationGroupTotals = computed(() => {
             </div>
           </div>
         </div>
+
+        <!-- ── Tab Laporan & Rekap Surat ──────────────────────────────────────── -->
+        <div v-if="activeTab === 'laporan'" class="space-y-5">
+
+          <!-- Filter Card -->
+          <div class="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
+            <h2 class="text-base font-bold text-blue-700 mb-4 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 5h18v2l-7 7v5l-4-2v-3L3 7V5Z"/>
+              </svg>
+              Filter Laporan Surat
+            </h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <!-- Jenis Surat -->
+              <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Jenis Surat</label>
+                <select
+                  v-model="laporanFilter.jenis"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  <option v-for="opt in jenisSuratOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Bulan -->
+              <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Bulan</label>
+                <select
+                  v-model="laporanFilter.bulan"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="">Semua Bulan</option>
+                  <option v-for="(name, idx) in monthNames" :key="idx + 1" :value="idx + 1">
+                    {{ name }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Tahun -->
+              <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Tahun</label>
+                <select
+                  v-model="laporanFilter.tahun"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="">Semua Tahun</option>
+                  <option v-for="y in availableYears" :key="y" :value="y">{{ y }}</option>
+                </select>
+              </div>
+
+              <!-- Tanggal Dari -->
+              <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal Dari</label>
+                <input
+                  type="date"
+                  v-model="laporanFilter.date_from"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+
+              <!-- Tanggal Sampai -->
+              <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal Sampai</label>
+                <input
+                  type="date"
+                  v-model="laporanFilter.date_to"
+                  class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+            </div>
+
+            <div class="mt-5 flex gap-3">
+              <button
+                type="button"
+                @click="fetchLaporan"
+                :disabled="laporanLoading"
+                class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M10 2a8 8 0 1 0 4.906 14.32l4.387 4.387 1.414-1.414-4.387-4.387A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12A6 6 0 0 1 10 4Z"/>
+                </svg>
+                {{ laporanLoading ? 'Memuat...' : 'Tampilkan Laporan' }}
+              </button>
+
+              <button
+                type="button"
+                @click="resetLaporanFilter"
+                class="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
+              >
+                Reset
+              </button>
+            </div>
+
+            <div v-if="laporanError" class="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+              {{ laporanError }}
+            </div>
+          </div>
+
+          <!-- Hasil Laporan -->
+          <div v-if="laporanData !== null">
+
+            <!-- Ringkasan -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+              <div class="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-center shadow-sm">
+                <div class="text-3xl font-bold text-blue-700">{{ num(laporanData.total) }}</div>
+                <div class="mt-1 text-xs font-medium text-blue-500">Total Surat</div>
+              </div>
+              <div
+                v-for="item in laporanData.per_jenis"
+                :key="item.label"
+                class="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-center shadow-sm"
+              >
+                <div class="text-2xl font-bold text-amber-700">{{ num(item.jumlah) }}</div>
+                <div class="mt-1 text-xs font-medium text-amber-600 leading-tight">{{ item.label }}</div>
+              </div>
+            </div>
+
+            <!-- Tabel Rekap -->
+            <div class="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+              <div class="bg-blue-600 px-5 py-3 flex items-center justify-between">
+                <span class="text-white font-bold">Rekap Surat</span>
+                <span class="text-blue-100 text-sm">{{ num(laporanData.total) }} surat ditemukan</span>
+              </div>
+
+              <div v-if="laporanData.letters.length === 0" class="px-5 py-10 text-center text-gray-400 italic">
+                Tidak ada data surat yang sesuai dengan filter yang dipilih.
+              </div>
+
+              <div v-else class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                  <thead>
+                    <tr class="bg-gray-50 text-gray-600 border-b border-gray-200">
+                      <th class="px-4 py-3 text-left font-semibold w-10">No.</th>
+                      <th class="px-4 py-3 text-left font-semibold">No. Surat</th>
+                      <th class="px-4 py-3 text-left font-semibold">Jenis Surat</th>
+                      <th class="px-4 py-3 text-left font-semibold">Judul</th>
+                      <th class="px-4 py-3 text-left font-semibold">Tanggal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="(surat, idx) in laporanData.letters"
+                      :key="surat.id"
+                      :class="idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'"
+                      class="border-t border-gray-100 hover:bg-blue-50 transition-colors"
+                    >
+                      <td class="px-4 py-3 text-gray-400 text-center">{{ idx + 1 }}</td>
+                      <td class="px-4 py-3 font-mono text-xs text-gray-700">{{ surat.no_surat }}</td>
+                      <td class="px-4 py-3">
+                        <span class="inline-block rounded-full bg-amber-100 text-amber-700 text-xs font-medium px-2 py-0.5">
+                          {{ surat.label }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 text-gray-700">{{ surat.title }}</td>
+                      <td class="px-4 py-3 text-gray-500 whitespace-nowrap">{{ surat.tanggal }}</td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr class="border-t-2 border-blue-300 bg-blue-50 font-bold">
+                      <td colspan="4" class="px-4 py-3 text-blue-700">Total</td>
+                      <td class="px-4 py-3 text-blue-800">{{ num(laporanData.total) }} surat</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Belum difilter -->
+          <div v-else-if="!laporanLoading" class="rounded-2xl border border-dashed border-blue-200 bg-blue-50 px-6 py-12 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-blue-300 mx-auto mb-3" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm-1 1.5L18.5 9H13V3.5ZM8 13h8v1.5H8V13Zm0 3h6v1.5H8V16Zm0-6h3v1.5H8V10Z"/>
+            </svg>
+            <p class="text-blue-500 font-medium">Pilih filter di atas lalu tekan <strong>Tampilkan Laporan</strong> untuk melihat rekap surat.</p>
+          </div>
+
+        </div>
+        <!-- ── End Tab Laporan ─────────────────────────────────────────────────── -->
 
         <!-- Footer info -->
         <div class="text-xs text-gray-400">

@@ -21,6 +21,12 @@ const formatDate = (raw) => {
   })
 }
 
+function markDiterima(id) {
+  router.patch(route('disposisi-tugas.diterima', { disposisi: id }), {}, {
+    preserveScroll: true,
+  })
+}
+
 function markSelesai(id) {
   router.patch(route('disposisi-tugas.selesai', { disposisi: id }), {}, {
     preserveScroll: true,
@@ -47,7 +53,7 @@ function isPdf(mime)     { return mime === 'application/pdf' }
       <div>
         <h1 class="text-xl font-bold text-gray-900">Disposisi Tugas</h1>
         <p class="mt-1 text-sm text-gray-600">
-          Daftar surat yang didisposisikan oleh Lurah kepada Anda.
+          Daftar surat yang didisposisikan oleh Lurah kepada Anda. Konfirmasi penerimaan, lalu tekan <strong>Selesai</strong> saat tugas selesai dikerjakan.
         </p>
       </div>
 
@@ -61,7 +67,8 @@ function isPdf(mime)     { return mime === 'application/pdf' }
 
       <!-- Tabel disposisi -->
       <div class="rounded-2xl border border-blue-100 bg-white shadow-sm overflow-hidden">
-        <table class="w-full text-sm">
+        <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[700px]">
           <thead class="bg-blue-50 text-gray-700">
             <tr>
               <th class="p-3 text-left font-semibold whitespace-nowrap">Tanggal Disposisi</th>
@@ -78,7 +85,9 @@ function isPdf(mime)     { return mime === 'application/pdf' }
               <!-- Baris utama -->
               <tr
                 :class="[
-                  item.status === 'pending' ? 'bg-blue-50/60 border-l-4 border-l-blue-400' : (idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'),
+                  item.status === 'pending'   ? 'bg-blue-50/60 border-l-4 border-l-blue-400' :
+                  item.status === 'diterima'  ? 'bg-yellow-50/60 border-l-4 border-l-yellow-400' :
+                  (idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'),
                 ]"
                 class="border-t border-gray-100 hover:bg-blue-50/30 transition-colors"
               >
@@ -100,6 +109,10 @@ function isPdf(mime)     { return mime === 'application/pdf' }
                       v-if="item.status === 'pending'"
                       class="inline-block rounded-full bg-blue-500 text-white text-xs font-bold px-2 py-0.5 leading-tight whitespace-nowrap flex-shrink-0"
                     >Baru</span>
+                    <span
+                      v-else-if="item.status === 'diterima'"
+                      class="inline-block rounded-full bg-yellow-400 text-white text-xs font-bold px-2 py-0.5 leading-tight whitespace-nowrap flex-shrink-0"
+                    >Diterima</span>
                   </div>
                 </td>
 
@@ -119,8 +132,12 @@ function isPdf(mime)     { return mime === 'application/pdf' }
                 <td class="p-3 whitespace-nowrap">
                   <span
                     v-if="item.status === 'pending'"
+                    class="inline-block rounded-full bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5"
+                  >Menunggu</span>
+                  <span
+                    v-else-if="item.status === 'diterima'"
                     class="inline-block rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5"
-                  >Pending</span>
+                  >Diterima</span>
                   <span
                     v-else
                     class="inline-block rounded-full bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-0.5"
@@ -161,19 +178,35 @@ function isPdf(mime)     { return mime === 'application/pdf' }
                       ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
 
-                    <!-- Tandai selesai -->
+                    <!-- Konfirmasi diterima (hanya untuk pending) -->
                     <button
                       v-if="item.status === 'pending'"
                       type="button"
-                      class="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 shadow-sm transition whitespace-nowrap"
-                      @click="markSelesai(item.id)"
+                      class="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 shadow-sm transition whitespace-nowrap"
+                      :title="'Konfirmasi bahwa tugas ini sudah diterima'"
+                      @click="markDiterima(item.id)"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                       </svg>
-                      Tandai Selesai
+                      Konfirmasi Diterima
                     </button>
-                    <span v-else-if="!item.letter?.documents?.length && (item.letter?.is_manual || !item.letter?.template_slug)" class="text-gray-300 text-xs">—</span>
+
+                    <!-- Tandai selesai (hanya untuk diterima) -->
+                    <button
+                      v-if="item.status === 'diterima'"
+                      type="button"
+                      class="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 shadow-sm transition whitespace-nowrap"
+                      :title="'Tandai tugas ini sudah selesai dikerjakan'"
+                      @click="markSelesai(item.id)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                      Selesai
+                    </button>
+
+                    <span v-if="item.status === 'selesai' && !item.letter?.documents?.length && (item.letter?.is_manual || !item.letter?.template_slug)" class="text-gray-300 text-xs">—</span>
                   </div>
                 </td>
               </tr>
@@ -251,6 +284,7 @@ function isPdf(mime)     { return mime === 'application/pdf' }
             </tr>
           </tbody>
         </table>
+        </div><!-- end overflow-x-auto -->
 
         <!-- Pagination -->
         <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm">

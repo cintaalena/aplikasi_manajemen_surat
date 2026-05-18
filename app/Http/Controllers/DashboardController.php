@@ -751,6 +751,71 @@ class DashboardController extends Controller
         ];
     }
 
+    /**
+     * Laporan & Rekap Surat dengan filter.
+     * GET /dashboard/rekap-surat?jenis=&bulan=&tahun=&date_from=&date_to=
+     */
+    public function rekapSurat(Request $request)
+    {
+        $timeCol  = $this->resolveLetterTimeColumn();
+        $jenis    = $request->query('jenis', '');      // template_slug
+        $bulan    = (int) $request->query('bulan', 0); // 1-12, 0 = semua
+        $tahun    = (int) $request->query('tahun', 0); // 0 = semua
+        $dateFrom = $request->query('date_from', '');
+        $dateTo   = $request->query('date_to', '');
+
+        $query = DB::table('letters');
+
+        if ($jenis !== '') {
+            $query->where('template_slug', $jenis);
+        }
+
+        if ($dateFrom !== '' && $dateTo !== '') {
+            $query->whereBetween($timeCol, [
+                \Carbon\Carbon::parse($dateFrom)->startOfDay(),
+                \Carbon\Carbon::parse($dateTo)->endOfDay(),
+            ]);
+        } elseif ($tahun > 0 && $bulan > 0) {
+            $start = \Carbon\Carbon::create($tahun, $bulan, 1)->startOfMonth();
+            $query->whereBetween($timeCol, [$start, $start->copy()->endOfMonth()]);
+        } elseif ($tahun > 0) {
+            $start = \Carbon\Carbon::create($tahun, 1, 1)->startOfYear();
+            $query->whereBetween($timeCol, [$start, $start->copy()->endOfYear()]);
+        } elseif ($bulan > 0) {
+            $query->whereMonth($timeCol, $bulan);
+        }
+
+        $letters = $query
+            ->orderBy($timeCol)
+            ->get(['id', 'no_surat', 'title', 'template_slug', $timeCol])
+            ->map(fn($r) => [
+                'id'            => $r->id,
+                'no_surat'      => $r->no_surat ?? '-',
+                'title'         => $r->title ?? '-',
+                'template_slug' => $r->template_slug,
+                'label'         => $this->labelTemplate($r->template_slug),
+                'tanggal'       => $r->{$timeCol}
+                    ? \Carbon\Carbon::parse($r->{$timeCol})->translatedFormat('d M Y')
+                    : '-',
+            ])
+            ->values();
+
+        // Rekap per jenis
+        $perJenis = $letters
+            ->groupBy('template_slug')
+            ->map(fn($items, $slug) => [
+                'label'  => $this->labelTemplate($slug),
+                'jumlah' => $items->count(),
+            ])
+            ->values();
+
+        return response()->json([
+            'total'     => $letters->count(),
+            'letters'   => $letters,
+            'per_jenis' => $perJenis,
+        ]);
+    }
+
     private function resolveLetterTimeColumn(): string
     {
         try {
