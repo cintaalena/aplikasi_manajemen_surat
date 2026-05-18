@@ -44,6 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/metrics', [DashboardController::class, 'metrics'])->name('dashboard.metrics');
     Route::get('/dashboard/letters-by-month', [DashboardController::class, 'lettersByMonth'])->name('dashboard.letters-by-month');
+    Route::get('/dashboard/rekap-surat', [DashboardController::class, 'rekapSurat'])->name('dashboard.rekap-surat');
     Route::get('/dashboard/export-excel', [DashboardController::class, 'exportExcel'])->name('dashboard.export.excel');
     
 });
@@ -120,6 +121,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/disposisi-tugas', [DisposisiController::class, 'index'])
         ->middleware('role:staff')
         ->name('disposisi-tugas.index');
+    Route::patch('/disposisi-tugas/{disposisi}/diterima', [DisposisiController::class, 'markDiterima'])
+        ->middleware('role:staff')
+        ->name('disposisi-tugas.diterima');
     Route::patch('/disposisi-tugas/{disposisi}/selesai', [DisposisiController::class, 'markSelesai'])
         ->middleware('role:staff')
         ->name('disposisi-tugas.selesai');

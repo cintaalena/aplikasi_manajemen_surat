@@ -146,26 +146,28 @@ const fetchNotifications = async () => {
     if (!res.ok) return
     const data = await res.json()
 
-    // Bunyi sound-ping (tes dari artisan, tanpa mengotori panel)
     if (data.has_sound_ping) {
       playNotificationSound()
-    }
-    // Bunyi hanya untuk notifikasi yang ID-nya belum pernah dilihat sebelumnya.
-    // Dengan melacak ID (bukan jumlah), kita tidak pernah bunyikan ulang notif lama,
-    // sekalipun unread_count berubah karena markAllRead / markRead.
-    else if (initialized) {
+    } else if (initialized) {
+      // Setelah init: hanya proses notifikasi dengan ID yang benar-benar baru
       const newNotifs = data.notifications.filter(n => !seenIds.has(n.id))
       if (newNotifs.length > 0) {
         playNotificationSound()
+        const newUnread = newNotifs.filter(n => !n.is_read).length
+        if (newUnread > 0) unreadCount.value += newUnread
+        // Sisipkan di depan, jangan timpa notif lama (agar is_read lokal tidak di-reset)
+        notifications.value = [...newNotifs, ...notifications.value].slice(0, 20)
       }
+      // JANGAN timpa notifications.value / unreadCount dari server setelah init —
+      // cegah polling membalik status "sudah dibaca" yang sudah diset lokal
+    } else {
+      // Fetch pertama saja: ambil semua dari server
+      notifications.value = data.notifications
+      unreadCount.value   = data.unread_count
     }
 
-    // Tandai semua ID yang ada sekarang sebagai sudah diketahui
     data.notifications.forEach(n => seenIds.add(n.id))
     initialized = true
-
-    notifications.value = data.notifications
-    unreadCount.value   = data.unread_count
   } catch (e) { /* silent */ }
 }
 
@@ -173,23 +175,30 @@ const toggleNotif = () => {
   notifOpen.value = !notifOpen.value
   if (notifOpen.value) {
     updatePanelPos()
+    // Badge langsung hilang dan semua ditandai dibaca saat lonceng dibuka
+    if (unreadCount.value > 0) {
+      markAllRead()
+    }
   }
 }
 
 const markAllRead = async () => {
-  // Optimistic update — UI berubah langsung tanpa menunggu server
+  // Optimistic update — UI berubah langsung
   notifications.value = notifications.value.map(n => ({ ...n, is_read: true }))
   unreadCount.value   = 0
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? ''
-  fetch(route('notifications.mark-all-read'), {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'X-CSRF-TOKEN': csrf,
-      'X-Requested-With': 'XMLHttpRequest',
-    },
-    credentials: 'same-origin',
-  }).catch(() => {})
+  // Tunggu server selesai sebelum lanjut (penting saat dipakai sebelum navigasi)
+  try {
+    await fetch(route('notifications.mark-all-read'), {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrf,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      credentials: 'same-origin',
+    })
+  } catch (e) { /* silent */ }
 }
 
 const markRead = async (notif) => {
@@ -209,9 +218,11 @@ const markRead = async (notif) => {
   }).catch(() => {})
 }
 
-const openNotif = (notif) => {
-  markRead(notif)
+const openNotif = async (notif) => {
   notifOpen.value = false
+  // Tunggu server tandai semua dibaca SEBELUM navigasi,
+  // supaya fetchNotifications di halaman baru dapat unread_count = 0
+  await markAllRead()
   if (userRole.value === 'staff') {
     router.visit(route('disposisi-tugas.index'))
   } else {
@@ -231,20 +242,6 @@ onMounted(async () => {
 
     // Fetch pertama — tunggu hasilnya
     await fetchNotifications()
-
-    // Jika user membuka halaman arsip langsung (mis. dari bookmark atau link sidebar),
-    // otomatis tandai semua notifikasi sebagai dibaca.
-    try {
-      if (userRole.value === 'lurah') {
-        if (route().current('arsip-surat.index') || route().current('arsip-surat.show')) {
-          if (unreadCount.value > 0) markAllRead()
-        }
-      } else if (userRole.value === 'staff') {
-        if (route().current('disposisi-tugas.index')) {
-          if (unreadCount.value > 0) markAllRead()
-        }
-      }
-    } catch (e) {}
 
     pollInterval = setInterval(fetchNotifications, 3000)
   }
