@@ -1,0 +1,30 @@
+﻿sequenceDiagram
+  actor Pengguna
+  participant Browser
+  participant Server
+  participant Database
+
+  Pengguna->>Browser: Buka halaman login
+  Browser->>Server: Minta halaman login
+  Server-->>Browser: Tampilkan form login
+
+  Pengguna->>Browser: Isi email & kata sandi, klik Masuk
+  Browser->>Server: Kirim data login
+  Server->>Database: Cek email & kata sandi
+  Database-->>Server: Data pengguna ditemukan
+
+  alt Login berhasil
+    Server-->>Browser: Arahkan ke Dashboard
+    Browser-->>Pengguna: Tampilkan Dashboard
+  else Email/kata sandi salah
+    Server-->>Browser: Tampilkan pesan gagal
+    Browser-->>Pengguna: "Email atau kata sandi salah"
+  end
+
+  Note over Pengguna,Server: --- Saat ingin keluar ---
+
+  Pengguna->>Browser: Klik tombol Keluar
+  Browser->>Server: Kirim permintaan logout
+  Server->>Server: Hapus sesi login
+  Server-->>Browser: Arahkan ke halaman utama
+  Browser-->>Pengguna: Ditampilkan halaman selamat datang

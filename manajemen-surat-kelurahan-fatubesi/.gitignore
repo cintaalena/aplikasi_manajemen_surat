@@ -1,0 +1,37 @@
+*.log
+.DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db
+
+# Test files (remove before production)
+test*.ps1
+api_test.ps1
+complete_test.ps1
+final_test.ps1
+quick_test.ps1
+check_schema.php
+/scripts/*.ps1
+/scripts/*.sh
+
+# Test-only controllers (MUST DELETE before production!)
+/app/Http/Controllers/Api/RateLimitTestController.php
