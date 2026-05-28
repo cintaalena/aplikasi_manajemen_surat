@@ -1,0 +1,942 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ThreatModel>
+  <MetaInformation>
+    <ThreatModelName>Aplikasi Manajemen Surat Kelurahan Fatubesi</ThreatModelName>
+    <ThreatModelDescription>Data Flow Diagram dan Threat Model untuk Aplikasi Manajemen Surat berbasis Laravel + Inertia.js + MySQL. Mencakup proses autentikasi, manajemen penduduk, pembuatan surat, arsip surat, disposisi, dan notifikasi.</ThreatModelDescription>
+    <ThreatModelOwner></ThreatModelOwner>
+    <Reviewer></Reviewer>
+    <Contributors></Contributors>
+    <ExternalDependencies>MySQL 8.x, PHP 8.x, Laravel 10.x, Node.js (Vite), XAMPP/Apache, File System (storage/app)</ExternalDependencies>
+    <SecurityAssumptions>1. Semua komunikasi menggunakan HTTPS. 2. Server berada di jaringan internal yang terlindungi. 3. Backup database dilakukan secara berkala. 4. Hanya pengguna terdaftar yang dapat mengakses sistem.</SecurityAssumptions>
+    <OtherNotes>Role: admin, staff, lurah. Middleware role-based access control diterapkan pada setiap route sensitif.</OtherNotes>
+    <Owner></Owner>
+    <ThreatModelId>a1b2c3d4-e5f6-7890-abcd-ef1234567890</ThreatModelId>
+  </MetaInformation>
+
+  <DrawingSurfaceList>
+
+    <!-- =========================================================== -->
+    <!--  DIAGRAM 1: Context Diagram (Level 0)                        -->
+    <!-- =========================================================== -->
+    <DrawingSurfaceModel>
+      <Guid>d0000001-0000-0000-0000-000000000000</Guid>
+      <Header>Level 0 - Context Diagram</Header>
+      <Zoom>1</Zoom>
+      <MasterSnap>8</MasterSnap>
+      <ShowGrid>false</ShowGrid>
+
+      <Entities>
+
+        <!-- External Entity: Admin -->
+        <Entity>
+          <TypeId>tm.Entity.ExternalInteractor</TypeId>
+          <Guid>e0000001-0000-0000-0000-000000000000</Guid>
+          <Header>Admin</Header>
+          <Left>100</Left>
+          <Top>120</Top>
+          <Width>100</Width>
+          <Height>75</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType>
+              <Name>Out of Scope</Name>
+              <Value>false</Value>
+            </anyType>
+          </Properties>
+        </Entity>
+
+        <!-- External Entity: Staff -->
+        <Entity>
+          <TypeId>tm.Entity.ExternalInteractor</TypeId>
+          <Guid>e0000002-0000-0000-0000-000000000000</Guid>
+          <Header>Staff</Header>
+          <Left>350</Left>
+          <Top>120</Top>
+          <Width>100</Width>
+          <Height>75</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType>
+              <Name>Out of Scope</Name>
+              <Value>false</Value>
+            </anyType>
+          </Properties>
+        </Entity>
+
+        <!-- External Entity: Lurah -->
+        <Entity>
+          <TypeId>tm.Entity.ExternalInteractor</TypeId>
+          <Guid>e0000003-0000-0000-0000-000000000000</Guid>
+          <Header>Lurah</Header>
+          <Left>600</Left>
+          <Top>120</Top>
+          <Width>100</Width>
+          <Height>75</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType>
+              <Name>Out of Scope</Name>
+              <Value>false</Value>
+            </anyType>
+          </Properties>
+        </Entity>
+
+        <!-- Process: Sistem Manajemen Surat (context) -->
+        <Entity>
+          <TypeId>tm.Entity.Process</TypeId>
+          <Guid>p0000001-0000-0000-0000-000000000000</Guid>
+          <Header>Sistem Manajemen Surat Kelurahan</Header>
+          <Left>300</Left>
+          <Top>330</Top>
+          <Width>200</Width>
+          <Height>120</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType>
+              <Name>Code Type</Name>
+              <Value>Unmanaged</Value>
+            </anyType>
+            <anyType>
+              <Name>Sanitizes Data</Name>
+              <Value>true</Value>
+            </anyType>
+            <anyType>
+              <Name>Runs As</Name>
+              <Value>Low</Value>
+            </anyType>
+          </Properties>
+        </Entity>
+
+        <!-- Data Store: MySQL Database -->
+        <Entity>
+          <TypeId>tm.Entity.DataStore</TypeId>
+          <Guid>ds000001-0000-0000-0000-000000000000</Guid>
+          <Header>MySQL Database</Header>
+          <Left>300</Left>
+          <Top>570</Top>
+          <Width>200</Width>
+          <Height>75</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType>
+              <Name>Stores Credentials</Name>
+              <Value>true</Value>
+            </anyType>
+            <anyType>
+              <Name>Encrypted</Name>
+              <Value>false</Value>
+            </anyType>
+            <anyType>
+              <Name>SQL</Name>
+              <Value>true</Value>
+            </anyType>
+            <anyType>
+              <Name>Stores Log Data</Name>
+              <Value>true</Value>
+            </anyType>
+          </Properties>
+        </Entity>
+
+      </Entities>
+
+      <Lines>
+
+        <!-- Admin -> Sistem -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f0000001-0000-0000-0000-000000000000</Guid>
+          <Header>Request Admin (HTTPS)</Header>
+          <SourceGuid>e0000001-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>p0000001-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType>
+              <Name>Transport</Name>
+              <Value>HTTPS</Value>
+            </anyType>
+            <anyType>
+              <Name>Authentication</Name>
+              <Value>Session-based</Value>
+            </anyType>
+            <anyType>
+              <Name>Cookies</Name>
+              <Value>true</Value>
+            </anyType>
+          </Properties>
+        </Line>
+
+        <!-- Staff -> Sistem -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f0000002-0000-0000-0000-000000000000</Guid>
+          <Header>Request Staff (HTTPS)</Header>
+          <SourceGuid>e0000002-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>p0000001-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType>
+              <Name>Transport</Name>
+              <Value>HTTPS</Value>
+            </anyType>
+            <anyType>
+              <Name>Authentication</Name>
+              <Value>Session-based</Value>
+            </anyType>
+            <anyType>
+              <Name>Cookies</Name>
+              <Value>true</Value>
+            </anyType>
+          </Properties>
+        </Line>
+
+        <!-- Lurah -> Sistem -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f0000003-0000-0000-0000-000000000000</Guid>
+          <Header>Request Lurah (HTTPS)</Header>
+          <SourceGuid>e0000003-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>p0000001-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType>
+              <Name>Transport</Name>
+              <Value>HTTPS</Value>
+            </anyType>
+            <anyType>
+              <Name>Authentication</Name>
+              <Value>Session-based</Value>
+            </anyType>
+          </Properties>
+        </Line>
+
+        <!-- Sistem -> Admin (Response) -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f0000004-0000-0000-0000-000000000000</Guid>
+          <Header>Response / Laporan</Header>
+          <SourceGuid>p0000001-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>e0000001-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType>
+              <Name>Transport</Name>
+              <Value>HTTPS</Value>
+            </anyType>
+          </Properties>
+        </Line>
+
+        <!-- Sistem -> Staff (Response) -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f0000005-0000-0000-0000-000000000000</Guid>
+          <Header>Response / Surat / Notifikasi</Header>
+          <SourceGuid>p0000001-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>e0000002-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType>
+              <Name>Transport</Name>
+              <Value>HTTPS</Value>
+            </anyType>
+          </Properties>
+        </Line>
+
+        <!-- Sistem -> Lurah (Response) -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f0000006-0000-0000-0000-000000000000</Guid>
+          <Header>Response / Disposisi / Notifikasi</Header>
+          <SourceGuid>p0000001-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>e0000003-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType>
+              <Name>Transport</Name>
+              <Value>HTTPS</Value>
+            </anyType>
+          </Properties>
+        </Line>
+
+        <!-- Sistem <-> DB -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f0000007-0000-0000-0000-000000000000</Guid>
+          <Header>Baca / Tulis Data (SQL)</Header>
+          <SourceGuid>p0000001-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>ds000001-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType>
+              <Name>Transport</Name>
+              <Value>TCP</Value>
+            </anyType>
+            <anyType>
+              <Name>Authentication</Name>
+              <Value>Database Auth</Value>
+            </anyType>
+          </Properties>
+        </Line>
+
+      </Lines>
+
+      <Borders>
+
+        <!-- Trust Boundary: Internet Zone -->
+        <Border>
+          <TypeId>tm.Boundary.BoxBoundary</TypeId>
+          <Guid>b0000001-0000-0000-0000-000000000000</Guid>
+          <Header>Internet / Browser Zone</Header>
+          <Left>50</Left>
+          <Top>70</Top>
+          <Width>720</Width>
+          <Height>160</Height>
+        </Border>
+
+        <!-- Trust Boundary: Web App Zone -->
+        <Border>
+          <TypeId>tm.Boundary.BoxBoundary</TypeId>
+          <Guid>b0000002-0000-0000-0000-000000000000</Guid>
+          <Header>Web Application Zone (Apache + Laravel)</Header>
+          <Left>200</Left>
+          <Top>280</Top>
+          <Width>400</Width>
+          <Height>220</Height>
+        </Border>
+
+        <!-- Trust Boundary: Database Zone -->
+        <Border>
+          <TypeId>tm.Boundary.BoxBoundary</TypeId>
+          <Guid>b0000003-0000-0000-0000-000000000000</Guid>
+          <Header>Database Zone (MySQL Server)</Header>
+          <Left>200</Left>
+          <Top>520</Top>
+          <Width>400</Width>
+          <Height>160</Height>
+        </Border>
+
+      </Borders>
+
+    </DrawingSurfaceModel>
+
+    <!-- =========================================================== -->
+    <!--  DIAGRAM 2: DFD Level 1 - Detail Proses                      -->
+    <!-- =========================================================== -->
+    <DrawingSurfaceModel>
+      <Guid>d0000002-0000-0000-0000-000000000000</Guid>
+      <Header>Level 1 - DFD Detail Proses</Header>
+      <Zoom>1</Zoom>
+      <MasterSnap>8</MasterSnap>
+      <ShowGrid>false</ShowGrid>
+
+      <Entities>
+
+        <!-- ── External Entities ─────────────────────────────── -->
+
+        <Entity>
+          <TypeId>tm.Entity.ExternalInteractor</TypeId>
+          <Guid>e1000001-0000-0000-0000-000000000000</Guid>
+          <Header>Admin</Header>
+          <Left>80</Left>
+          <Top>120</Top>
+          <Width>100</Width>
+          <Height>75</Height>
+          <OutOfScope>false</OutOfScope>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.ExternalInteractor</TypeId>
+          <Guid>e1000002-0000-0000-0000-000000000000</Guid>
+          <Header>Staff</Header>
+          <Left>400</Left>
+          <Top>120</Top>
+          <Width>100</Width>
+          <Height>75</Height>
+          <OutOfScope>false</OutOfScope>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.ExternalInteractor</TypeId>
+          <Guid>e1000003-0000-0000-0000-000000000000</Guid>
+          <Header>Lurah</Header>
+          <Left>720</Left>
+          <Top>120</Top>
+          <Width>100</Width>
+          <Height>75</Height>
+          <OutOfScope>false</OutOfScope>
+        </Entity>
+
+        <!-- ── Processes ─────────────────────────────────────── -->
+
+        <Entity>
+          <TypeId>tm.Entity.Process</TypeId>
+          <Guid>p1000001-0000-0000-0000-000000000000</Guid>
+          <Header>1.0 Autentikasi &amp; Sesi</Header>
+          <Left>80</Left>
+          <Top>320</Top>
+          <Width>160</Width>
+          <Height>80</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>Sanitizes Data</Name><Value>true</Value></anyType>
+            <anyType><Name>Runs As</Name><Value>Low</Value></anyType>
+          </Properties>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.Process</TypeId>
+          <Guid>p1000002-0000-0000-0000-000000000000</Guid>
+          <Header>2.0 Manajemen Pengguna</Header>
+          <Left>320</Left>
+          <Top>320</Top>
+          <Width>160</Width>
+          <Height>80</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>Sanitizes Data</Name><Value>true</Value></anyType>
+            <anyType><Name>Runs As</Name><Value>Low</Value></anyType>
+          </Properties>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.Process</TypeId>
+          <Guid>p1000003-0000-0000-0000-000000000000</Guid>
+          <Header>3.0 Manajemen Penduduk</Header>
+          <Left>560</Left>
+          <Top>320</Top>
+          <Width>160</Width>
+          <Height>80</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>Sanitizes Data</Name><Value>true</Value></anyType>
+            <anyType><Name>Runs As</Name><Value>Low</Value></anyType>
+          </Properties>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.Process</TypeId>
+          <Guid>p1000004-0000-0000-0000-000000000000</Guid>
+          <Header>4.0 Pembuatan Surat</Header>
+          <Left>800</Left>
+          <Top>320</Top>
+          <Width>160</Width>
+          <Height>80</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>Sanitizes Data</Name><Value>true</Value></anyType>
+            <anyType><Name>Runs As</Name><Value>Low</Value></anyType>
+          </Properties>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.Process</TypeId>
+          <Guid>p1000005-0000-0000-0000-000000000000</Guid>
+          <Header>5.0 Arsip Surat</Header>
+          <Left>80</Left>
+          <Top>540</Top>
+          <Width>160</Width>
+          <Height>80</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>Sanitizes Data</Name><Value>true</Value></anyType>
+          </Properties>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.Process</TypeId>
+          <Guid>p1000006-0000-0000-0000-000000000000</Guid>
+          <Header>6.0 Disposisi Surat</Header>
+          <Left>320</Left>
+          <Top>540</Top>
+          <Width>160</Width>
+          <Height>80</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>Sanitizes Data</Name><Value>true</Value></anyType>
+          </Properties>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.Process</TypeId>
+          <Guid>p1000007-0000-0000-0000-000000000000</Guid>
+          <Header>7.0 Notifikasi (SSE)</Header>
+          <Left>560</Left>
+          <Top>540</Top>
+          <Width>160</Width>
+          <Height>80</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>Sanitizes Data</Name><Value>true</Value></anyType>
+          </Properties>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.Process</TypeId>
+          <Guid>p1000008-0000-0000-0000-000000000000</Guid>
+          <Header>8.0 Dashboard &amp; Laporan</Header>
+          <Left>800</Left>
+          <Top>540</Top>
+          <Width>160</Width>
+          <Height>80</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>Sanitizes Data</Name><Value>true</Value></anyType>
+          </Properties>
+        </Entity>
+
+        <!-- ── Data Stores ────────────────────────────────────── -->
+
+        <Entity>
+          <TypeId>tm.Entity.DataStore</TypeId>
+          <Guid>ds100001-0000-0000-0000-000000000000</Guid>
+          <Header>DB: users</Header>
+          <Left>80</Left>
+          <Top>780</Top>
+          <Width>160</Width>
+          <Height>60</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>Stores Credentials</Name><Value>true</Value></anyType>
+            <anyType><Name>Encrypted</Name><Value>false</Value></anyType>
+            <anyType><Name>SQL</Name><Value>true</Value></anyType>
+          </Properties>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.DataStore</TypeId>
+          <Guid>ds100002-0000-0000-0000-000000000000</Guid>
+          <Header>DB: letters</Header>
+          <Left>320</Left>
+          <Top>780</Top>
+          <Width>160</Width>
+          <Height>60</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>Stores Credentials</Name><Value>false</Value></anyType>
+            <anyType><Name>SQL</Name><Value>true</Value></anyType>
+            <anyType><Name>Stores Log Data</Name><Value>true</Value></anyType>
+          </Properties>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.DataStore</TypeId>
+          <Guid>ds100003-0000-0000-0000-000000000000</Guid>
+          <Header>DB: penduduks</Header>
+          <Left>560</Left>
+          <Top>780</Top>
+          <Width>160</Width>
+          <Height>60</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>Stores Credentials</Name><Value>false</Value></anyType>
+            <anyType><Name>SQL</Name><Value>true</Value></anyType>
+          </Properties>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.DataStore</TypeId>
+          <Guid>ds100004-0000-0000-0000-000000000000</Guid>
+          <Header>DB: letter_dispositions</Header>
+          <Left>800</Left>
+          <Top>780</Top>
+          <Width>180</Width>
+          <Height>60</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>SQL</Name><Value>true</Value></anyType>
+          </Properties>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.DataStore</TypeId>
+          <Guid>ds100005-0000-0000-0000-000000000000</Guid>
+          <Header>DB: letter_notifications</Header>
+          <Left>1040</Left>
+          <Top>780</Top>
+          <Width>200</Width>
+          <Height>60</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>SQL</Name><Value>true</Value></anyType>
+          </Properties>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.DataStore</TypeId>
+          <Guid>ds100006-0000-0000-0000-000000000000</Guid>
+          <Header>File Storage (storage/app)</Header>
+          <Left>1040</Left>
+          <Top>320</Top>
+          <Width>200</Width>
+          <Height>60</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>Stores Credentials</Name><Value>false</Value></anyType>
+            <anyType><Name>Encrypted</Name><Value>false</Value></anyType>
+          </Properties>
+        </Entity>
+
+        <Entity>
+          <TypeId>tm.Entity.DataStore</TypeId>
+          <Guid>ds100007-0000-0000-0000-000000000000</Guid>
+          <Header>Session / Cache</Header>
+          <Left>1040</Left>
+          <Top>540</Top>
+          <Width>200</Width>
+          <Height>60</Height>
+          <OutOfScope>false</OutOfScope>
+          <Properties>
+            <anyType><Name>Stores Credentials</Name><Value>true</Value></anyType>
+            <anyType><Name>Encrypted</Name><Value>true</Value></anyType>
+          </Properties>
+        </Entity>
+
+      </Entities>
+
+      <Lines>
+
+        <!-- === Autentikasi (1.0) === -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000001-0000-0000-0000-000000000000</Guid>
+          <Header>Credentials (email + password)</Header>
+          <SourceGuid>e1000001-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>p1000001-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>HTTPS</Value></anyType>
+            <anyType><Name>Authentication</Name><Value>None (pre-auth)</Value></anyType>
+            <anyType><Name>Cookies</Name><Value>false</Value></anyType>
+          </Properties>
+        </Line>
+
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000002-0000-0000-0000-000000000000</Guid>
+          <Header>Credentials (email + password)</Header>
+          <SourceGuid>e1000002-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>p1000001-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>HTTPS</Value></anyType>
+          </Properties>
+        </Line>
+
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000003-0000-0000-0000-000000000000</Guid>
+          <Header>Credentials (email + password)</Header>
+          <SourceGuid>e1000003-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>p1000001-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>HTTPS</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- 1.0 -> DB users (verifikasi login) -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000004-0000-0000-0000-000000000000</Guid>
+          <Header>Query Verifikasi User + Role</Header>
+          <SourceGuid>p1000001-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>ds100001-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>TCP</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- 1.0 -> Session Cache -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000005-0000-0000-0000-000000000000</Guid>
+          <Header>Simpan Session Token</Header>
+          <SourceGuid>p1000001-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>ds100007-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>TCP</Value></anyType>
+            <anyType><Name>Encrypted</Name><Value>true</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- === Manajemen Pengguna (2.0) === -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000006-0000-0000-0000-000000000000</Guid>
+          <Header>Data Pengguna Baru / Update</Header>
+          <SourceGuid>e1000001-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>p1000002-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>HTTPS</Value></anyType>
+            <anyType><Name>Authentication</Name><Value>Session Cookie</Value></anyType>
+          </Properties>
+        </Line>
+
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000007-0000-0000-0000-000000000000</Guid>
+          <Header>CRUD Data User (name, email, role, NIP)</Header>
+          <SourceGuid>p1000002-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>ds100001-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>TCP</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- === Manajemen Penduduk (3.0) === -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000008-0000-0000-0000-000000000000</Guid>
+          <Header>Data Penduduk (NIK, nama, KK, dll)</Header>
+          <SourceGuid>e1000002-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>p1000003-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>HTTPS</Value></anyType>
+            <anyType><Name>Authentication</Name><Value>Session Cookie</Value></anyType>
+          </Properties>
+        </Line>
+
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000009-0000-0000-0000-000000000000</Guid>
+          <Header>CRUD Data Penduduk + Import CSV</Header>
+          <SourceGuid>p1000003-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>ds100003-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>TCP</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- === Pembuatan Surat (4.0) === -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000010-0000-0000-0000-000000000000</Guid>
+          <Header>Form Surat (template slug + data penduduk)</Header>
+          <SourceGuid>e1000002-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>p1000004-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>HTTPS</Value></anyType>
+            <anyType><Name>Authentication</Name><Value>Session Cookie</Value></anyType>
+            <anyType><Name>Cookies</Name><Value>true</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- 4.0 -> DB letters -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000011-0000-0000-0000-000000000000</Guid>
+          <Header>Simpan Surat Finalized (nomor, jenis, status)</Header>
+          <SourceGuid>p1000004-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>ds100002-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>TCP</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- 4.0 -> File Storage -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000012-0000-0000-0000-000000000000</Guid>
+          <Header>Upload File Dokumen Surat (PDF/DOCX)</Header>
+          <SourceGuid>p1000004-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>ds100006-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>File I/O</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- === Arsip Surat (5.0) === -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000013-0000-0000-0000-000000000000</Guid>
+          <Header>Request Lihat / Cari Arsip Surat</Header>
+          <SourceGuid>e1000002-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>p1000005-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>HTTPS</Value></anyType>
+            <anyType><Name>Authentication</Name><Value>Session Cookie</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- 5.0 <-> DB letters -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000014-0000-0000-0000-000000000000</Guid>
+          <Header>Query Arsip (filter, pagination)</Header>
+          <SourceGuid>p1000005-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>ds100002-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>TCP</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- 5.0 -> File Storage (streaming file) -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000015-0000-0000-0000-000000000000</Guid>
+          <Header>Baca File Dokumen (stream ke browser)</Header>
+          <SourceGuid>p1000005-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>ds100006-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>File I/O</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- === Disposisi Surat (6.0) === -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000016-0000-0000-0000-000000000000</Guid>
+          <Header>Perintah Disposisi (tujuan staff + catatan)</Header>
+          <SourceGuid>e1000003-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>p1000006-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>HTTPS</Value></anyType>
+            <anyType><Name>Authentication</Name><Value>Session Cookie</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- 6.0 -> DB dispositions -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000017-0000-0000-0000-000000000000</Guid>
+          <Header>Simpan Data Disposisi</Header>
+          <SourceGuid>p1000006-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>ds100004-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>TCP</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- 6.0 -> DB notifications -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000018-0000-0000-0000-000000000000</Guid>
+          <Header>Buat Notifikasi untuk Staff</Header>
+          <SourceGuid>p1000006-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>ds100005-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>TCP</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- === Notifikasi / SSE (7.0) === -->
+        <!-- DB notifications -> 7.0 -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000019-0000-0000-0000-000000000000</Guid>
+          <Header>Poll Notifikasi Belum Dibaca</Header>
+          <SourceGuid>ds100005-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>p1000007-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>TCP</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- 7.0 -> Staff (SSE stream) -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000020-0000-0000-0000-000000000000</Guid>
+          <Header>SSE Stream Notifikasi Real-time</Header>
+          <SourceGuid>p1000007-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>e1000002-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>HTTPS (SSE)</Value></anyType>
+            <anyType><Name>Authentication</Name><Value>Session Cookie</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- 7.0 -> Lurah (SSE stream) -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000021-0000-0000-0000-000000000000</Guid>
+          <Header>SSE Stream Notifikasi Real-time</Header>
+          <SourceGuid>p1000007-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>e1000003-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>HTTPS (SSE)</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- === Dashboard &amp; Laporan (8.0) === -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000022-0000-0000-0000-000000000000</Guid>
+          <Header>Request Dashboard / Export Excel</Header>
+          <SourceGuid>e1000001-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>p1000008-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>HTTPS</Value></anyType>
+            <anyType><Name>Authentication</Name><Value>Session Cookie</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- 8.0 -> DB letters (agregasi) -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000023-0000-0000-0000-000000000000</Guid>
+          <Header>Query Agregasi Surat (rekap bulanan)</Header>
+          <SourceGuid>p1000008-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>ds100002-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>TCP</Value></anyType>
+          </Properties>
+        </Line>
+
+        <!-- 8.0 -> Admin (response laporan) -->
+        <Line>
+          <TypeId>tm.Line.DataFlow</TypeId>
+          <Guid>f1000024-0000-0000-0000-000000000000</Guid>
+          <Header>Data Laporan / File Excel</Header>
+          <SourceGuid>p1000008-0000-0000-0000-000000000000</SourceGuid>
+          <TargetGuid>e1000001-0000-0000-0000-000000000000</TargetGuid>
+          <Properties>
+            <anyType><Name>Transport</Name><Value>HTTPS</Value></anyType>
+          </Properties>
+        </Line>
+
+      </Lines>
+
+      <Borders>
+
+        <!-- Trust Boundary: Internet / Browser -->
+        <Border>
+          <TypeId>tm.Boundary.BoxBoundary</TypeId>
+          <Guid>b1000001-0000-0000-0000-000000000000</Guid>
+          <Header>Internet / Browser Zone</Header>
+          <Left>30</Left>
+          <Top>70</Top>
+          <Width>860</Width>
+          <Height>170</Height>
+        </Border>
+
+        <!-- Trust Boundary: Web Application (Laravel) -->
+        <Border>
+          <TypeId>tm.Boundary.BoxBoundary</TypeId>
+          <Guid>b1000002-0000-0000-0000-000000000000</Guid>
+          <Header>Web Application Zone (Apache + Laravel + PHP)</Header>
+          <Left>30</Left>
+          <Top>280</Top>
+          <Width>1000</Width>
+          <Height>400</Height>
+        </Border>
+
+        <!-- Trust Boundary: Database & Storage -->
+        <Border>
+          <TypeId>tm.Boundary.BoxBoundary</TypeId>
+          <Guid>b1000003-0000-0000-0000-000000000000</Guid>
+          <Header>Database &amp; Storage Zone (MySQL + File System)</Header>
+          <Left>30</Left>
+          <Top>730</Top>
+          <Width>1280</Width>
+          <Height>180</Height>
+        </Border>
+
+        <!-- Trust Boundary: File System (terpisah dari DB) -->
+        <Border>
+          <TypeId>tm.Boundary.BoxBoundary</TypeId>
+          <Guid>b1000004-0000-0000-0000-000000000000</Guid>
+          <Header>File System Zone</Header>
+          <Left>1010</Left>
+          <Top>280</Top>
+          <Width>270</Width>
+          <Height>360</Height>
+        </Border>
+
+      </Borders>
+
+    </DrawingSurfaceModel>
+
+  </DrawingSurfaceList>
+
+  <ThreatList />
+
+</ThreatModel>
