@@ -146,6 +146,10 @@ class PendudukController extends Controller
     }
 
     public function import(Request $request)
+            // Tambahan: Batasi Content-Length maksimal 10MB (10485760 bytes)
+            if ($request->server('CONTENT_LENGTH') !== null && (int)$request->server('CONTENT_LENGTH') > 10485760) {
+                return back()->with('error', '❌ Upload Gagal: Ukuran file melebihi 10MB (server limit)');
+            }
     {
         // STEP 1: Validasi file upload
         $validator = Validator::make($request->all(), [

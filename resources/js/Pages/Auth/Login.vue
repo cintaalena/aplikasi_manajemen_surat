@@ -12,8 +12,10 @@ defineProps({
     status: {
         type: String,
     },
-    // SECURITY (A07): staffNames prop removed — exposing all active user names
-    // in the login page enables username enumeration. Use free-text input instead.
+    staffNames: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const adminMode = ref(false);
@@ -71,16 +73,31 @@ const submit = () => {
             <div>
                 <InputLabel for="name" value="Nama" />
 
-                <!-- SECURITY (A07): Plain text input for all roles.
-                     Dropdown was removed to prevent username enumeration. -->
+                <!-- Staff: dropdown dari daftar nama aktif -->
+                <select
+                    v-if="!adminMode"
+                    id="name"
+                    v-model="form.name"
+                    required
+                    autofocus
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                >
+                    <option value="" disabled>-- Pilih Nama --</option>
+                    <option v-for="staffName in staffNames" :key="staffName" :value="staffName">
+                        {{ staffName }}
+                    </option>
+                </select>
+
+                <!-- Admin: input teks bebas -->
                 <TextInput
+                    v-else
                     id="name"
                     type="text"
                     class="mt-1 block w-full"
                     v-model="form.name"
                     required
                     autofocus
-                    :placeholder="adminMode ? 'Username admin' : 'Masukkan nama Anda'"
+                    placeholder="Username admin"
                     autocomplete="username"
                 />
 

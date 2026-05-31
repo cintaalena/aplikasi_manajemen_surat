@@ -37,15 +37,12 @@ class User extends Authenticatable
         'last_failed_login_at'   => 'datetime',
     ];
 
-    // ── SECURITY (A07): Account Lockout Constants ───────────────────────────
-    /** Maximum consecutive failures before lockout */
+    
     const MAX_LOGIN_ATTEMPTS = 10;
-    /** Lockout duration in minutes */
+    
     const LOCKOUT_DURATION_MINUTES = 15;
 
-    /**
-     * Check whether this account is currently locked out.
-     */
+   
     public function isLockedOut(): bool
     {
         return $this->locked_until !== null && now()->lt($this->locked_until);
