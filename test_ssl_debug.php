@@ -15,7 +15,7 @@ if (!$s) { echo "Connect GAGAL: $es\n"; exit(1); }
 fgets($s); fwrite($s, "EHLO test.local\r\n");
 while(($l=fgets($s))!==false){ if($l[3]===' ') break; }
 fwrite($s,"STARTTLS\r\n"); fgets($s);
-$ok = @stream_socket_enable_crypto($s, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+$ok = @stream_socket_enable_crypto($s, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT);
 echo "TLS (cafile eksplisit): " . ($ok===true ? "BERHASIL" : "GAGAL") . "\n";
 fclose($s);
 

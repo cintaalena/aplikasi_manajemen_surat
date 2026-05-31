@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,15 +15,17 @@ class AuthenticatedSessionController extends Controller
 {
     /**
      * Display the login view.
-     *
-     * SECURITY (A07): Staff names are NO LONGER sent to the login page.
-     * Exposing the full list of active user names enables username enumeration
-     * attacks. Use a plain text input instead.
      */
     public function create(): Response
     {
+        $staffNames = User::where('is_active', true)
+            ->where('role', '!=', 'admin')
+            ->orderBy('name')
+            ->pluck('name');
+
         return Inertia::render('Auth/Login', [
-            'status' => session('status'),
+            'status'     => session('status'),
+            'staffNames' => $staffNames,
         ]);
     }
 

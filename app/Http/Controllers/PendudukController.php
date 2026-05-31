@@ -357,6 +357,10 @@ class PendudukController extends Controller
 
     public function import(Request $request)
     {
+        // Tambahan: Batasi Content-Length maksimal 10MB (10485760 bytes)
+        if ($request->server('CONTENT_LENGTH') !== null && (int)$request->server('CONTENT_LENGTH') > 10485760) {
+            return back()->with('error', '❌ Upload Gagal: Ukuran file melebihi 10MB (server limit)');
+        }
         // STEP 1: Validasi file upload
         $validator = Validator::make($request->all(), [
             'file' => ['required', 'file', 'extensions:csv,txt,xlsx,xls', 'max:10240'], // 10MB
@@ -485,7 +489,12 @@ class PendudukController extends Controller
                     continue;
                 }
 
+
                 $data = $this->mapRowToData($row, $header, $headerMap);
+                // Set status_kehidupan default 'Hidup' jika tidak ada
+                if (empty($data['status_kehidupan'])) {
+                    $data['status_kehidupan'] = 'Hidup';
+                }
 
                 // Validasi data minimal
                 if (empty($data['kode_keluarga'])) {
@@ -506,12 +515,12 @@ class PendudukController extends Controller
                     continue;
                 }
 
-                // Check for existing by NIK or kode_keluarga + nama
+
+                // Check for existing by NIK (hash) atau kode_keluarga+nama
                 $existing = null;
                 if (!empty($data['nik'])) {
-                    $existing = Penduduk::where('nik', $data['nik'])->first();
+                    $existing = Penduduk::findByNik($data['nik']);
                 }
-
                 if (!$existing && !empty($data['kode_keluarga']) && !empty($data['nama'])) {
                     $existing = Penduduk::where('kode_keluarga', $data['kode_keluarga'])
                         ->where('nama', $data['nama'])
@@ -519,8 +528,14 @@ class PendudukController extends Controller
                 }
 
                 try {
-                    Penduduk::create($data);
-                    $inserted++;
+                    if ($existing) {
+                        $existing->fill($data);
+                        $existing->save();
+                        $updated++;
+                    } else {
+                        Penduduk::create($data);
+                        $inserted++;
+                    }
                 } catch (\Throwable $e) {
                     $skipped++;
                     if (count($errors) < 5) {
@@ -545,8 +560,8 @@ class PendudukController extends Controller
                 $successMsg .= implode("\n", $errors);
             }
 
-            // penting: paksa reload props index (Inertia)
-            return redirect()->route('penduduk.index')->with('success', $successMsg);
+            // penting: paksa reload props index (Inertia) agar flash message selalu muncul
+            return Inertia::location(route('penduduk.index') . '?success=' . urlencode($successMsg));
 
         } catch (\Throwable $e) {
             DB::rollBack();

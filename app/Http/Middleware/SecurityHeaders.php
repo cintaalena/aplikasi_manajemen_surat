@@ -36,8 +36,14 @@ class SecurityHeaders
             "base-uri 'self'",
             "form-action 'self'",
             "object-src 'none'",  // SECURITY (A05): Block Flash/plugins
-            "upgrade-insecure-requests", // SECURITY (A05): Force HTTPS sub-resources
         ];
+
+        // SECURITY (A05): Only upgrade insecure requests in production (HTTPS environment).
+        // In local HTTP development, this directive would break all XHR/fetch requests
+        // by forcing them to HTTPS (which has no server), making login/navigation fail.
+        if (config('app.env') !== 'local') {
+            $csp[] = "upgrade-insecure-requests";
+        }
         $response->headers->set('Content-Security-Policy', implode('; ', $csp));
 
         // SECURITY: Prevent clickjacking attacks
