@@ -2,6 +2,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Head, useForm, router } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
+import { useFormArrowNav } from '@/composables/useFormArrowNav'
 
 const form = useForm({
   is_kepala_keluarga: false,
@@ -150,6 +151,8 @@ const toTitleCase = (str) => {
   if (!str) return str
   return String(str).replace(/\S+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1))
 }
+
+const { handleFormArrowNav } = useFormArrowNav()
 </script>
 
 <template>
@@ -176,7 +179,7 @@ const toTitleCase = (str) => {
         </div>
 
         <div class="rounded-2xl border border-green-100 bg-white p-6 shadow-sm">
-          <form @submit.prevent="submitPenduduk" class="space-y-6">
+          <form @submit.prevent="submitPenduduk" @keydown="handleFormArrowNav" class="space-y-6">
             <div class="rounded-2xl border border-gray-200 p-4">
               <label class="flex items-center gap-3">
                 <input

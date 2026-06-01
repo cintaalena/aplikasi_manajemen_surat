@@ -53,10 +53,10 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
     <table class="w-full text-center">
         <tbody>
             <tr>
-            <td class="w-20">
-                <img :src="asset('images/logo_kop.png')" class="w-16 mx-auto" style="mix-blend-mode: multiply;" />
+            <td class="w-24 align-middle">
+                <img :src="asset('images/logo_kop.png')" class="w-20 mx-auto" style="mix-blend-mode: multiply;" />
             </td>
-            <td>
+            <td class="text-center">
                 <div class="font-bold text-[16px] uppercase">
                 Pemerintah Kota Kupang
                 </div>
@@ -70,6 +70,7 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
                 Jln. Sabu No., Fatubesi - Kupang 85226
                 </div>
             </td>
+            <td class="w-24"></td>
             </tr>
         </tbody>
     </table>

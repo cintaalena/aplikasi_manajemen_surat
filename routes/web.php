@@ -82,9 +82,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('/penduduk/{penduduk}', [PendudukController::class, 'destroy'])->name('penduduk.destroy');
     });
 
-    // Import — admin saja
+    // Import — staff & admin
     Route::post('/penduduk/import', [PendudukController::class, 'import'])
-        ->middleware(['secure.upload', 'role:admin'])
+        ->middleware(['secure.upload', 'role:admin,staff'])
         ->name('penduduk.import');
 
     // ── Template & Finalize Surat — staff & admin saja ─────────────────────

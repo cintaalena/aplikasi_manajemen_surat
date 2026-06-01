@@ -7,12 +7,21 @@ const props = defineProps({
   penduduks: Object,
   filters: Object,
   dusunOptions: Array,
+  importSuccess: { type: String, default: null },
+  importError: { type: String, default: null },
 })
 
 const page = usePage()
 
-const flashSuccess = computed(() => page.props.flash?.success)
-const flashError = computed(() => page.props.flash?.error)
+const importMessage    = ref(null)
+const importMessageErr = ref(null)
+
+// Tangkap pesan langsung dari prop — berlaku untuk full reload maupun XHR redirect
+watch(() => props.importSuccess, (val) => { if (val) importMessage.value = val }, { immediate: true })
+watch(() => props.importError,   (val) => { if (val) importMessageErr.value = val }, { immediate: true })
+
+const flashSuccess = computed(() => importMessage.value    || page.props.flash?.success || null)
+const flashError   = computed(() => importMessageErr.value || page.props.flash?.error   || null)
 
 const userRole = computed(() => page.props.auth?.user?.role ?? 'staff')
 const canEdit   = computed(() => userRole.value === 'staff' || userRole.value === 'admin')
@@ -116,6 +125,8 @@ const importCsv = () => {
 
   importing.value = true
   uploadError.value = ''
+  importMessage.value    = null
+  importMessageErr.value = null
 
   const fd = new FormData()
   fd.append('file', file)

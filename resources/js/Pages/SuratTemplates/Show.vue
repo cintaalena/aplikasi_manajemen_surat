@@ -201,16 +201,92 @@ const incrementCounter = async (templateSlug) => {
 
 const addPengikut = () => {
   form.pengikut.push({
+    penduduk_id: null,
     nama: '',
     nik: '',
     tempatLahir: '',
     tanggalLahir: '',
     hubungan: '',
   })
+  // siapkan state autocomplete untuk entri baru
+  pengikutSuggestions.value.push([])
+  showPengikutDropdown.value.push(false)
+  pengikutSelected.value.push(false)
+  pengikutSearchError.value.push('')
 }
 
 const removePengikut = (index) => {
   form.pengikut.splice(index, 1)
+  pengikutSuggestions.value.splice(index, 1)
+  showPengikutDropdown.value.splice(index, 1)
+  pengikutSelected.value.splice(index, 1)
+  pengikutSearchError.value.splice(index, 1)
+}
+
+// ── Autocomplete per-pengikut ────────────────────────────────────────────────
+const pengikutSuggestions    = ref([])   // array of arrays
+const showPengikutDropdown   = ref([])   // array of booleans
+const pengikutSelected       = ref([])   // array of booleans
+const pengikutSearchError    = ref([])   // array of strings
+const pengikutSearchTimers   = {}
+
+const applyPengikutFromDb = (index, p) => {
+  const item = form.pengikut[index]
+  if (!item) return
+  const jkMap = { 'L': 'Laki-laki', 'P': 'Perempuan' }
+  item.penduduk_id  = p.id ?? null
+  item.nama         = p.nama ?? ''
+  item.nik          = p.nik ?? ''
+  item.tempatLahir  = p.tempat_lahir ?? ''
+  item.tanggalLahir = p.tanggal_lahir ?? ''
+  pengikutSelected.value[index]      = true
+  showPengikutDropdown.value[index]  = false
+  pengikutSuggestions.value[index]   = []
+  pengikutSearchError.value[index]   = ''
+}
+
+const searchPengikutByName = async (index, keyword) => {
+  const q = String(keyword || '').trim()
+  if (q.length < 2) {
+    pengikutSuggestions.value[index]  = []
+    showPengikutDropdown.value[index] = false
+    return
+  }
+  try {
+    const res = await fetch(`/penduduk/search-by-name?q=${encodeURIComponent(q)}`, {
+      headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'include',
+    })
+    const data = await res.json().catch(() => null)
+    if (!res.ok) throw new Error(data?.message || 'Gagal mencari data penduduk')
+    pengikutSuggestions.value[index]  = Array.isArray(data) ? data : []
+    showPengikutDropdown.value[index] = pengikutSuggestions.value[index].length > 0
+    if (pengikutSuggestions.value[index].length === 0) pengikutSelected.value[index] = false
+  } catch (e) {
+    pengikutSuggestions.value[index]  = []
+    showPengikutDropdown.value[index] = false
+    pengikutSearchError.value[index]  = e.message || 'Gagal mencari data penduduk'
+  }
+}
+
+const onPengikutNamaInput = (index, value) => {
+  const item = form.pengikut[index]
+  if (!item) return
+  item.nama = value
+  item.penduduk_id = null
+  pengikutSelected.value[index] = false
+  pengikutSearchError.value[index] = ''
+  clearTimeout(pengikutSearchTimers[index])
+  if (!value || String(value).trim().length < 2) {
+    pengikutSuggestions.value[index]  = []
+    showPengikutDropdown.value[index] = false
+    return
+  }
+  pengikutSearchTimers[index] = setTimeout(() => searchPengikutByName(index, value), 300)
+}
+
+const closePengikutDropdown = (index) => {
+  showPengikutDropdown.value[index] = false
 }
 
 // ── Cascading Wilayah (untuk Surat Pindah) ──────────────────────────────────
@@ -348,7 +424,9 @@ const clearPendudukSelection = () => {
 const pendudukLocked = computed(() => pendudukSelected.value)
 const ayahLocked     = computed(() => form.ayah_id !== null)
 const ibuLocked      = computed(() => form.ibu_id !== null)
-const ortuAddrLocked = computed(() => form.ayah_id !== null || form.ibu_id !== null)
+// Field pekerjaan/alamat/rt/rw/kelurahan/kecamatan hanya terkunci jika ayah ada di database.
+// Jika hanya ibu yang ada di database, field-field ini tetap bisa diisi manual.
+const ortuAddrLocked = computed(() => form.ayah_id !== null)
 
 const resetAyah = () => {
   form.namaAyah = ''
@@ -598,6 +676,20 @@ const validatePendudukSelectionBeforePrint = () => {
     throw new Error('nama ini tidak terdaftar di database penduduk kelurahan fatubesi')
   }
 
+  // Validasi pengikut (hanya untuk surat pindah)
+  if (isPindah.value && form.pengikut && form.pengikut.length > 0) {
+    for (let i = 0; i < form.pengikut.length; i++) {
+      const item = form.pengikut[i]
+      const namaItem = String(item.nama || '').trim()
+      if (!namaItem) {
+        throw new Error(`Nama Pengikut ${i + 1} wajib diisi`)
+      }
+      if (!item.penduduk_id || !pengikutSelected.value[i]) {
+        throw new Error(`Pengikut ${i + 1} (${namaItem}) tidak terdaftar di database penduduk Kelurahan Fatubesi`)
+      }
+    }
+  }
+
   return true
 }
 
@@ -795,6 +887,20 @@ const removeKelDok = async (key) => {
   kelDokState[key].id  = null
   kelDokState[key].url = null
   kelDokState[key].error = ''
+}
+
+const validateOrtuKelahiranBeforePrint = () => {
+  if (!isKelahiran.value) return true
+  const hasAyah = form.ayah_id !== null
+  const hasIbu  = form.ibu_id  !== null
+  if (!hasAyah && !hasIbu) {
+    throw new Error(
+      'Data orang tua tidak ditemukan di database.\n\n' +
+      'Minimal salah satu (ayah atau ibu) harus terdaftar sebagai penduduk Kelurahan Fatubesi.\n\n' +
+      'Silakan ketik nama ayah atau ibu lalu pilih dari daftar yang muncul.'
+    )
+  }
+  return true
 }
 
 const validateDokKelahiranBeforePrint = () => {
@@ -1131,6 +1237,16 @@ const finalizeLetter = async (templateSlug) => {
   })
 
   if (!res.ok) {
+    if (res.status === 409) {
+      // Duplicate no_surat — backend sudah majukan counter, beri tahu frontend
+      const errData = await res.json().catch(() => ({}))
+      if (errData.duplicate) {
+        const e = new Error(errData.message || 'Nomor surat sudah digunakan.')
+        e.isDuplicate = true
+        e.nextNoSurat = errData.nextNoSurat ?? null
+        throw e
+      }
+    }
     let errMsg = `Server error ${res.status}`
     try {
       const errData = await res.json()
@@ -1165,6 +1281,13 @@ const printNow = async () => {
   }
 
   try {
+    validateOrtuKelahiranBeforePrint()
+  } catch (e) {
+    alert(e.message)
+    return
+  }
+
+  try {
     validateDokDomisiliBeforePrint()
   } catch (e) {
     alert(e.message)
@@ -1195,12 +1318,29 @@ const printNow = async () => {
   showPreview.value = true
   printMode.value = true
   await nextTick()
+
+  // Tunggu semua gambar di print sheet selesai diunduh sebelum window.print()
+  // (nextTick hanya tunggu DOM Vue, bukan resource network seperti gambar)
+  if (printSheetRef.value) {
+    const imgs = Array.from(printSheetRef.value.querySelectorAll('img'))
+    const pending = imgs.filter(img => !img.complete)
+    if (pending.length > 0) {
+      await Promise.all(
+        pending.map(img => new Promise(resolve => {
+          img.addEventListener('load',  resolve, { once: true })
+          img.addEventListener('error', resolve, { once: true })
+        }))
+      )
+    }
+  }
+
   window.print()
 }
 
 // Modal sukses setelah finalize berhasil
 const showSuccessModal = ref(false)
 const savedLetter = ref(null) // {id, noSurat}
+const isFinalizing = ref(false)
 
 const confirmFinalize = async (confirmed) => {
   showPrintConfirm.value = false
@@ -1211,15 +1351,38 @@ const confirmFinalize = async (confirmed) => {
     return
   }
 
+  if (isFinalizing.value) return   // cegah double-click / double-submit
+  isFinalizing.value = true
   isPrinting.value = true
   try {
     await finalizeLetter(props.slug)
     router.visit('/dashboard')
   } catch (e) {
     console.error('finalize error:', e)
-    alert(e.message || 'Gagal menyimpan data surat ke arsip. Silakan coba lagi.')
+    if (e.isDuplicate) {
+      const next = e.nextNoSurat ?? null
+      const msg  = next
+        ? `Nomor surat tersebut sudah digunakan oleh surat lain.\n\nNomor surat diubah otomatis ke: ${next}\n\nSilakan tekan tombol "Cetak" lagi untuk mencetak dengan nomor baru.`
+        : (e.message || 'Nomor surat sudah digunakan.')
+      alert(msg)
+      if (next) {
+        form.noSurat = next
+        // Sinkronkan lastCounterSnapshot agar preview nomor konsisten
+        const urutMatch = next.match(/^(\d+)\//)
+        if (urutMatch && lastCounterSnapshot.value) {
+          lastCounterSnapshot.value = {
+            ...lastCounterSnapshot.value,
+            count: parseInt(urutMatch[1]) - 1,
+          }
+        }
+      }
+      // TIDAK buka ulang dialog — user harus tekan Cetak lagi dari form
+    } else {
+      alert(e.message || 'Gagal menyimpan data surat ke arsip. Silakan coba lagi.')
+    }
   } finally {
     isPrinting.value = false
+    isFinalizing.value = false
   }
 }
 </script>
@@ -2610,23 +2773,65 @@ const confirmFinalize = async (confirmed) => {
                   </div>
 
                   <div class="space-y-3">
-                    <div>
-                      <label class="text-xs font-semibold text-gray-700">Nama</label>
-                      <input
-                        v-model="item.nama"
-                        type="text"
-                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                        placeholder="Masukkan nama pengikut"
-                      />
+                    <!-- Nama dengan autocomplete dari database -->
+                    <div class="relative">
+                      <label class="text-xs font-semibold text-gray-700">
+                        Nama
+                        <span class="ml-1 text-xs font-normal text-gray-400">(wajib terdaftar di database)</span>
+                      </label>
+                      <div class="relative mt-1">
+                        <input
+                          :value="item.nama"
+                          @input="onPengikutNamaInput(index, $event.target.value)"
+                          @focus="!pengikutSelected[index] && searchPengikutByName(index, item.nama)"
+                          @blur="() => setTimeout(() => closePengikutDropdown(index), 200)"
+                          type="text"
+                          autocomplete="off"
+                          :class="[
+                            'w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2',
+                            pengikutSelected[index]
+                              ? 'border-green-400 bg-green-50 focus:border-green-400 focus:ring-green-300'
+                              : 'border-gray-200 focus:border-purple-400 focus:ring-purple-400'
+                          ]"
+                          placeholder="Ketik nama pengikut..."
+                        />
+                        <!-- indikator terpilih -->
+                        <span v-if="pengikutSelected[index]" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-green-600 text-sm font-medium">✓ Terdaftar</span>
+                      </div>
+                      <!-- dropdown saran -->
+                      <ul
+                        v-if="showPengikutDropdown[index] && pengikutSuggestions[index]?.length > 0"
+                        class="absolute z-50 mt-1 w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg"
+                        style="max-height:200px"
+                      >
+                        <li
+                          v-for="p in pengikutSuggestions[index]"
+                          :key="p.id"
+                          @mousedown.prevent="applyPengikutFromDb(index, p)"
+                          class="cursor-pointer px-4 py-2 text-sm hover:bg-purple-50"
+                        >
+                          <span class="font-medium">{{ p.nama }}</span>
+                          <span class="ml-2 text-xs text-gray-400">{{ p.nik }}</span>
+                        </li>
+                      </ul>
+                      <!-- pesan tidak ditemukan -->
+                      <p
+                        v-else-if="item.nama && item.nama.length >= 2 && !showPengikutDropdown[index] && pengikutSuggestions[index]?.length === 0 && !pengikutSelected[index]"
+                        class="mt-1 text-xs text-red-600"
+                      >
+                        Nama tidak ditemukan di database penduduk
+                      </p>
+                      <p v-if="pengikutSearchError[index]" class="mt-1 text-xs text-red-600">{{ pengikutSearchError[index] }}</p>
                     </div>
 
                     <div>
-                      <label class="text-xs font-semibold text-gray-700">NIK</label>
+                      <label class="text-xs font-semibold text-gray-700">NIK <span class="font-normal text-gray-400">(otomatis dari database)</span></label>
                       <input
-                        v-model="item.nik"
+                        :value="item.nik"
+                        readonly
                         type="text"
-                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
-                        placeholder="Masukkan NIK pengikut"
+                        class="mt-1 w-full rounded-xl border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed"
+                        placeholder="Terisi otomatis saat nama dipilih"
                       />
                     </div>
 
@@ -2806,11 +3011,11 @@ const confirmFinalize = async (confirmed) => {
           </button>
           <button
             type="button"
-            :disabled="isPrinting"
+            :disabled="isPrinting || isFinalizing"
             class="rounded-xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 transition disabled:opacity-60"
             @click="confirmFinalize(true)"
           >
-            {{ isPrinting ? 'Menyimpan...' : 'Ya, Berhasil Dicetak' }}
+            {{ isFinalizing ? 'Menyimpan...' : 'Ya, Berhasil Dicetak' }}
           </button>
         </div>
       </div>
