@@ -178,6 +178,12 @@ class PendudukController extends Controller
 
         $first = $keluarga->first();
 
+        if (blank($first->kode_keluarga)) {
+            return back()->withErrors([
+                'kepala_keluarga_kode' => 'Kepala keluarga yang dipilih tidak memiliki No. KK yang valid. Perbaiki data kepala keluarga tersebut terlebih dahulu.',
+            ])->withInput();
+        }
+
         $validated['kode_keluarga'] = $first->kode_keluarga;
         $validated['nama_kepala_keluarga'] = $first->nama_kepala_keluarga;
         $validated['alamat'] = $first->alamat;
@@ -272,6 +278,8 @@ class PendudukController extends Controller
                 'status_kehidupan' => $statusKehidupan,
             ],
             'dusunOptions' => $dusunOptions,
+            'importSuccess' => session('success'),
+            'importError'   => session('error'),
         ]);
     }
 
@@ -355,11 +363,21 @@ class PendudukController extends Controller
         }, $filename, $headers);
     }
 
+    /**
+     * Helper: flash pesan ke session lalu paksa full browser reload ke penduduk.index.
+     * Digunakan agar notifikasi terbaca oleh SEMUA role (admin, staff) tanpa masalah timing XHR.
+     */
+    private function importRedirect(string $key, string $message): \Symfony\Component\HttpFoundation\Response
+    {
+        session()->flash($key, $message);
+        return Inertia::location(route('penduduk.index'));
+    }
+
     public function import(Request $request)
     {
         // Tambahan: Batasi Content-Length maksimal 10MB (10485760 bytes)
         if ($request->server('CONTENT_LENGTH') !== null && (int)$request->server('CONTENT_LENGTH') > 10485760) {
-            return back()->with('error', '❌ Upload Gagal: Ukuran file melebihi 10MB (server limit)');
+            return $this->importRedirect('error', '❌ Upload Gagal: Ukuran file melebihi 10MB (server limit)');
         }
         // STEP 1: Validasi file upload
         $validator = Validator::make($request->all(), [
@@ -371,7 +389,7 @@ class PendudukController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return back()->with('error', '❌ Upload Gagal: ' . $validator->errors()->first());
+            return $this->importRedirect('error', '❌ Upload Gagal: ' . $validator->errors()->first());
         }
 
         $file = $request->file('file');
@@ -387,23 +405,23 @@ class PendudukController extends Controller
                 $xlsx = SimpleXLSX::parse($path);
                 if (!$xlsx) {
                     $error = SimpleXLSX::parseError();
-                    return back()->with('error', "❌ Gagal membaca file Excel (.xlsx): {$error}\n\nSolusi: Pastikan file tidak corrupt dan format valid.");
+                    return $this->importRedirect('error', "❌ Gagal membaca file Excel (.xlsx): {$error}\n\nSolusi: Pastikan file tidak corrupt dan format valid.");
                 }
                 $rows = $xlsx->rows();
             } elseif ($extension === 'xls') {
                 if (!class_exists(SimpleXLS::class)) {
-                    return back()->with('error', "❌ Library pembaca .xls tidak tersedia.\n\nSolusi: Simpan ulang file menjadi .xlsx atau .csv lalu upload ulang.");
+                    return $this->importRedirect('error', "❌ Library pembaca .xls tidak tersedia.\n\nSolusi: Simpan ulang file menjadi .xlsx atau .csv lalu upload ulang.");
                 }
                 $xls = SimpleXLS::parse($path);
                 if (!$xls) {
                     $error = SimpleXLS::parseError();
-                    return back()->with('error', "❌ Gagal membaca file Excel (.xls): {$error}\n\nSolusi: Coba save ulang file sebagai .xlsx atau .csv");
+                    return $this->importRedirect('error', "❌ Gagal membaca file Excel (.xls): {$error}\n\nSolusi: Coba save ulang file sebagai .xlsx atau .csv");
                 }
                 $rows = $xls->rows();
             } else {
                 $handle = fopen($path, 'r');
                 if (!$handle) {
-                    return back()->with('error', "❌ Gagal membuka file CSV.\n\nSolusi: Pastikan file CSV tidak sedang dibuka di aplikasi lain.");
+                    return $this->importRedirect('error', "❌ Gagal membuka file CSV.\n\nSolusi: Pastikan file CSV tidak sedang dibuka di aplikasi lain.");
                 }
 
                 $firstLine = fgets($handle);
@@ -423,16 +441,16 @@ class PendudukController extends Controller
                 fclose($handle);
             }
         } catch (\Throwable $e) {
-            return back()->with('error', "❌ Error membaca file '{$filename}': {$e->getMessage()}\n\nSolusi: Coba tutup file di Excel/LibreOffice, lalu upload ulang.");
+            return $this->importRedirect('error', "❌ Error membaca file '{$filename}': {$e->getMessage()}\n\nSolusi: Coba tutup file di Excel/LibreOffice, lalu upload ulang.");
         }
 
         // STEP 3: Validasi file tidak kosong
         if (empty($rows)) {
-            return back()->with('error', "❌ File '{$filename}' kosong atau tidak memiliki data.\n\nSolusi: Pastikan file memiliki minimal 1 baris header dan 1 baris data.");
+            return $this->importRedirect('error', "❌ File '{$filename}' kosong atau tidak memiliki data.\n\nSolusi: Pastikan file memiliki minimal 1 baris header dan 1 baris data.");
         }
 
         if (count($rows) < 2) {
-            return back()->with('error', "❌ File hanya memiliki header tanpa data.\n\nData ditemukan: " . count($rows) . " baris\n\nSolusi: Tambahkan minimal 1 baris data setelah header.");
+            return $this->importRedirect('error', "❌ File hanya memiliki header tanpa data.\n\nData ditemukan: " . count($rows) . " baris\n\nSolusi: Tambahkan minimal 1 baris data setelah header.");
         }
 
         // STEP 4: Validasi header dan mapping
@@ -442,7 +460,7 @@ class PendudukController extends Controller
         // Cek apakah ada kolom yang berhasil dimapping
         if (empty($headerMap)) {
             $headerList = implode(', ', array_slice($header, 0, 12));
-            return back()->with('error', "❌ Tidak ada kolom yang dikenali dari header file.\n\nHeader ditemukan: {$headerList}...\n\nSolusi: Pastikan file memiliki kolom minimal:\n- 'Nama' / 'Nama Anggota Keluarga'\n- 'Kode Keluarga'\n- 'RT', 'RW', 'Dusun'");
+            return $this->importRedirect('error', "❌ Tidak ada kolom yang dikenali dari header file.\n\nHeader ditemukan: {$headerList}...\n\nSolusi: Pastikan file memiliki kolom minimal:\n- 'Nama' / 'Nama Anggota Keluarga'\n- 'Kode Keluarga'\n- 'RT', 'RW', 'Dusun'");
         }
 
         // Validasi kolom wajib
@@ -459,7 +477,7 @@ class PendudukController extends Controller
         if (!empty($missingRequired)) {
             $missing = implode(', ', $missingRequired);
             $headerList = implode(', ', $header);
-            return back()->with('error', "❌ Kolom wajib tidak ditemukan: {$missing}\n\nHeader file Anda: {$headerList}\n\nSolusi: Pastikan kolom 'Nama Anggota Keluarga' dan 'Kode Keluarga' ada di file Excel.");
+            return $this->importRedirect('error', "❌ Kolom wajib tidak ditemukan: {$missing}\n\nHeader file Anda: {$headerList}\n\nSolusi: Pastikan kolom 'Nama Anggota Keluarga' dan 'Kode Keluarga' ada di file Excel.");
         }
 
         // STEP 5: Import data
@@ -519,7 +537,7 @@ class PendudukController extends Controller
                 // Check for existing by NIK (hash) atau kode_keluarga+nama
                 $existing = null;
                 if (!empty($data['nik'])) {
-                    $existing = Penduduk::findByNik($data['nik']);
+                    $existing = Penduduk::where('nik', $data['nik'])->first();
                 }
                 if (!$existing && !empty($data['kode_keluarga']) && !empty($data['nama'])) {
                     $existing = Penduduk::where('kode_keluarga', $data['kode_keluarga'])
@@ -560,8 +578,7 @@ class PendudukController extends Controller
                 $successMsg .= implode("\n", $errors);
             }
 
-            // penting: paksa reload props index (Inertia) agar flash message selalu muncul
-            return Inertia::location(route('penduduk.index') . '?success=' . urlencode($successMsg));
+            return $this->importRedirect('success', $successMsg);
 
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -575,7 +592,7 @@ class PendudukController extends Controller
             $errorMsg .= "4. Pastikan jenis kelamin L atau P\n\n";
             $errorMsg .= "Data yang sukses di-import: INSERT {$inserted}, UPDATE {$updated}";
 
-            return back()->with('error', $errorMsg);
+            return $this->importRedirect('error', $errorMsg);
         }
     }
 
@@ -699,6 +716,8 @@ class PendudukController extends Controller
                 'rw',
                 'dusun',
             ])
+            ->whereNotNull('kode_keluarga')
+            ->where('kode_keluarga', '!=', '')
             ->whereNotNull('nama_kepala_keluarga')
             ->where('nama_kepala_keluarga', '!=', '')
             ->where(function ($w) use ($q) {

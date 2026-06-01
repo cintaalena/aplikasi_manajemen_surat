@@ -28,13 +28,22 @@ class UserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name'     => ['required', 'string', 'max:200'],
-            'nip'      => ['nullable', 'string', 'max:50'],
-            'email'    => ['required', 'email', 'max:200', 'unique:users,email'],
-            'jabatan'  => ['required', 'string', 'max:100'],
-            'role'     => ['required', 'in:lurah,staff'],
-            'password' => ['required', Password::min(8)->mixedCase()->numbers()],
+            'name'                  => ['required', 'string', 'max:200'],
+            'nip'                   => ['nullable', 'string', 'max:50'],
+            'jabatan'               => ['required', 'string', 'max:100'],
+            'role'                  => ['required', 'in:lurah,staff'],
+            'password'              => ['required', 'string', 'min:6', 'confirmed'],
+            'password_confirmation' => ['required', 'string'],
         ]);
+
+        // Generate email unik otomatis dari nama
+        $baseEmail = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['name']));
+        $email = $baseEmail . '@fatubesi.local';
+        $suffix = 1;
+        while (\App\Models\User::where('email', $email)->exists()) {
+            $email = $baseEmail . $suffix . '@fatubesi.local';
+            $suffix++;
+        }
 
         // Credential otomatis: A-001 untuk lurah, B-001 untuk staff
         $credentialCode = $data['role'] === 'lurah' ? 'A-001' : 'B-001';
@@ -42,7 +51,7 @@ class UserController extends Controller
         User::create([
             'name'                 => strtoupper($data['name']),
             'nip'                  => $data['nip'] ?? null,
-            'email'                => $data['email'],
+            'email'                => $email,
             'jabatan'              => $data['jabatan'],
             'role'                 => $data['role'],
             'password'             => Hash::make($data['password']),
@@ -52,7 +61,12 @@ class UserController extends Controller
             'email_verified_at'    => now(),
         ]);
 
-        return back()->with('success', 'Pengguna berhasil ditambahkan.');
+        return back()
+            ->with('success', 'Pengguna berhasil ditambahkan.')
+            ->with('credential', $credentialCode)
+            ->with('credential_name', strtoupper($data['name']))
+            ->with('credential_role', $data['role'])
+            ->with('credential_password', $data['password']);
     }
 
     public function update(Request $request, User $user): RedirectResponse
@@ -64,12 +78,21 @@ class UserController extends Controller
             'role'    => ['required', 'in:lurah,staff'],
         ]);
 
-        $user->update([
+        $updateData = [
             'name'    => strtoupper($data['name']),
             'nip'     => $data['nip'] ?? null,
             'jabatan' => $data['jabatan'],
             'role'    => $data['role'],
-        ]);
+        ];
+
+        // Jika role berubah, regenerate credential sesuai role baru
+        if ($user->role !== $data['role']) {
+            $credentialCode = $data['role'] === 'lurah' ? 'A-001' : 'B-001';
+            $updateData['credential_code_hash'] = Hash::make($credentialCode);
+            $updateData['credential_issued_at'] = now();
+        }
+
+        $user->update($updateData);
 
         return back()->with('success', 'Data pengguna berhasil diperbarui.');
     }

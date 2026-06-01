@@ -10,7 +10,11 @@ const props = defineProps({
 // ── Flash helpers ──────────────────────────────────────────────────────────
 import { usePage } from '@inertiajs/vue3'
 const page = usePage()
-const flashSuccess = computed(() => page.props.flash?.success)
+const flashSuccess        = computed(() => page.props.flash?.success)
+const flashCredential         = computed(() => page.props.flash?.credential)
+const flashCredentialName     = computed(() => page.props.flash?.credential_name)
+const flashCredentialRole     = computed(() => page.props.flash?.credential_role)
+const flashCredentialPassword = computed(() => page.props.flash?.credential_password)
 
 // ── JABATAN options ────────────────────────────────────────────────────────
 const jabatanOptions = [
@@ -35,7 +39,7 @@ const resetTarget= ref(null)
 
 // ── Forms ──────────────────────────────────────────────────────────────────
 const createForm = useForm({
-    name: '', nip: '', email: '', jabatan: '', role: 'staff', password: '',
+    name: '', nip: '', jabatan: '', role: 'staff', password: '', password_confirmation: '',
 })
 
 const editForm = useForm({
@@ -101,9 +105,36 @@ const submitReset = () => {
                 </button>
             </div>
 
-            <!-- Flash -->
+            <!-- Flash success + credential baru -->
             <div
-                v-if="flashSuccess"
+                v-if="flashCredential"
+                class="rounded-xl border-2 border-green-400 bg-green-50 px-5 py-4 text-sm text-green-900"
+            >
+                <div class="font-bold text-base mb-1">✅ Pengguna berhasil ditambahkan!</div>
+                <div class="mb-2">Berikan informasi login berikut kepada <strong>{{ flashCredentialName }}</strong>:</div>
+                <table class="text-sm">
+                    <tr>
+                        <td class="pr-4 text-gray-600">Nama (login)</td>
+                        <td class="font-mono font-semibold">{{ flashCredentialName }}</td>
+                    </tr>
+                    <tr>
+                        <td class="pr-4 text-gray-600">Credential Code</td>
+                        <td class="font-mono font-bold text-green-700 text-base">{{ flashCredential }}</td>
+                    </tr>
+                    <tr>
+                        <td class="pr-4 text-gray-600">Password</td>
+                        <td class="font-mono font-bold text-red-700 text-base">{{ flashCredentialPassword }}</td>
+                    </tr>
+                    <tr>
+                        <td class="pr-4 text-gray-600">Role</td>
+                        <td>{{ flashCredentialRole === 'lurah' ? 'Lurah (A-001)' : 'Staff (B-001)' }}</td>
+                    </tr>
+                </table>
+                <div class="mt-2 text-xs text-green-700 font-semibold">&#x26A0; Catat informasi ini sekarang. Halaman ini tidak akan menampilkannya lagi.</div>
+                <div class="mt-1 text-xs text-red-700 font-semibold">&#x1F512; Jangan bagikan password melalui media yang tidak aman.</div>
+            </div>
+            <div
+                v-else-if="flashSuccess"
                 class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
             >
                 {{ flashSuccess }}
@@ -188,12 +219,7 @@ const submitReset = () => {
                             <input v-model="createForm.nip" type="text"
                                 class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500" />
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Email</label>
-                            <input v-model="createForm.email" type="email" required
-                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500" />
-                            <p v-if="createForm.errors.email" class="mt-1 text-xs text-red-600">{{ createForm.errors.email }}</p>
-                        </div>
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Jabatan</label>
                             <select v-model="createForm.jabatan" required
@@ -215,7 +241,14 @@ const submitReset = () => {
                             <label class="block text-sm font-medium text-gray-700">Password</label>
                             <input v-model="createForm.password" type="password" required
                                 class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500" />
+                            <p class="mt-1 text-xs text-gray-500">Min. 6 karakter</p>
                             <p v-if="createForm.errors.password" class="mt-1 text-xs text-red-600">{{ createForm.errors.password }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Konfirmasi Password</label>
+                            <input v-model="createForm.password_confirmation" type="password" required
+                                class="mt-1 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-green-500 focus:ring-green-500" />
+                            <p v-if="createForm.password_confirmation && createForm.password !== createForm.password_confirmation" class="mt-1 text-xs text-red-600">Password tidak cocok</p>
                         </div>
                         <div class="flex justify-end gap-3 pt-2">
                             <button type="button" @click="showCreate = false"

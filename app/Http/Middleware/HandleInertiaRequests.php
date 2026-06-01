@@ -40,11 +40,14 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'flash' => [
-                'success'      => fn () => $request->session()->get('success'),
-                'error'        => fn () => $request->session()->get('error'),
-                'credential'   => fn () => $request->session()->get('credential'),
-                'otp_sent'     => fn () => $request->session()->get('otp_sent'),
-                'mail_warning' => fn () => $request->session()->get('mail_warning'),
+                'success'              => fn () => $request->session()->get('success'),
+                'error'               => fn () => $request->session()->get('error'),
+                'credential'          => fn () => $request->session()->get('credential'),
+                'credential_name'     => fn () => $request->session()->get('credential_name'),
+                'credential_role'     => fn () => $request->session()->get('credential_role'),
+                'credential_password' => fn () => $request->session()->get('credential_password'),
+                'otp_sent'            => fn () => $request->session()->get('otp_sent'),
+                'mail_warning'        => fn () => $request->session()->get('mail_warning'),
             ],
         ]);
     }

@@ -85,43 +85,117 @@ class LetterController extends Controller
             }
         }
 
+        // Validasi pengikut surat pindah — semua harus ada di database
+        if ($templateSlug === 'keterangan-pindah') {
+            $payload  = $validated['payload'] ?? [];
+            $pengikut = $payload['pengikut'] ?? [];
+            foreach ($pengikut as $idx => $p) {
+                $pId   = $p['penduduk_id'] ?? null;
+                $pNama = $this->normalizeName($p['nama'] ?? '');
+                $no    = $idx + 1;
+
+                if (!$pId || $pNama === '') {
+                    return response()->json([
+                        'message' => "Pengikut {$no} tidak terdaftar di database penduduk Kelurahan Fatubesi.",
+                    ], 422);
+                }
+
+                $pRec = Penduduk::select('id', 'nama')->find($pId);
+                if (!$pRec) {
+                    return response()->json([
+                        'message' => "Pengikut {$no} tidak ditemukan di database penduduk Kelurahan Fatubesi.",
+                    ], 422);
+                }
+
+                if ($this->normalizeName($pRec->nama) !== $pNama) {
+                    return response()->json([
+                        'message' => "Nama pengikut {$no} tidak cocok dengan data di database.",
+                    ], 422);
+                }
+            }
+        }
+
         $now = now();
         $monthRoman = $this->monthToRoman((int) $now->format('n'));
         $year = (int) $now->format('Y');
 
-        $letter = DB::transaction(function () use ($templateSlug, $validated, $monthRoman, $year, $now) {
-            $counter = LetterCounter::where('template_slug', $templateSlug)->lockForUpdate()->first();
+        try {
+            $letter = DB::transaction(function () use ($templateSlug, $validated, $monthRoman, $year, $now) {
+                $counter = LetterCounter::where('template_slug', $templateSlug)->lockForUpdate()->first();
 
-            if (!$counter) {
-                $counter = LetterCounter::create([
+                if (!$counter) {
+                    $counter = LetterCounter::create([
+                        'template_slug' => $templateSlug,
+                        'count' => 0,
+                    ]);
+                }
+
+                $counter->count = $counter->count + 1;
+                $counter->save();
+
+                $urut = (int) $counter->count;
+                $indexCode = (string) $validated['index_code'];
+                $noSurat = $this->buildNoSurat($urut, $indexCode, $monthRoman, $year);
+
+                return Letter::create([
                     'template_slug' => $templateSlug,
-                    'count' => 0,
+                    'title' => $validated['title'],
+                    'no_surat' => $noSurat,
+
+                    'index_code' => $indexCode,
+                    'urut' => $urut,
+                    'month_roman' => $monthRoman,
+                    'year' => $year,
+
+                    'payload' => $validated['payload'],
+
+                    'printed_at' => $now,
+                    'printed_by' => auth()->id(),
                 ]);
+            });
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Duplicate no_surat — cari urut berikutnya yang benar-benar belum ada (cek global)
+            if ($e->getCode() === '23000' && str_contains($e->getMessage(), 'no_surat')) {
+                $indexCode = (string) $validated['index_code'];
+
+                $nextUrut = DB::transaction(function () use ($templateSlug, $indexCode, $monthRoman, $year) {
+                    $counter = LetterCounter::where('template_slug', $templateSlug)->lockForUpdate()->first();
+
+                    // Titik mulai: ambil yang lebih besar antara counter saat ini+1 atau max urut template+1
+                    $maxForTemplate = Letter::where('template_slug', $templateSlug)->max('urut') ?? 0;
+                    $start = max(
+                        ($counter ? (int) $counter->count : 0) + 1,
+                        $maxForTemplate + 1
+                    );
+
+                    // Loop sampai menemukan noSurat yang belum ada sama sekali di tabel letters
+                    $urut = $start;
+                    while (Letter::where('no_surat', "{$urut}/Kel.Ftbs.{$indexCode}/{$monthRoman}/{$year}")->exists()) {
+                        $urut++;
+                    }
+
+                    // Setel counter ke urut-1 agar finalize berikutnya menghasilkan urut ini
+                    if ($counter) {
+                        $counter->count = $urut - 1;
+                        $counter->save();
+                    } else {
+                        LetterCounter::create(['template_slug' => $templateSlug, 'count' => $urut - 1]);
+                    }
+
+                    return $urut;
+                });
+
+                $nextNoSurat = $this->buildNoSurat($nextUrut, $indexCode, $monthRoman, $year);
+
+                return response()->json([
+                    'message'     => 'Nomor surat tersebut sudah digunakan oleh surat lain.',
+                    'duplicate'   => true,
+                    'nextNoSurat' => $nextNoSurat,
+                ], 409);
+            } else {
+                throw $e;
             }
-
-            $counter->count = $counter->count + 1;
-            $counter->save();
-
-            $urut = (int) $counter->count;
-            $indexCode = (string) $validated['index_code'];
-            $noSurat = $this->buildNoSurat($urut, $indexCode, $monthRoman, $year);
-
-            return Letter::create([
-                'template_slug' => $templateSlug,
-                'title' => $validated['title'],
-                'no_surat' => $noSurat,
-
-                'index_code' => $indexCode,
-                'urut' => $urut,
-                'month_roman' => $monthRoman,
-                'year' => $year,
-
-                'payload' => $validated['payload'],
-
-                'printed_at' => $now,
-                'printed_by' => auth()->id(),
-            ]);
-        });
+        }
 
         // Link dokumen persyaratan yang sudah di-upload ke letter ini
         $docIds = $validated['doc_ids'] ?? [];
@@ -151,14 +225,14 @@ class LetterController extends Controller
             }
 
             $pengikut = $validated['payload']['pengikut'] ?? [];
-            foreach ($pengikut as $p) {
-                $nik = trim((string) ($p['nik'] ?? ''));
-                if ($nik !== '') {
-                    \Illuminate\Support\Facades\DB::table('penduduks')
-                        ->where('nik', $nik)
-                        ->whereNull('deleted_at')
-                        ->update(['status_kehidupan' => 'Pindah', 'updated_at' => now()]);
-                }
+            $pengikutIds = array_filter(
+                array_map(fn($p) => isset($p['penduduk_id']) ? (int)$p['penduduk_id'] : null, $pengikut)
+            );
+            if (!empty($pengikutIds)) {
+                \Illuminate\Support\Facades\DB::table('penduduks')
+                    ->whereIn('id', array_values($pengikutIds))
+                    ->whereNull('deleted_at')
+                    ->update(['status_kehidupan' => 'Pindah', 'updated_at' => now()]);
             }
         }
 

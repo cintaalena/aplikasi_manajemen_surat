@@ -74,7 +74,7 @@ Route::middleware('auth')->group(function () {
     
     // SECURITY: File upload protected with secure.upload middleware
     Route::post('/penduduk/import', [PendudukController::class, 'import'])
-        ->middleware('secure.upload')
+        ->middleware('secure.upload', 'role:staff,admin')
         ->name('penduduk.import');
 
     // Finalize surat — pakai web route agar session auth bekerja

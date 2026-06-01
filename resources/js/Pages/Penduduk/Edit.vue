@@ -2,6 +2,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Head, useForm, router } from '@inertiajs/vue3'
 import { watch } from 'vue'
+import { useFormArrowNav } from '@/composables/useFormArrowNav'
 
 const props = defineProps({
   penduduk: Object,
@@ -61,6 +62,8 @@ const submit = () => {
     preserveScroll: true,
   })
 }
+
+const { handleFormArrowNav } = useFormArrowNav()
 </script>
 
 <template>
@@ -87,7 +90,7 @@ const submit = () => {
         </div>
 
         <div class="rounded-2xl border border-green-100 bg-white p-6 shadow-sm">
-          <form @submit.prevent="submit" class="space-y-6">
+          <form @submit.prevent="submit" @keydown="handleFormArrowNav" class="space-y-6">
 
             <!-- Identitas Keluarga -->
             <div class="rounded-2xl border border-gray-200 p-4">
