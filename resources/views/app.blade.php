@@ -34,7 +34,7 @@
         <link href="/css/figtree.css" rel="stylesheet" />
 
         <!-- Scripts -->
-        @routes
+        @routes(nonce: $cspNonce ?? null)
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead
     </head>

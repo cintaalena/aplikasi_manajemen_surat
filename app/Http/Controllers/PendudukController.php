@@ -222,7 +222,32 @@ class PendudukController extends Controller
         $perPage = (int) $request->query('perPage', 20);
         if (!in_array($perPage, [10, 20, 30, 50], true)) $perPage = 20;
 
-        $query = Penduduk::query();
+        $query = Penduduk::query()
+    ->select([
+        'id',
+        'rt',
+        'rw',
+        'dusun',
+        'alamat',
+        'kode_keluarga',
+        'nama_kepala_keluarga',
+        'no_urut',
+        'nik',
+        'nama',
+        'jenis_kelamin',
+        'hubungan',
+        'tempat_lahir',
+        'tanggal_lahir',
+        'usia',
+        'status_perkawinan',
+        'agama',
+        'golongan_darah',
+        'kewarganegaraan',
+        'etnis',
+        'pendidikan',
+        'pekerjaan',
+        'status_kehidupan',
+    ]);
 
         if ($q !== '') {
             $query->where(function ($w) use ($q) {

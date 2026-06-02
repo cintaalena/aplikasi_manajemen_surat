@@ -169,8 +169,13 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
 
 
 <div class="toolbar">
-  <button class="btn btn-print" onclick="window.print()">&#128438; Cetak / Simpan PDF</button>
-  <button class="btn btn-back" onclick="window.close()">← Kembali ke Arsip</button>
+   <button id="btn-print" type="button" class="btn btn-print">
+    &#128438; Cetak / Simpan PDF
+  </button>
+  <a class="btn btn-back" href="<?php echo e(route('arsip-surat.index')); ?>">
+    ← Kembali ke Arsip
+  </a>
+
   <span class="meta"><?php echo e($letter->title); ?> &bull; <?php echo e($letter->no_surat); ?></span>
 </div>
 
@@ -498,7 +503,17 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
   <?php endif; ?>
 
 </div><!-- /page -->
+<script nonce="<?php echo e($cspNonce ?? ''); ?>">
+  document.addEventListener('DOMContentLoaded', function () {
+    const printButton = document.getElementById('btn-print');
 
+    if (printButton) {
+      printButton.addEventListener('click', function () {
+        window.print();
+      });
+    }
+  });
+</script>
 </body>
 </html>
 <?php /**PATH C:\xampp\htdocs\aplikasi_manajemen_surat-main\aplikasi_manajemen_surat-main\resources\views/letters/pratinjau.blade.php ENDPATH**/ ?>

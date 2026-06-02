@@ -25,11 +25,28 @@ class LetterArchiveController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $letters = Letter::query()
+            ->select([
+        'id',
+        'template_slug',
+        'title',
+        'no_surat',
+        'printed_at',
+        'printed_by',
+        'is_manual',
+    ])
             ->with('printedBy:id,name')
             ->with('documents:id,letter_id,doc_key,doc_label,original_name,mime_type,file_size,file_path')
             ->with(['dispositions' => function ($q) {
-                $q->with('fromUser:id,name')->with('toUser:id,name');
-            }])
+                $q->select([
+            'id',
+            'letter_id',
+            'from_user_id',
+            'to_user_id',
+            'status',
+        ])
+        ->with('fromUser:id,name')
+        ->with('toUser:id,name');
+    }])
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
                     $sub->where('no_surat', 'like', "%{$q}%")
@@ -176,7 +193,12 @@ class LetterArchiveController extends Controller
                 'printed_at'    => $letter->printed_at,
                 'is_manual'     => $letter->is_manual,
                 'printed_by'    => $letter->printedBy
-                    ? ['id' => $letter->printedBy->id, 'name' => $letter->printedBy->name]
+                    ? [
+                        'id'      => $letter->printedBy->id,
+                        'name'    => $letter->printedBy->name,
+                        'nip'     => $letter->printedBy->nip,
+                        'jabatan' => $letter->printedBy->jabatan,
+                    ]
                     : null,
                 'documents'     => $letter->documents->map(fn($doc) => [
                     'id'            => $doc->id,

@@ -26,6 +26,7 @@ class Letter extends Model
     ];
 
     protected $hidden = [
+        'payload',
         'deleted_at',
     ];
 

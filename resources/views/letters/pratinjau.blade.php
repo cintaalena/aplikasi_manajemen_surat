@@ -169,8 +169,13 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
 
 {{-- Toolbar --}}
 <div class="toolbar">
-  <button class="btn btn-print" onclick="window.print()">&#128438; Cetak / Simpan PDF</button>
-  <button class="btn btn-back" onclick="window.close()">← Kembali ke Arsip</button>
+   <button id="btn-print" type="button" class="btn btn-print">
+    &#128438; Cetak / Simpan PDF
+  </button>
+  <a class="btn btn-back" href="{{ route('arsip-surat.index') }}">
+    ← Kembali ke Arsip
+  </a>
+
   <span class="meta">{{ $letter->title }} &bull; {{ $letter->no_surat }}</span>
 </div>
 
@@ -497,6 +502,16 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
   @endif
 
 </div><!-- /page -->
+<script nonce="{{ $cspNonce ?? '' }}">
+  document.addEventListener('DOMContentLoaded', function () {
+    const printButton = document.getElementById('btn-print');
 
+    if (printButton) {
+      printButton.addEventListener('click', function () {
+        window.print();
+      });
+    }
+  });
+</script>
 </body>
 </html>
