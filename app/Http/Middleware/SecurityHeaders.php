@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Vite;
 
 class SecurityHeaders
 {
@@ -14,6 +15,9 @@ class SecurityHeaders
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $nonce = base64_encode(random_bytes(16));
+         Vite::useCspNonce($nonce);
+    view()->share('cspNonce', $nonce);
         $response = $next($request);
 
         // SECURITY: Content Security Policy (CSP)
@@ -27,7 +31,7 @@ class SecurityHeaders
             // SECURITY (A05): 'unsafe-eval' removed — it enables JS eval() which
             // is exploitable by XSS. Inertia + Vue 3 does NOT require eval().
             // 'unsafe-inline' is retained for Vue SFC style injection (Tailwind).
-            "script-src 'self' 'unsafe-inline'" . $viteDevServer,
+            "script-src 'self' 'nonce-{$nonce}'" . $viteDevServer,
             "style-src 'self' 'unsafe-inline' https://fonts.bunny.net" . $viteDevServer, // Tailwind needs unsafe-inline
             "img-src 'self' data: https:",
             "font-src 'self' data: https://fonts.bunny.net",

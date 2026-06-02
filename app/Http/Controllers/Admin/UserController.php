@@ -65,8 +65,7 @@ class UserController extends Controller
             ->with('success', 'Pengguna berhasil ditambahkan.')
             ->with('credential', $credentialCode)
             ->with('credential_name', strtoupper($data['name']))
-            ->with('credential_role', $data['role'])
-            ->with('credential_password', $data['password']);
+            ->with('credential_role', $data['role']);
     }
 
     public function update(Request $request, User $user): RedirectResponse
