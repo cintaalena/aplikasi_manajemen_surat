@@ -12,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend(\App\Http\Middleware\RestrictCorsHeaders::class);
         // SECURITY (A08): CSRF exception for 'surat/*/finalize' removed.
         // Inertia.js automatically sends the CSRF token on all form submissions
         // via the X-XSRF-TOKEN header, so no exemption is needed.
@@ -25,9 +26,14 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SecurityHeaders::class, // SECURITY: Security headers (CSP, XSS, etc)
         ]);
 
-        $middleware->api(append: [
-            \App\Http\Middleware\SanitizeResponse::class, // SECURITY: Prevent sensitive data leakage
-        ]);
+        $middleware->api(
+    prepend: [
+        \App\Http\Middleware\SecurityHeaders::class,
+    ],
+    append: [
+        \App\Http\Middleware\SanitizeResponse::class,
+    ]
+);
 
         // SECURITY: File upload validation middleware
         $middleware->alias([
@@ -36,5 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
-    })->create();
+    $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response) {
+        return \App\Http\Middleware\SecurityHeaders::applyToResponse($response);
+    });
+})->create();
