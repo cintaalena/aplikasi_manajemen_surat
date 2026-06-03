@@ -16,12 +16,15 @@ class SecurityHeaders
     public function handle(Request $request, Closure $next): Response
     {
         $nonce = base64_encode(random_bytes(16));
-         Vite::useCspNonce($nonce);
-    view()->share('cspNonce', $nonce);
+        Vite::useCspNonce($nonce);
+        view()->share('cspNonce', $nonce);
         $response = $next($request);
+        return self::applyToResponse($response, $nonce);
+    }
 
-        // SECURITY: Content Security Policy (CSP)
-        // Prevent XSS by restricting resource loading
+         public static function applyToResponse(Response $response, ?string $nonce = null): Response
+    {
+        $nonce = $nonce ?: base64_encode(random_bytes(16));
         $viteDevServer = config('app.env') === 'local' 
             ? ' http://localhost:5173 http://localhost:5174 http://127.0.0.1:5173 http://127.0.0.1:5174 ws://localhost:5173 ws://localhost:5174 ws://127.0.0.1:5173 ws://127.0.0.1:5174'
             : '';
@@ -33,7 +36,7 @@ class SecurityHeaders
             // 'unsafe-inline' is retained for Vue SFC style injection (Tailwind).
             "script-src 'self' 'nonce-{$nonce}'" . $viteDevServer,
             "style-src 'self' 'unsafe-inline' https://fonts.bunny.net" . $viteDevServer, // Tailwind needs unsafe-inline
-            "img-src 'self' data: https:",
+            "img-src 'self' data: blob:",
             "font-src 'self' data: https://fonts.bunny.net",
             "connect-src 'self'" . $viteDevServer,
             "frame-ancestors 'none'", // Prevent clickjacking
