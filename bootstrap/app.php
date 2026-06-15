@@ -12,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*'); // kampus menggunakan reverse proxy untuk SSL termination
         $middleware->prepend(\App\Http\Middleware\RestrictCorsHeaders::class);
         // SECURITY (A08): CSRF exception for 'surat/*/finalize' removed.
         // Inertia.js automatically sends the CSRF token on all form submissions
