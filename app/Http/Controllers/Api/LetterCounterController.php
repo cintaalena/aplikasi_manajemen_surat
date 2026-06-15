@@ -15,7 +15,6 @@ class LetterCounterController extends Controller
         return $romans[max(1, min(12, $monthNumber)) - 1];
     }
 
-    // GET /api/letter-counters/{templateSlug}
     public function show(string $templateSlug)
     {
         $row = LetterCounter::firstWhere('template_slug', $templateSlug);
@@ -28,7 +27,6 @@ class LetterCounterController extends Controller
         ]);
     }
 
-    // POST /api/letter-counters/{templateSlug}/increment
     public function increment(Request $request, string $templateSlug)
     {
         $newCount = DB::transaction(function () use ($templateSlug) {

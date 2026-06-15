@@ -1,0 +1,52 @@
+sequenceDiagram
+    actor Admin as Admin
+    participant App as Aplikasi
+    participant DB as Database
+
+    %% ── LIHAT DAFTAR PENGGUNA ──────────────────────────────
+    Admin->>App: Buka halaman kelola pengguna
+    App->>DB: Ambil semua data pengguna (selain admin)
+    DB-->>App: Daftar pengguna beserta jabatan dan peran
+    App-->>Admin: Tampilkan tabel daftar pengguna
+
+    %% ── TAMBAH PENGGUNA ────────────────────────────────────
+    Admin->>App: Isi formulir tambah pengguna
+    Note over Admin,App: nama, NIP, jabatan, peran, dan password
+
+    alt Data tidak lengkap atau tidak valid
+        App-->>Admin: Tampilkan pesan kesalahan
+    else Data valid
+        App->>App: Buat email otomatis dari nama pengguna
+        App->>App: Buat kode kredensial sesuai peran (Lurah atau Staff)
+        App->>DB: Simpan data pengguna baru
+        App-->>Admin: Berhasil ditambahkan dan tampilkan kode kredensial
+    end
+
+    %% ── EDIT DATA PENGGUNA ─────────────────────────────────
+    Admin->>App: Ubah data pengguna (nama / jabatan / peran)
+
+    alt Data tidak valid
+        App-->>Admin: Tampilkan pesan kesalahan
+    else Peran pengguna berubah
+        App->>App: Buat ulang kode kredensial sesuai peran baru
+        App->>DB: Perbarui data dan kode kredensial pengguna
+        App-->>Admin: Data pengguna berhasil diperbarui
+    else Peran tidak berubah
+        App->>DB: Perbarui data pengguna
+        App-->>Admin: Data pengguna berhasil diperbarui
+    end
+
+    %% ── AKTIFKAN / NONAKTIFKAN PENGGUNA ────────────────────
+    Admin->>App: Klik tombol aktifkan atau nonaktifkan pengguna
+    App->>DB: Balik status aktif pengguna
+    App-->>Admin: Status pengguna berhasil diubah
+
+    %% ── RESET PASSWORD ─────────────────────────────────────
+    Admin->>App: Kirim password baru untuk pengguna
+
+    alt Password tidak memenuhi syarat keamanan
+        App-->>Admin: Tampilkan pesan kesalahan
+    else Password valid
+        App->>DB: Simpan password baru yang sudah dienkripsi
+        App-->>Admin: Password berhasil direset
+    end

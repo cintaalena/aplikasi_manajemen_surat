@@ -9,14 +9,12 @@ import { ref, computed, onUnmounted, onMounted } from 'vue'
 defineProps({ label: { type: String, default: 'Dokumen' } })
 const emit = defineEmits(['captured', 'close'])
 
-// Deteksi apakah URL menggunakan 127.0.0.1 (kamera bisa gagal) vs localhost
 const isOn127     = computed(() => location.hostname === '127.0.0.1')
 const currentPort = computed(() => location.port || '80')
 const goToLocalhost = () => {
   location.href = location.href.replace('127.0.0.1', 'localhost')
 }
 
-// Deteksi jenis browser untuk link pengaturan kamera
 const isEdge   = computed(() => navigator.userAgent.includes('Edg/'))
 const isChrome = computed(() => navigator.userAgent.includes('Chrome/') && !navigator.userAgent.includes('Edg/'))
 const isFirefox = computed(() => navigator.userAgent.includes('Firefox/'))
@@ -31,11 +29,9 @@ const openBrowserSettings = () => {
   }
 }
 
-// 'opening' | 'live' | 'denied' | 'busy' | 'unavailable' | 'error'
 const step        = ref('opening')
 const errorMsg    = ref('')
 const errorName   = ref('')
-// 'browser' | 'system' | 'dismissed' — penyebab denied
 const denialCause = ref('browser')
 const videoRef    = ref(null)
 const canvasRef   = ref(null)
@@ -139,14 +135,11 @@ onUnmounted(stopCamera)
 </script>
 
 <template>
-  <!-- Overlay solid penuh — bg-black tanpa opacity agar tidak transparan -->
   <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black p-4">
     <div class="relative w-full max-w-lg rounded-2xl bg-gray-900 shadow-2xl overflow-hidden">
 
-      <!-- Header selalu tampil -->
       <div class="flex items-center justify-between px-4 py-3 bg-gray-800">
         <div class="flex items-center gap-2 min-w-0">
-          <!-- Indikator warna sesuai step -->
           <span class="h-2 w-2 rounded-full shrink-0 transition-colors"
             :class="{
               'bg-yellow-400 animate-pulse': step === 'checking' || step === 'opening',
@@ -165,9 +158,7 @@ onUnmounted(stopCamera)
         </button>
       </div>
 
-      <!-- ── Menunggu izin browser (popup native muncul di atas) ─────────── -->
       <div v-if="step === 'opening'" class="flex flex-col items-center gap-5 px-6 py-10 text-center bg-gray-900">
-        <!-- Spinner -->
         <div class="relative flex h-16 w-16 items-center justify-center">
           <svg class="absolute h-16 w-16 animate-spin text-green-800" fill="none" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>
@@ -184,7 +175,6 @@ onUnmounted(stopCamera)
           <p class="text-base font-bold text-white">Meminta Izin Kamera</p>
           <p class="mt-1 text-sm text-gray-400">Izinkan akses kamera pada notifikasi di browser Anda</p>
         </div>
-        <!-- Ilustrasi notifikasi browser Edge/Chrome -->
         <div class="w-full rounded-xl border border-yellow-500/50 bg-yellow-950 px-4 py-3 text-left">
           <p class="mb-2 text-xs font-bold text-yellow-400 uppercase tracking-wide">⬆ Notifikasi browser muncul di bagian atas</p>
           <div class="flex items-center gap-3 rounded-lg border border-gray-600 bg-gray-800 px-3 py-3">
@@ -201,7 +191,6 @@ onUnmounted(stopCamera)
         </div>
       </div>
 
-      <!-- ── Akses ditolak ─────────────────────────────────────────────────── -->
       <div v-else-if="step === 'denied'" class="flex flex-col gap-3 px-5 py-5 bg-gray-900">
         <div class="flex items-center gap-3">
           <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-950 border border-red-700">
@@ -219,12 +208,10 @@ onUnmounted(stopCamera)
           </div>
         </div>
 
-        <!-- ★ UTAMA: Reset izin kamera di browser (penyebab paling umum) -->
         <div v-if="denialCause === 'browser'" class="rounded-xl border-2 border-green-500/60 bg-green-950/60 p-3 space-y-2">
           <p class="text-xs font-bold text-green-300 flex items-center gap-1.5">
             <span class="text-base">🔑</span> Cara Reset Izin Kamera di Browser
           </p>
-          <!-- Langkah address bar -->
           <div class="space-y-1.5">
             <div class="flex items-start gap-2">
               <span class="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-green-700 text-[10px] font-bold text-white">1</span>
@@ -239,7 +226,6 @@ onUnmounted(stopCamera)
               <p class="text-xs text-gray-200">Klik <strong class="text-white">"Reload"</strong> / <strong class="text-white">"Muat Ulang"</strong> yang muncul, lalu coba kamera lagi</p>
             </div>
           </div>
-          <!-- Ilustrasi visual -->
           <div class="mt-1 rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-xs text-gray-300">
             <div class="flex items-center gap-2 mb-1">
               <span class="text-gray-400 font-mono text-[10px]">🔒 https://localhost/...</span>
@@ -249,14 +235,12 @@ onUnmounted(stopCamera)
               <span class="text-green-400 font-bold">Allow ✓</span>
             </div>
           </div>
-          <!-- Tombol buka pengaturan browser (Edge/Chrome) -->
           <button v-if="browserCameraSettingsUrl" type="button" @click="openBrowserSettings"
             class="w-full rounded-lg bg-green-700 py-2 text-xs font-bold text-white hover:bg-green-600 transition">
             Buka Pengaturan Kamera Browser →
           </button>
         </div>
 
-        <!-- Penyebab: akses via 127.0.0.1 bukan localhost -->
         <div v-if="isOn127" class="rounded-xl border border-blue-600/50 bg-blue-950/60 p-3 space-y-2">
           <p class="text-xs font-bold text-blue-300 flex items-center gap-1.5">
             <span class="text-base">🔗</span> Penyebab utama: URL menggunakan <code class="bg-gray-800 px-1 rounded">127.0.0.1</code>
@@ -268,7 +252,6 @@ onUnmounted(stopCamera)
           </button>
         </div>
 
-        <!-- Windows Privacy Settings (hanya tampil jika penyebab = system) -->
         <div v-if="denialCause === 'system'" class="rounded-xl border border-orange-700/40 bg-orange-950/50 p-3 space-y-2">
           <p class="text-xs font-bold text-orange-300 flex items-center gap-1.5">
             <span class="text-base">🪟</span> Periksa Windows Privacy Settings
@@ -276,12 +259,10 @@ onUnmounted(stopCamera)
           <p class="text-xs text-gray-400"><kbd class="rounded bg-gray-700 px-1 text-white font-bold">Win+I</kbd> → <strong class="text-white">Privacy &amp; security</strong> → <strong class="text-white">Camera</strong> → pastikan semua toggle <span class="text-green-400 font-bold">ON</span></p>
         </div>
 
-        <!-- Kode error teknis -->
         <div class="rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 font-mono text-[10px] text-gray-500">
           Error: <span class="text-yellow-400">{{ errorName }}</span><span v-if="errorMsg"> — {{ errorMsg }}</span>
         </div>
 
-        <!-- ★ FALLBACK: Gunakan input file dengan capture — bypass semua permission -->
         <div class="rounded-xl border-2 border-green-500/60 bg-green-950/50 p-3 space-y-2">
           <p class="text-xs font-bold text-green-300">📷 Alternatif: Ambil Foto Langsung</p>
           <p class="text-xs text-gray-400">Klik tombol di bawah untuk membuka kamera atau pilih foto dari galeri tanpa membutuhkan izin browser.</p>
@@ -304,7 +285,6 @@ onUnmounted(stopCamera)
         </div>
       </div>
 
-      <!-- ── Kamera dipakai app lain ────────────────────────────────────────── -->
       <div v-else-if="step === 'busy'" class="flex flex-col items-center gap-4 px-6 py-8 text-center bg-gray-900">
         <div class="flex h-14 w-14 items-center justify-center rounded-full bg-yellow-950 border-2 border-yellow-700">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -322,7 +302,6 @@ onUnmounted(stopCamera)
         </button>
       </div>
 
-      <!-- ── Kamera tidak ditemukan ────────────────────────────────────────── -->
       <div v-else-if="step === 'unavailable'" class="flex flex-col items-center gap-5 px-6 py-10 text-center bg-gray-900">
         <div class="flex h-16 w-16 items-center justify-center rounded-full bg-gray-800 border-2 border-gray-600">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -340,7 +319,6 @@ onUnmounted(stopCamera)
         </button>
       </div>
 
-      <!-- ── Error umum ────────────────────────────────────────────────────── -->
       <div v-else-if="step === 'error'" class="flex flex-col items-center gap-5 px-6 py-10 text-center bg-gray-900">
         <div class="flex h-16 w-16 items-center justify-center rounded-full bg-orange-950 border-2 border-orange-700">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -358,7 +336,6 @@ onUnmounted(stopCamera)
         </button>
       </div>
 
-      <!-- ── Live — kamera aktif ───────────────────────────────────────────── -->
       <template v-else-if="step === 'live'">
         <div class="relative bg-black">
           <div v-if="flash" class="pointer-events-none absolute inset-0 z-10 bg-white/80"></div>

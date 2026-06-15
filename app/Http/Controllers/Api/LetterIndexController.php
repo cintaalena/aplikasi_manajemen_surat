@@ -8,7 +8,6 @@ class LetterIndexController extends Controller
 {
     public function groups()
     {
-        // Kembalikan full groups + items
         return response()->json(config('letter_indexes', []));
     }
 }

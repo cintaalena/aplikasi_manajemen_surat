@@ -17,8 +17,10 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/app/backups/
 /storage/pail
 /vendor
+/.scannerwork
 Homestead.json
 Homestead.yaml
 Thumbs.db

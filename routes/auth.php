@@ -12,7 +12,6 @@ Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 
-    // Rate limiting: Max 5 login attempts per menit per IP
     Route::post('login', [AuthenticatedSessionController::class, 'store'])
         ->middleware('throttle:5,1');
 });

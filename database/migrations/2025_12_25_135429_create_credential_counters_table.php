@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('credential_counters', function (Blueprint $table) {
             $table->id();
-            $table->string('jabatan_key')->unique(); // mis. lurah, sekretaris
+            $table->string('jabatan_key')->unique();
             $table->unsignedInteger('last_number')->default(0);
             $table->timestamps();
         });

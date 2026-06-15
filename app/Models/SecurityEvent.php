@@ -25,7 +25,6 @@ use Illuminate\Support\Facades\Log;
  */
 class SecurityEvent extends Model
 {
-    // Append-only — no updated_at
     const UPDATED_AT = null;
 
     protected $fillable = [
@@ -44,7 +43,6 @@ class SecurityEvent extends Model
         'created_at' => 'datetime',
     ];
 
-    // ── Event type constants ────────────────────────────────────────────────
     const EVENT_LOGIN_FAILED        = 'login_failed';
     const EVENT_LOGIN_SUCCESS       = 'login_success';
     const EVENT_ACCOUNT_LOCKED      = 'account_locked';
@@ -54,7 +52,6 @@ class SecurityEvent extends Model
     const EVENT_CSRF_MISMATCH       = 'csrf_mismatch';
     const EVENT_SESSION_HIJACK      = 'session_hijack_attempt';
 
-    // ── Severity constants ──────────────────────────────────────────────────
     const SEVERITY_INFO     = 'info';
     const SEVERITY_WARNING  = 'warning';
     const SEVERITY_CRITICAL = 'critical';
@@ -83,7 +80,6 @@ class SecurityEvent extends Model
                 'context'             => $context ?: null,
             ]);
         } catch (\Throwable $e) {
-            // Fallback: write to log file so events are never silently lost
             Log::error('SecurityEvent DB write failed', [
                 'event_type' => $eventType,
                 'error'      => $e->getMessage(),

@@ -16,7 +16,6 @@ const { asset } = useAsset()
     <div class="w-full max-w-5xl">
       <div class="grid overflow-hidden rounded-3xl shadow-lg border border-gray-100 lg:grid-cols-2">
 
-        <!-- LEFT: Logo panel -->
         <div class="flex flex-col items-center justify-center p-10 bg-white border-b border-gray-100 lg:border-b-0 lg:border-r">
           <div class="flex items-center gap-3 self-start mb-10">
             <img :src="asset('images/logo_kalpataru.jpg')" alt="Kalpataru"
@@ -38,7 +37,6 @@ const { asset } = useAsset()
           </p>
         </div>
 
-        <!-- RIGHT: Welcome + login -->
         <div class="flex flex-col items-center justify-center bg-white p-10 text-center">
           <img :src="asset('images/logo_kalpataru.jpg')" alt="KF"
             class="h-14 w-14 object-contain mix-blend-multiply mb-4" />

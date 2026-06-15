@@ -21,7 +21,6 @@ class LurahUserSeeder extends Seeder
      * ]
      */
     private array $users = [
-        // ── LURAH ─────────────────────────────────────────────────────────
         [
             'name'            => 'ANAK AGUNG G.S.M. PUTRA SE',
             'nip'             => '19760703 200112 1 002',
@@ -32,7 +31,6 @@ class LurahUserSeeder extends Seeder
             'role'            => 'lurah',
         ],
 
-        // ── SEKRETARIS ────────────────────────────────────────────────────
         [
             'name'            => 'YUBLINA BAUBANI, A.Md',
             'nip'             => '19750601 200012 2 007',
@@ -43,7 +41,6 @@ class LurahUserSeeder extends Seeder
             'role'            => 'staff',
         ],
 
-        // ── KASIE PELAYANAN MASYARAKAT ────────────────────────────────────
         [
             'name'            => 'FERRY FRANSISKA, S.Sos',
             'nip'             => '19730618201001 1004',
@@ -54,7 +51,6 @@ class LurahUserSeeder extends Seeder
             'role'            => 'staff',
         ],
 
-        // ── KASIE PEM DAN TRANTIB UMUM ────────────────────────────────────
         [
             'name'            => 'YERRY AGUSTINUS BALLU, SH',
             'nip'             => '19840803 201001 1 006',
@@ -65,7 +61,6 @@ class LurahUserSeeder extends Seeder
             'role'            => 'staff',
         ],
 
-        // ── PENGELOLA PEMBERDAYAAN MASYARAKAT DAN KELEMBAGAAN ─────────────
         [
             'name'            => 'SELESTINA ANUNUT, A.Md',
             'nip'             => '19810920 200502 2 008',
@@ -76,7 +71,6 @@ class LurahUserSeeder extends Seeder
             'role'            => 'staff',
         ],
 
-        // ── PENGADMINISTRASI PERKANTORAN ──────────────────────────────────
         [
             'name'            => 'THERESIA MAMO',
             'nip'             => '19730515 199803 2 009',
@@ -123,7 +117,6 @@ class LurahUserSeeder extends Seeder
             'role'            => 'staff',
         ],
 
-        // ── PENATA LAYANAN OPERASIONAL ────────────────────────────────────
         [
             'name'            => 'YOHANES PAULUS NESI LEBAO, ST',
             'nip'             => '19900523 202521 1 063',

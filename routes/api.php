@@ -9,17 +9,11 @@ use App\Http\Controllers\Api\LetterIndexController;
 use App\Http\Controllers\Api\LetterController;
 use App\Http\Controllers\PendudukController;
 
-// Public API - data read-only yang tidak sensitif
-// SECURITY (A04): Throttle public endpoints to prevent enumeration/DoS
 Route::middleware('throttle:60,1')->group(function () {
     Route::get('/letter-index-groups', [LetterIndexController::class, 'groups']);
     Route::get('/letter-counters/{templateSlug}', [LetterCounterController::class, 'show']);
 });
 
-// SECURITY (A10 - SSRF): Wilayah proxy — URLs are restricted to a hardcoded
-// allow-listed domain (ibnux.github.io). IDs are stripped of non-digits before
-// being interpolated into the URL, preventing path traversal. Throttled to
-// prevent the proxy from being used as a DoS amplifier.
 Route::middleware('throttle:30,1')->group(function () {
     Route::get('/wilayah/provinces', function () {
         return Cache::remember('wilayah_provinces', 86400, function () {
@@ -56,11 +50,7 @@ Route::middleware('throttle:30,1')->group(function () {
     });
 });
 
-// Semua API route yang mengubah data / data sensitif memerlukan autentikasi
 Route::middleware(['auth'])->group(function () {
-    // SECURITY (A01): Counter increment restricted to staff & admin only.
-    // Any authenticated user (e.g. lurah viewing only) must not be able to
-    // increment letter counters and corrupt the numbering sequence.
     Route::post('/letter-counters/{templateSlug}/increment', [LetterCounterController::class, 'increment'])
         ->middleware('role:staff,admin');
 });

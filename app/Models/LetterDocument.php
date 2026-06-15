@@ -14,7 +14,7 @@ class LetterDocument extends Model
         'original_name',
         'mime_type',
         'file_size',
-        'uploaded_by', // SECURITY (A01): Track uploader for object-level authorization
+        'uploaded_by',
     ];
 
     protected $appends = ['url'];

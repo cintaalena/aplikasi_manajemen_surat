@@ -7,7 +7,6 @@ const props = defineProps({
     users: { type: Array, default: () => [] },
 })
 
-// ── Flash helpers ──────────────────────────────────────────────────────────
 import { usePage } from '@inertiajs/vue3'
 const page = usePage()
 const flashSuccess        = computed(() => page.props.flash?.success)
@@ -16,7 +15,6 @@ const flashCredentialName     = computed(() => page.props.flash?.credential_name
 const flashCredentialRole     = computed(() => page.props.flash?.credential_role)
 const flashCredentialPassword = computed(() => page.props.flash?.credential_password)
 
-// ── JABATAN options ────────────────────────────────────────────────────────
 const jabatanOptions = [
     { value: 'lurah',                             label: 'Lurah' },
     { value: 'sekretaris',                        label: 'Sekretaris' },
@@ -30,14 +28,12 @@ const jabatanOptions = [
 const roleLabel = (role) => ({ lurah: 'Lurah', staff: 'Staff' }[role] ?? role)
 const jabatanLabel = (val) => jabatanOptions.find(j => j.value === val)?.label ?? val
 
-// ── Modal state ────────────────────────────────────────────────────────────
 const showCreate = ref(false)
 const showEdit   = ref(false)
 const showReset  = ref(false)
 const editTarget = ref(null)
 const resetTarget= ref(null)
 
-// ── Forms ──────────────────────────────────────────────────────────────────
 const createForm = useForm({
     name: '', nip: '', jabatan: '', role: 'staff', password: '', password_confirmation: '',
 })
@@ -48,7 +44,6 @@ const editForm = useForm({
 
 const resetForm = useForm({ password: '' })
 
-// ── Actions ────────────────────────────────────────────────────────────────
 const submitCreate = () => {
     createForm.post(route('admin.pengguna.store'), {
         onSuccess: () => { showCreate.value = false; createForm.reset() },
@@ -94,7 +89,6 @@ const submitReset = () => {
         <Head title="Manajemen Pengguna" />
 
         <div class="space-y-5">
-            <!-- Header -->
             <div class="flex items-center justify-between">
                 <h1 class="text-xl font-bold text-gray-900">Manajemen Pengguna</h1>
                 <button
@@ -105,7 +99,6 @@ const submitReset = () => {
                 </button>
             </div>
 
-            <!-- Flash success + credential baru -->
             <div
                 v-if="flashCredential"
                 class="rounded-xl border-2 border-green-400 bg-green-50 px-5 py-4 text-sm text-green-900"
@@ -140,7 +133,6 @@ const submitReset = () => {
                 {{ flashSuccess }}
             </div>
 
-            <!-- Table -->
             <div class="overflow-x-auto rounded-xl border border-gray-200">
                 <table class="min-w-full divide-y divide-gray-200 text-sm">
                     <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500">
@@ -200,7 +192,6 @@ const submitReset = () => {
             </div>
         </div>
 
-        <!-- ── Modal: Tambah Pengguna ──────────────────────────────────────── -->
         <Teleport to="body">
             <div v-if="showCreate" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
                 <div class="w-full max-w-md rounded-2xl bg-white shadow-xl">
@@ -263,7 +254,6 @@ const submitReset = () => {
             </div>
         </Teleport>
 
-        <!-- ── Modal: Edit Pengguna ────────────────────────────────────────── -->
         <Teleport to="body">
             <div v-if="showEdit" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
                 <div class="w-full max-w-md rounded-2xl bg-white shadow-xl">
@@ -310,7 +300,6 @@ const submitReset = () => {
             </div>
         </Teleport>
 
-        <!-- ── Modal: Reset Password ───────────────────────────────────────── -->
         <Teleport to="body">
             <div v-if="showReset" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
                 <div class="w-full max-w-sm rounded-2xl bg-white shadow-xl">

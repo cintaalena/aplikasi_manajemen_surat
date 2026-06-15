@@ -12,10 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('letters', function (Blueprint $table) {
-            // Flag surat masuk manual (dari luar, bukan dari cetak web)
             $table->boolean('is_manual')->default(false)->after('printed_by');
 
-            // Kolom-kolom ini tidak relevan untuk surat manual, jadikan nullable
             $table->unsignedInteger('index_code')->nullable()->change();
             $table->unsignedBigInteger('urut')->nullable()->change();
             $table->string('month_roman', 4)->nullable()->change();

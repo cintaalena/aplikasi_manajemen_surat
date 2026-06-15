@@ -92,7 +92,6 @@ const { handleFormArrowNav } = useFormArrowNav()
         <div class="rounded-2xl border border-green-100 bg-white p-6 shadow-sm">
           <form @submit.prevent="submit" @keydown="handleFormArrowNav" class="space-y-6">
 
-            <!-- Identitas Keluarga -->
             <div class="rounded-2xl border border-gray-200 p-4">
               <h2 class="mb-4 text-lg font-semibold text-gray-900">Identitas Keluarga</h2>
 
@@ -165,7 +164,6 @@ const { handleFormArrowNav } = useFormArrowNav()
               </div>
             </div>
 
-            <!-- Data Individu -->
             <div class="rounded-2xl border border-gray-200 p-4">
               <h2 class="mb-4 text-lg font-semibold text-gray-900">Data Individu</h2>
 

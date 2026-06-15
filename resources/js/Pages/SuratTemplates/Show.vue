@@ -16,7 +16,6 @@ const isKelahiran = computed(() => props.slug === 'keterangan-kelahiran')
 const isKematian = computed(() => props.slug === 'keterangan-kematian')
 const isPindah = computed(() => props.slug === 'keterangan-pindah')
 
-// Hitung usia dari tanggal lahir hingga tanggal meninggal
 const hitungUmurKematian = (tanggalLahir, tanggalMeninggal) => {
   if (!tanggalLahir || !tanggalMeninggal) return ''
   const lahir = new Date(tanggalLahir)
@@ -32,11 +31,9 @@ const showPreview = ref(false)
 const printMode = ref(false)
 const isPrinting = ref(false)
 
-// ── Tanda Tangan: apakah lurah ada di tempat? ───────────────────────────────
 const lurahDiTempat = ref(false)
 const authUser = computed(() => usePage().props.auth?.user ?? {})
 const isCurrentUserLurah = computed(() => authUser.value?.jabatan === 'lurah')
-// Jika lurahDiTempat dicentang dan user login bukan lurah → gunakan data lurah sebagai penanda tangan
 const effectiveSigner = computed(() => {
   if (lurahDiTempat.value && !isCurrentUserLurah.value && props.lurahUser) {
     return props.lurahUser
@@ -50,7 +47,6 @@ const showPendudukDropdown = ref(false)
 const pendudukSelected = ref(false)
 let pendudukSearchTimer = null
 
-// Preview scale — fit 794px A4 content into the container
 const previewContainerRef = ref(null)
 const previewInnerRef = ref(null)
 const previewScale = ref(1)
@@ -59,7 +55,7 @@ let previewResizeObserver = null
 
 const recalcPreviewScale = () => {
   if (!previewContainerRef.value || !previewInnerRef.value) return
-  const padding = 40 // p-5 both sides
+  const padding = 40
   const containerWidth = previewContainerRef.value.clientWidth - padding
   const scale = Math.min(1, containerWidth / 794)
   previewScale.value = scale
@@ -139,7 +135,6 @@ const form = reactive({
   pengikut: [],
 })
 
-// Auto-isi umur saat tanggal meninggal atau tanggal lahir berubah
 watch(
   () => [form.tanggalMeninggal, form.tanggalLahir],
   ([meninggal, lahir]) => {
@@ -166,7 +161,6 @@ const generateNoSurat = ({ urut, indexCode, monthRoman, year }) => {
   return `${seq}/Kel.Ftbs.${indexCode}/${monthRoman}/${year}`
 }
 
-
 const apiBase = '/api/letter-counters'
 
 const getCounter = async (templateSlug) => {
@@ -183,7 +177,7 @@ const getCounter = async (templateSlug) => {
       console.error('Counter API Error:', res.status, errorText)
       throw new Error(`Gagal mengambil counter: ${res.status}`)
     }
-    return await res.json() // {count, monthRoman, year}
+    return await res.json()
   } catch (error) {
     console.error('getCounter error:', error)
     throw error
@@ -196,7 +190,7 @@ const incrementCounter = async (templateSlug) => {
     headers: { Accept: 'application/json' },
   })
   if (!res.ok) throw new Error('Gagal increment counter')
-  return await res.json() // {count, monthRoman, year}
+  return await res.json()
 }
 
 const addPengikut = () => {
@@ -208,7 +202,6 @@ const addPengikut = () => {
     tanggalLahir: '',
     hubungan: '',
   })
-  // siapkan state autocomplete untuk entri baru
   pengikutSuggestions.value.push([])
   showPengikutDropdown.value.push(false)
   pengikutSelected.value.push(false)
@@ -223,11 +216,10 @@ const removePengikut = (index) => {
   pengikutSearchError.value.splice(index, 1)
 }
 
-// ── Autocomplete per-pengikut ────────────────────────────────────────────────
-const pengikutSuggestions    = ref([])   // array of arrays
-const showPengikutDropdown   = ref([])   // array of booleans
-const pengikutSelected       = ref([])   // array of booleans
-const pengikutSearchError    = ref([])   // array of strings
+const pengikutSuggestions    = ref([])
+const showPengikutDropdown   = ref([])
+const pengikutSelected       = ref([])
+const pengikutSearchError    = ref([])
 const pengikutSearchTimers   = {}
 
 const applyPengikutFromDb = (index, p) => {
@@ -289,7 +281,6 @@ const closePengikutDropdown = (index) => {
   showPengikutDropdown.value[index] = false
 }
 
-// ── Cascading Wilayah (untuk Surat Pindah) ──────────────────────────────────
 const provinsiList   = ref([])
 const kabupatenList  = ref([])
 const kecamatanList  = ref([])
@@ -369,7 +360,6 @@ const onDesaChange = (id) => {
   form.desaTujuan   = desa?.nama ?? ''
 }
 
-        // [{key,label,items:[{code,name}]}]
 const indexGroups = ref([])
 const selectedGroupKey = ref('')
 const selectedIndexCode = ref('')
@@ -380,7 +370,7 @@ const loadIndexGroups = async () => {
   isLoadingIndexes.value = true
   indexLoadError.value = null
   try {
-    console.log('🔄 Loading index groups from API...')
+    console.log('ðŸ”„ Loading index groups from API...')
     const res = await fetch('/api/letter-index-groups', { 
       headers: { 
         Accept: 'application/json',
@@ -390,20 +380,20 @@ const loadIndexGroups = async () => {
     })
     if (!res.ok) {
       const errorText = await res.text()
-      console.error('❌ Index Groups API Error:', res.status, errorText)
+      console.error('âŒ Index Groups API Error:', res.status, errorText)
       throw new Error(`Gagal mengambil kategori nomor index: ${res.status}`)
     }
     const data = await res.json()
-    console.log('✅ Index Groups loaded successfully:', data)
-    console.log('📊 Total categories:', data.length)
+    console.log('âœ… Index Groups loaded successfully:', data)
+    console.log('ðŸ“Š Total categories:', data.length)
     indexGroups.value = data
     isLoadingIndexes.value = false
     
     if (data.length === 0) {
-      console.warn('⚠️ No index groups found in response')
+      console.warn('âš ï¸ No index groups found in response')
     }
   } catch (error) {
-    console.error('❌ loadIndexGroups error:', error)
+    console.error('âŒ loadIndexGroups error:', error)
     indexLoadError.value = error.message
     isLoadingIndexes.value = false
   }
@@ -418,14 +408,9 @@ const clearPendudukSelection = () => {
   pendudukSelected.value = false
 }
 
-// ── Kunci field yang diisi otomatis dari database ────────────────────────────
-// Saat penduduk/ayah/ibu dipilih dari DB, field mereka tidak bisa diedit langsung.
-// Untuk mengubah data, user harus perbarui di menu Database Penduduk.
 const pendudukLocked = computed(() => pendudukSelected.value)
 const ayahLocked     = computed(() => form.ayah_id !== null)
 const ibuLocked      = computed(() => form.ibu_id !== null)
-// Field pekerjaan/alamat/rt/rw/kelurahan/kecamatan hanya terkunci jika ayah ada di database.
-// Jika hanya ibu yang ada di database, field-field ini tetap bisa diisi manual.
 const ortuAddrLocked = computed(() => form.ayah_id !== null)
 
 const resetAyah = () => {
@@ -541,13 +526,11 @@ const onNamaInput = (value) => {
   }, 300)
 }
 
-// ── Pencarian Ayah & Ibu untuk form Kelahiran ────────────────────────────────
 const ayahSuggestions = ref([])
 const showAyahDropdown = ref(false)
 const isSearchingAyah = ref(false)
 let ayahSearchTimer = null
 
-// Checkbox: ayah tidak terdata di database, isi manual
 const ayahTidakTerdataChecked = ref(false)
 const showAyahTidakTerdataNotice = computed(() =>
   String(form.namaAyah || '').trim().length >= 2 &&
@@ -609,7 +592,6 @@ const applyAyah = async (p) => {
   showAyahDropdown.value    = false
   ayahSuggestions.value     = []
 
-  // Otomatis cari istri dari KK yang sama dan isi kolom ibu
   const kode = p.kode_keluarga ?? ''
   if (kode) {
     try {
@@ -624,7 +606,7 @@ const applyAyah = async (p) => {
         showIbuDropdown.value = false
         ibuSuggestions.value  = []
       }
-    } catch { /* abaikan jika gagal */ }
+    } catch {}
   }
 }
 
@@ -642,9 +624,6 @@ const applyIbu = (p) => {
   showIbuDropdown.value = false
   ibuSuggestions.value  = []
 
-  // Hanya isi pekerjaan, alamat, rt, rw, kelurahan, kecamatan dari ibu
-  // jika ayah TIDAK terdata di database (tidak ada ayah_id) DAN
-  // user tidak memilih opsi "isi manual data ayah yang tidak terdata"
   if (!form.ayah_id && !ayahTidakTerdataChecked.value) {
     form.pekerjaan  = p.pekerjaan ?? ''
     form.rt         = p.rt ?? ''
@@ -653,7 +632,6 @@ const applyIbu = (p) => {
     form.kelurahan  = 'Fatubesi'
     form.kecamatan  = 'Kota Lama'
 
-    // Isi juga kode_keluarga dari ibu jika belum ada
     if (!form.kode_keluarga) {
       form.kode_keluarga        = p.kode_keluarga ?? ''
       form.nama_kepala_keluarga = p.nama_kepala_keluarga ?? ''
@@ -661,7 +639,6 @@ const applyIbu = (p) => {
     }
   }
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
 const validatePendudukSelectionBeforePrint = () => {
   if (!requiresPendudukValidation.value) return true
@@ -676,7 +653,6 @@ const validatePendudukSelectionBeforePrint = () => {
     throw new Error('nama ini tidak terdaftar di database penduduk kelurahan fatubesi')
   }
 
-  // Validasi pengikut (hanya untuk surat pindah)
   if (isPindah.value && form.pengikut && form.pengikut.length > 0) {
     for (let i = 0; i < form.pengikut.length; i++) {
       const item = form.pengikut[i]
@@ -700,7 +676,6 @@ const filteredIndexItems = computed(() => {
   return items
 })
 
-// ketika kategori berubah -> set index pertama pada kategori itu
 watch(selectedGroupKey, (newKey) => {
   console.log('Category changed to:', newKey)
   if (!newKey) {
@@ -708,20 +683,17 @@ watch(selectedGroupKey, (newKey) => {
     return
   }
   const g = indexGroups.value.find(x => x.key === newKey)
-  // Reset ke empty string agar user memilih sendiri
   selectedIndexCode.value = ''
   console.log('Index code reset, please select an index')
 })
 
-
-const lastCounterSnapshot = ref(null) // simpan result getCounter() terakhir biar mudah re-render
+const lastCounterSnapshot = ref(null)
 
 const setNoSuratFromCounter = (counter) => {
   if (!counter || !selectedIndexCode.value) {
     form.noSurat = ''
     return
   }
-  // Tampilkan nomor BERIKUTNYA: count + 1 (nomor yang akan dipakai saat Cetak)
   const urut = (counter.count ?? 0) + 1
   const indexCode = selectedIndexCode.value
   form.noSurat = generateNoSurat({
@@ -732,7 +704,6 @@ const setNoSuratFromCounter = (counter) => {
   })
 }
 
-// ketika index berubah -> re-render nomor surat memakai counter terakhir (tanpa fetch berulang)
 watch(selectedIndexCode, (newCode) => {
   console.log('Index code changed to:', newCode)
   if (lastCounterSnapshot.value) {
@@ -740,12 +711,10 @@ watch(selectedIndexCode, (newCode) => {
   }
 })
 
-// init: load kategori dulu, lalu ambil counter terakhir (nomor final terakhir)
 onMounted(async () => {
   console.log('=== Initializing form for slug:', props.slug, '===')
   
   try {
-    // Set judul surat berdasarkan slug
     if (isDomisili.value) {
       form.judulSurat = 'Surat Keterangan Domisili'
     } else if (isKelahiran.value) {
@@ -754,33 +723,27 @@ onMounted(async () => {
       form.judulSurat = 'Surat Keterangan Kematian'
     } else if (isPindah.value) {
       form.judulSurat = 'Surat Keterangan Pindah'
-      loadProvinsi() // pre-load provinsi di background
+      loadProvinsi()
     }
     console.log('Letter title set to:', form.judulSurat)
 
-    // Load index groups
     console.log('Loading index groups...')
     await loadIndexGroups()
     console.log('Index groups loaded. Waiting for user to select category and index.')
 
-    // Tunggu reactive update selesai
     await nextTick()
 
-    // Ambil counter untuk template ini (counter terpisah per slug)
     console.log('Fetching counter...')
     const counter = await getCounter(props.slug)
     console.log('Counter fetched:', counter)
     lastCounterSnapshot.value = counter
     
-    // Nomor surat akan di-generate otomatis ketika user memilih index code
     console.log('=== Initialization complete. Please select category and index. ===')
   } catch (e) {
     console.error('Error initializing letter form:', e)
-    // Jangan tampilkan alert, biarkan user tetap bisa mengisi form
   }
 })
 
-// Tampilkan dialog konfirmasi setelah print selesai
 const showPrintConfirm = ref(false)
 const printSheetRef = ref(null)
 
@@ -797,25 +760,18 @@ onBeforeUnmount(() => {
   previewResizeObserver?.disconnect()
 })
 
-// ── Dokumen Persyaratan Surat Kelahiran ──────────────────────────────────────
-
-// Studi kasus: 'normal_0_60' | 'normal_lebih_60' | 'luar_nikah' | ''
 const jenisPendaftaranKelahiran = ref('')
 
-// Semua dokumen yang mungkin dibutuhkan untuk kelahiran
 const KELAHIRAN_DOCS_CONFIG = {
-  // ─── Kasus 1 & 2: Normal (dalam nikah) ───
   suratKetLahir:      { label: 'Surat Keterangan Lahir dari RS/Bidan/Puskesmas',          wajib: true,  kasus: ['normal_0_60', 'normal_lebih_60'] },
   fotoKkKelahiran:    { label: 'Kartu Keluarga (KK)',                                     wajib: true,  kasus: ['normal_0_60', 'normal_lebih_60'] },
   fotoKtpAyahIbu:     { label: 'Fotocopy KTP Ayah dan Ibu',                               wajib: true,  kasus: ['normal_0_60', 'normal_lebih_60'] },
   fotoBukuNikah:      { label: 'Fotocopy Buku Nikah / Akta Perkawinan',                  wajib: true,  kasus: ['normal_0_60', 'normal_lebih_60'] },
   fotoKtp2Saksi:      { label: 'Fotocopy KTP 2 Orang Saksi',                             wajib: true,  kasus: ['normal_0_60', 'normal_lebih_60'] },
   suratPengantarRtRwLahir: { label: 'Surat Pengantar RT/RW',                             wajib: true,  kasus: ['normal_0_60', 'normal_lebih_60'] },
-  // ─── Tambahan untuk kasus 2 (lebih 60 hari) ───
   sptjmDataKelahiran: { label: 'SPTJM Kebenaran Data Kelahiran',                         wajib: true,  kasus: ['normal_lebih_60'] },
   suratPernyataanBelumAkta: { label: 'Surat Pernyataan Belum Punya Akta',               wajib: true,  kasus: ['normal_lebih_60'] },
   fotoIjazahOrtu:     { label: 'Fotocopy Ijazah Orang Tua',                              wajib: true,  kasus: ['normal_lebih_60'] },
-  // ─── Kasus 3: Luar nikah ───
   suratKetLahirLN:    { label: 'Surat Keterangan Lahir dari RS/Bidan/Puskesmas',         wajib: true,  kasus: ['luar_nikah'] },
   fotoKkIbu:          { label: 'KK Asli dari Ibu',                                       wajib: true,  kasus: ['luar_nikah'] },
   fotoKtpAyahIbuLN:   { label: 'Fotocopy KTP Ayah dan Ibu',                              wajib: true,  kasus: ['luar_nikah'] },
@@ -824,12 +780,10 @@ const KELAHIRAN_DOCS_CONFIG = {
   sptjmPengakuanAnak: { label: 'SPTJM Pengakuan Anak dari Ayah Biologis (opsional, jika nama ayah ingin masuk akta)', wajib: false, kasus: ['luar_nikah'] },
 }
 
-// State per dokumen kelahiran
 const kelDokState = reactive(
   Object.fromEntries(Object.keys(KELAHIRAN_DOCS_CONFIG).map(k => [k, { id: null, url: null, isUploading: false, error: '' }]))
 )
 
-// Daftar dokumen yang aktif (sesuai kasus terpilih)
 const activeKelahiranDocs = computed(() => {
   if (!jenisPendaftaranKelahiran.value) return []
   return Object.entries(KELAHIRAN_DOCS_CONFIG)
@@ -882,7 +836,7 @@ const removeKelDok = async (key) => {
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
         credentials: 'include',
       })
-    } catch { /* abaikan */ }
+    } catch {}
   }
   kelDokState[key].id  = null
   kelDokState[key].url = null
@@ -912,22 +866,18 @@ const validateDokKelahiranBeforePrint = () => {
     .filter(d => d.wajib && !kelDokState[d.key].id)
     .map(d => d.label)
   if (missing.length > 0) {
-    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
+    throw new Error('Dokumen persyaratan belum lengkap:\nâ€¢ ' + missing.join('\nâ€¢ '))
   }
   return true
 }
 
 const getKelDokIds = () => Object.values(kelDokState).map(s => s.id).filter(Boolean)
 
-// ── Dokumen Persyaratan Surat Kematian ───────────────────────────────────────
-
-// Jenis surat kematian yang dipilih user: 'dokter' | 'saksi' | ''
 const jenisSuratKematian = ref('')
 
-// Daftar dokumen pendukung (urut tampilan)
 const KEMATIAN_DOCS = [
   { key: 'suratPengantarRtRw',     label: 'Surat Pengantar RT/RW',                                       wajib: true  },
-  { key: 'suratKetKematian',       label: '', /* diisi dinamis berdasarkan jenisSuratKematian */          wajib: true  },
+  { key: 'suratKetKematian',       label: '',           wajib: true  },
   { key: 'fotoKtpAlmarhum',        label: 'Fotocopy KTP Almarhum/Almarhumah',                            wajib: true  },
   { key: 'fotoKkAlmarhum',         label: 'Fotocopy Kartu Keluarga Almarhum/Almarhumah',                 wajib: true  },
   { key: 'fotoKtpPemohon',         label: 'Fotocopy KTP Pemohon (Pelapor)',                              wajib: true  },
@@ -942,12 +892,10 @@ const labelKetKematian = computed(() =>
       : 'Dokumen Keterangan Kematian'
 )
 
-// State per dokumen: { id: number|null, url: string|null, isUploading: boolean, error: string }
 const dokState = reactive(
   Object.fromEntries(KEMATIAN_DOCS.map(d => [d.key, { id: null, url: null, isUploading: false, error: '' }]))
 )
 
-// Ambil CSRF token dari meta tag (sudah disediakan Laravel di blade)
 const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? ''
 
 const uploadDokumen = async (key, file) => {
@@ -1016,12 +964,11 @@ const removeDok = async (key) => {
         },
         credentials: 'include',
       })
-    } catch { /* abaikan, dokumen tetap dihapus dari state */ }
+    } catch {}
   }
   dokState[key].id  = null
   dokState[key].url = null
   dokState[key].error = ''
-  // Jika menghapus dokumen keterangan kematian, reset juga pilihan jenis
   if (key === 'suratKetKematian') {
     jenisSuratKematian.value = ''
   }
@@ -1043,14 +990,12 @@ const validateDokKematianBeforePrint = () => {
   }
 
   if (missing.length > 0) {
-    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
+    throw new Error('Dokumen persyaratan belum lengkap:\nâ€¢ ' + missing.join('\nâ€¢ '))
   }
   return true
 }
 
 const getDokIds = () => KEMATIAN_DOCS.map(d => dokState[d.key].id).filter(Boolean)
-
-// ── Dokumen Persyaratan Surat Pindah ─────────────────────────────────────────
 
 const PINDAH_DOCS = [
   { key: 'suratPengantarRt',  label: 'Surat Pengantar dari RT',                                  wajib: true },
@@ -1109,7 +1054,7 @@ const removePindahDok = async (key) => {
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
         credentials: 'include',
       })
-    } catch { /* abaikan */ }
+    } catch {}
   }
   pindahDokState[key].id  = null
   pindahDokState[key].url = null
@@ -1120,15 +1065,12 @@ const validateDokPindahBeforePrint = () => {
   if (!isPindah.value) return true
   const missing = PINDAH_DOCS.filter(d => d.wajib && !pindahDokState[d.key].id).map(d => d.label)
   if (missing.length > 0) {
-    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
+    throw new Error('Dokumen persyaratan belum lengkap:\nâ€¢ ' + missing.join('\nâ€¢ '))
   }
   return true
 }
 
 const getPindahDokIds = () => PINDAH_DOCS.map(d => pindahDokState[d.key].id).filter(Boolean)
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ── Dokumen Persyaratan Surat Keterangan Domisili ─────────────────────────────
 
 const DOMISILI_DOCS = [
   { key: 'suratPengantarRtRwDom', label: 'Surat Pengantar RT/RW', wajib: true },
@@ -1184,7 +1126,7 @@ const removeDomDok = async (key) => {
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
         credentials: 'include',
       })
-    } catch { /* abaikan */ }
+    } catch {}
   }
   domDokState[key].id  = null
   domDokState[key].url = null
@@ -1195,13 +1137,12 @@ const validateDokDomisiliBeforePrint = () => {
   if (!isDomisili.value) return true
   const missing = DOMISILI_DOCS.filter(d => d.wajib && !domDokState[d.key].id).map(d => d.label)
   if (missing.length > 0) {
-    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
+    throw new Error('Dokumen persyaratan belum lengkap:\nâ€¢ ' + missing.join('\nâ€¢ '))
   }
   return true
 }
 
 const getDomDokIds = () => DOMISILI_DOCS.map(d => domDokState[d.key].id).filter(Boolean)
-// ─────────────────────────────────────────────────────────────────────────────
 
 const finalizeLetter = async (templateSlug) => {
   if (!selectedIndexCode.value) {
@@ -1238,7 +1179,6 @@ const finalizeLetter = async (templateSlug) => {
 
   if (!res.ok) {
     if (res.status === 409) {
-      // Duplicate no_surat — backend sudah majukan counter, beri tahu frontend
       const errData = await res.json().catch(() => ({}))
       if (errData.duplicate) {
         const e = new Error(errData.message || 'Nomor surat sudah digunakan.')
@@ -1263,7 +1203,7 @@ const finalizeLetter = async (templateSlug) => {
 
   const data = await res.json()
   if (!data || !data.noSurat) throw new Error('Respons tidak valid dari server.')
-  return data // {id,noSurat,urut,monthRoman,year}
+  return data
 }
 
 const printNow = async () => {
@@ -1319,8 +1259,6 @@ const printNow = async () => {
   printMode.value = true
   await nextTick()
 
-  // Tunggu semua gambar di print sheet selesai diunduh sebelum window.print()
-  // (nextTick hanya tunggu DOM Vue, bukan resource network seperti gambar)
   if (printSheetRef.value) {
     const imgs = Array.from(printSheetRef.value.querySelectorAll('img'))
     const pending = imgs.filter(img => !img.complete)
@@ -1337,21 +1275,19 @@ const printNow = async () => {
   window.print()
 }
 
-// Modal sukses setelah finalize berhasil
 const showSuccessModal = ref(false)
-const savedLetter = ref(null) // {id, noSurat}
+const savedLetter = ref(null)
 const isFinalizing = ref(false)
 
 const confirmFinalize = async (confirmed) => {
   showPrintConfirm.value = false
 
   if (!confirmed) {
-    // User batalkan: kembalikan tampilan nomor preview
     if (lastCounterSnapshot.value) setNoSuratFromCounter(lastCounterSnapshot.value)
     return
   }
 
-  if (isFinalizing.value) return   // cegah double-click / double-submit
+  if (isFinalizing.value) return
   isFinalizing.value = true
   isPrinting.value = true
   try {
@@ -1367,7 +1303,6 @@ const confirmFinalize = async (confirmed) => {
       alert(msg)
       if (next) {
         form.noSurat = next
-        // Sinkronkan lastCounterSnapshot agar preview nomor konsisten
         const urutMatch = next.match(/^(\d+)\//)
         if (urutMatch && lastCounterSnapshot.value) {
           lastCounterSnapshot.value = {
@@ -1376,7 +1311,6 @@ const confirmFinalize = async (confirmed) => {
           }
         }
       }
-      // TIDAK buka ulang dialog — user harus tekan Cetak lagi dari form
     } else {
       alert(e.message || 'Gagal menyimpan data surat ke arsip. Silakan coba lagi.')
     }
@@ -1399,12 +1333,11 @@ const confirmFinalize = async (confirmed) => {
         <div>
           <h1 class="text-xl font-bold text-gray-900">{{ form.judulSurat }}</h1>
           <p class="mt-1 text-sm text-gray-600">
-            Isi form → <b>View</b> untuk preview → <b>Cetak</b> untuk arsip.
+            Isi form â†’ <b>View</b> untuk preview â†’ <b>Cetak</b> untuk arsip.
           </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-          <!-- Checkbox: lurah di tempat (hanya muncul jika user login bukan lurah & ada data lurah) -->
           <label
             v-if="!isCurrentUserLurah && props.lurahUser"
             class="flex items-center gap-2 cursor-pointer select-none rounded-xl border border-gray-200 bg-white px-3 py-2"
@@ -1445,12 +1378,10 @@ const confirmFinalize = async (confirmed) => {
       
 
       <div class="grid gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]" :class="showPreview ? '' : 'lg:grid-cols-2'">
-        <!-- FORM -->
         <div class="print:hidden rounded-2xl border border-purple-100 bg-white p-5 shadow-sm">
           <div class="text-sm font-semibold text-gray-900">Form Data</div>
 
           <div class="mt-4 grid gap-4 sm:grid-cols-2">
-            <!-- KATEGORI -->
             <div class="sm:col-span-2">
               <label class="text-xs font-semibold text-gray-700">Kategori Nomor Index</label>
               <select
@@ -1467,11 +1398,10 @@ const confirmFinalize = async (confirmed) => {
               </select>
               <p v-if="indexLoadError" class="mt-1 text-xs text-red-600">{{ indexLoadError }}</p>
               <p v-else-if="!isLoadingIndexes && indexGroups.length > 0" class="mt-1 text-xs text-green-600">
-                ✓ {{ indexGroups.length }} kategori tersedia
+                âœ“ {{ indexGroups.length }} kategori tersedia
               </p>
             </div>
 
-            <!-- INDEX -->
             <div class="sm:col-span-2">
               <label class="text-xs font-semibold text-gray-700">Nomor Index</label>
               <select
@@ -1491,7 +1421,6 @@ const confirmFinalize = async (confirmed) => {
               </p>
             </div>
 
-            <!-- NOMOR SURAT -->
             <div class="sm:col-span-2">
               <label class="text-xs font-semibold text-gray-700">Nomor Surat</label>
               <input
@@ -1501,12 +1430,11 @@ const confirmFinalize = async (confirmed) => {
                 class="mt-1 w-full rounded-xl border-gray-200 bg-gray-50 focus:border-purple-400 focus:ring-purple-400"
               />
               <p class="mt-1 text-xs text-gray-500">
-                <span v-if="!selectedIndexCode" class="text-amber-600 font-semibold">⚠️ Pilih kategori dan nomor index terlebih dahulu.</span>
+                <span v-if="!selectedIndexCode" class="text-amber-600 font-semibold">âš ï¸ Pilih kategori dan nomor index terlebih dahulu.</span>
                 <span v-else>Nomor urut naik hanya saat <b>Cetak</b>. Saat edit, memakai nomor final terakhir.</span>
               </p>
             </div>
 
-            <!-- TANGGAL SURAT -->
             <div>
               <label class="text-xs font-semibold text-gray-700">Tanggal Surat</label>
               <input
@@ -1516,10 +1444,8 @@ const confirmFinalize = async (confirmed) => {
               />
             </div>
 
-            <!-- Domisili Fields -->
             <template v-if="isDomisili">
 
-              <!-- Banner: data terkunci dari database -->
               <div
                 v-if="pendudukLocked"
                 class="sm:col-span-2 flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5"
@@ -1568,21 +1494,21 @@ const confirmFinalize = async (confirmed) => {
                     @click="applyPendudukToForm(item)"
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
-                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} • RT {{ item.rt }}/RW {{ item.rw }}</div>
+                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} â€¢ RT {{ item.rt }}/RW {{ item.rw }}</div>
                   </button>
                 </div>
 
                 <p v-if="isSearchingPenduduk" class="mt-1 text-xs text-gray-500">Mencari data penduduk...</p>
                 <p v-else-if="pendudukSearchError" class="mt-1 text-xs text-red-600">{{ pendudukSearchError }}</p>
                 <div v-else-if="pendudukSelected" class="mt-1 flex items-center gap-2">
-                  <p class="text-xs text-green-600">✓ Nama ditemukan di database penduduk Kelurahan Fatubesi</p>
+                  <p class="text-xs text-green-600">âœ“ Nama ditemukan di database penduduk Kelurahan Fatubesi</p>
                   <button type="button" @click="clearPendudukSelection()" class="text-xs text-gray-400 hover:text-red-500 underline whitespace-nowrap">Ganti</button>
                 </div>
                 <p
                   v-else-if="form.nama && form.nama.length >= 2 && !showPendudukDropdown && pendudukSuggestions.length === 0"
                   class="mt-1 text-xs text-red-600"
                 >
-                  ✗ Nama belum ditemukan di database penduduk Kelurahan Fatubesi
+                  âœ— Nama belum ditemukan di database penduduk Kelurahan Fatubesi
                 </p>
               </div>
 
@@ -1631,7 +1557,6 @@ const confirmFinalize = async (confirmed) => {
                 />
               </div>
 
-              <!-- Alamat Asal terpisah per komponen -->
               <div class="sm:col-span-2">
                 <p class="text-xs font-bold text-gray-700 mb-2">Alamat Asal (sesuai KTP)</p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
@@ -1742,7 +1667,6 @@ const confirmFinalize = async (confirmed) => {
                 />
               </div>
 
-              <!-- ══ DOKUMEN PERSYARATAN SURAT KETERANGAN DOMISILI ══ -->
               <div class="sm:col-span-2 mt-1">
                 <div class="rounded-xl border border-purple-200 bg-purple-50 p-4 space-y-4">
                   <div class="flex items-start gap-2">
@@ -1771,7 +1695,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
                         <button type="button" @click="removeDomDok(doc.key)" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                       </div>
                     </div>
@@ -1784,11 +1708,9 @@ const confirmFinalize = async (confirmed) => {
 
                 </div>
               </div>
-              <!-- ══ AKHIR DOKUMEN PERSYARATAN DOMISILI ══ -->
 
             </template>
 
-            <!-- Kelahiran Fields -->
             <template v-else-if="isKelahiran">
               <div class="sm:col-span-2">
                 <label class="text-xs font-semibold text-gray-700">Nama</label>
@@ -1866,16 +1788,15 @@ const confirmFinalize = async (confirmed) => {
                     @click="applyAyah(item)"
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
-                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} • RT {{ item.rt }}/RW {{ item.rw }}</div>
+                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} â€¢ RT {{ item.rt }}/RW {{ item.rw }}</div>
                   </button>
                 </div>
                 <div v-if="isSearchingAyah" class="mt-1 text-xs text-gray-500">Mencari...</div>
                 <div v-else-if="ayahLocked" class="mt-1 flex items-center gap-2">
-                  <span class="text-xs text-green-600">✓ Data ayah dari database</span>
+                  <span class="text-xs text-green-600">âœ“ Data ayah dari database</span>
                   <button type="button" @click="resetAyah()" class="text-xs text-gray-400 hover:text-red-500 underline whitespace-nowrap">Ganti</button>
                 </div>
 
-                <!-- Notifikasi: ayah tidak terdata di database -->
                 <div
                   v-if="showAyahTidakTerdataNotice"
                   class="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5"
@@ -1919,12 +1840,12 @@ const confirmFinalize = async (confirmed) => {
                     @click="applyIbu(item)"
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
-                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} • RT {{ item.rt }}/RW {{ item.rw }}</div>
+                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} â€¢ RT {{ item.rt }}/RW {{ item.rw }}</div>
                   </button>
                 </div>
                 <div v-if="isSearchingIbu" class="mt-1 text-xs text-gray-500">Mencari...</div>
                 <div v-else-if="ibuLocked" class="mt-1 flex items-center gap-2">
-                  <span class="text-xs text-green-600">✓ Data ibu dari database</span>
+                  <span class="text-xs text-green-600">âœ“ Data ibu dari database</span>
                   <button type="button" @click="resetIbu()" class="text-xs text-gray-400 hover:text-red-500 underline whitespace-nowrap">Ganti</button>
                 </div>
               </div>
@@ -2005,7 +1926,6 @@ const confirmFinalize = async (confirmed) => {
                 />
               </div>
 
-              <!-- ══ DOKUMEN PERSYARATAN SURAT KELAHIRAN ══ -->
               <div class="sm:col-span-2 mt-1">
                 <div class="rounded-xl border border-green-200 bg-green-50 p-4 space-y-4">
                   <div class="flex items-start gap-2">
@@ -2016,7 +1936,6 @@ const confirmFinalize = async (confirmed) => {
                     </div>
                   </div>
 
-                  <!-- Pilih Studi Kasus -->
                   <div class="rounded-lg bg-white border border-green-100 p-3 space-y-3">
                     <div class="flex items-center gap-2">
                       <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Wajib</span>
@@ -2025,7 +1944,7 @@ const confirmFinalize = async (confirmed) => {
                     <div class="flex flex-col gap-2 pl-1">
                       <label class="flex items-start gap-2 cursor-pointer select-none">
                         <input type="radio" name="jenisPendaftaranKelahiran" value="normal_0_60" v-model="jenisPendaftaranKelahiran" class="accent-green-600 h-4 w-4 mt-0.5 flex-shrink-0" />
-                        <span class="text-xs text-gray-700"><strong>Kasus 1:</strong> Bayi usia <strong>0–60 hari</strong> (didaftarkan tepat waktu, dalam pernikahan sah)</span>
+                        <span class="text-xs text-gray-700"><strong>Kasus 1:</strong> Bayi usia <strong>0â€“60 hari</strong> (didaftarkan tepat waktu, dalam pernikahan sah)</span>
                       </label>
                       <label class="flex items-start gap-2 cursor-pointer select-none">
                         <input type="radio" name="jenisPendaftaranKelahiran" value="normal_lebih_60" v-model="jenisPendaftaranKelahiran" class="accent-green-600 h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -2036,30 +1955,27 @@ const confirmFinalize = async (confirmed) => {
                         <span class="text-xs text-gray-700"><strong>Kasus 3:</strong> Anak lahir <strong>di luar nikah</strong></span>
                       </label>
                     </div>
-                    <p v-if="!jenisPendaftaranKelahiran" class="text-xs text-amber-700 font-medium pl-1">⚠ Pilih salah satu studi kasus di atas untuk melihat daftar dokumen yang diperlukan.</p>
+                    <p v-if="!jenisPendaftaranKelahiran" class="text-xs text-amber-700 font-medium pl-1">âš  Pilih salah satu studi kasus di atas untuk melihat daftar dokumen yang diperlukan.</p>
                   </div>
 
-                  <!-- Ringkasan syarat sesuai kasus -->
                   <div v-if="jenisPendaftaranKelahiran" class="rounded-lg bg-white border border-green-100 p-3">
                     <p class="text-xs font-semibold text-gray-700 mb-2">Dokumen yang diperlukan untuk kasus ini:</p>
                     <ul class="space-y-1 pl-1">
                       <li v-for="(doc, idx) in activeKelahiranDocs" :key="doc.key" class="flex items-center gap-2 text-xs text-gray-700">
-                        <span :class="doc.wajib ? 'text-green-600' : 'text-gray-400'" class="flex-shrink-0">{{ doc.wajib ? '●' : '○' }}</span>
+                        <span :class="doc.wajib ? 'text-green-600' : 'text-gray-400'" class="flex-shrink-0">{{ doc.wajib ? 'â—' : 'â—‹' }}</span>
                         {{ idx + 1 }}. {{ doc.label }}
                         <span v-if="!doc.wajib" class="text-gray-400">(opsional)</span>
-                        <span v-if="kelDokState[doc.key].id" class="ml-auto text-green-700 font-semibold">✓</span>
+                        <span v-if="kelDokState[doc.key].id" class="ml-auto text-green-700 font-semibold">âœ“</span>
                       </li>
                     </ul>
                   </div>
 
-                  <!-- Kartu upload per dokumen -->
                   <template v-if="jenisPendaftaranKelahiran">
                     <div
                       v-for="(doc, idx) in activeKelahiranDocs"
                       :key="doc.key"
                       class="rounded-lg bg-white border border-green-100 p-3 space-y-2"
                     >
-                      <!-- Nama dokumen -->
                       <div class="flex items-start gap-2">
                         <span
                           :class="doc.wajib ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'"
@@ -2067,7 +1983,6 @@ const confirmFinalize = async (confirmed) => {
                         >{{ doc.wajib ? 'Wajib' : 'Opsional' }}</span>
                         <span class="text-xs font-medium text-gray-700 leading-snug">{{ idx + 1 }}. {{ doc.label }}</span>
                       </div>
-                      <!-- Tombol upload -->
                       <div v-if="kelDokState[doc.key].isUploading" class="rounded-lg border-2 border-dashed border-green-300 bg-green-50 py-2 text-center text-xs text-green-700 font-medium">
                         Mengupload...
                       </div>
@@ -2079,7 +1994,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-3 py-2">
-                        <span class="text-xs text-green-700 font-semibold">✓ File tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">âœ“ File tersimpan</span>
                         <button type="button" @click="removeKelDok(doc.key)" class="text-xs text-red-500 hover:text-red-700 font-medium">Hapus</button>
                       </div>
                       <p v-if="kelDokState[doc.key].error" class="text-xs text-red-600">{{ kelDokState[doc.key].error }}</p>
@@ -2092,13 +2007,10 @@ const confirmFinalize = async (confirmed) => {
 
                 </div>
               </div>
-              <!-- ══ AKHIR DOKUMEN PERSYARATAN ══ -->
             </template>
 
-            <!-- Kematian Fields -->
             <template v-else-if="isKematian">
 
-              <!-- Banner: data terkunci dari database -->
               <div
                 v-if="pendudukLocked"
                 class="sm:col-span-2 flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5"
@@ -2139,21 +2051,21 @@ const confirmFinalize = async (confirmed) => {
                     @click="applyPendudukToForm(item)"
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
-                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} • RT {{ item.rt }}/RW {{ item.rw }}</div>
+                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} â€¢ RT {{ item.rt }}/RW {{ item.rw }}</div>
                   </button>
                 </div>
 
                 <p v-if="isSearchingPenduduk" class="mt-1 text-xs text-gray-500">Mencari data penduduk...</p>
                 <p v-else-if="pendudukSearchError" class="mt-1 text-xs text-red-600">{{ pendudukSearchError }}</p>
                 <div v-else-if="pendudukSelected" class="mt-1 flex items-center gap-2">
-                  <p class="text-xs text-green-600">✓ Nama ditemukan di database penduduk Kelurahan Fatubesi</p>
+                  <p class="text-xs text-green-600">âœ“ Nama ditemukan di database penduduk Kelurahan Fatubesi</p>
                   <button type="button" @click="clearPendudukSelection()" class="text-xs text-gray-400 hover:text-red-500 underline whitespace-nowrap">Ganti</button>
                 </div>
                 <p
                   v-else-if="form.nama && form.nama.length >= 2 && !showPendudukDropdown && pendudukSuggestions.length === 0"
                   class="mt-1 text-xs text-red-600"
                 >
-                  ✗ Nama belum ditemukan di database penduduk Kelurahan Fatubesi
+                  âœ— Nama belum ditemukan di database penduduk Kelurahan Fatubesi
                 </p>
               </div>
 
@@ -2266,7 +2178,6 @@ const confirmFinalize = async (confirmed) => {
                 />
               </div>
 
-              <!-- ══ DOKUMEN PERSYARATAN SURAT KEMATIAN ══ -->
               <div class="sm:col-span-2 mt-1">
                 <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-4">
                   <div class="flex items-start gap-2">
@@ -2277,8 +2188,6 @@ const confirmFinalize = async (confirmed) => {
                     </div>
                   </div>
 
-                  <!-- helper reusable: kartu upload per dokumen -->
-                  <!-- 1. Surat Pengantar RT/RW -->
                   <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
@@ -2293,7 +2202,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
                         <button type="button" @click="removeDok('suratPengantarRtRw')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                       </div>
                     </div>
@@ -2304,14 +2213,12 @@ const confirmFinalize = async (confirmed) => {
                     </div>
                   </div>
 
-                  <!-- 2. Pilih jenis surat keterangan kematian (radio) lalu upload -->
                   <div class="rounded-lg bg-white border border-amber-100 p-3 space-y-3">
                     <div class="flex items-center gap-2">
                       <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Wajib</span>
                       <span class="text-xs font-medium text-gray-700">2. Keterangan Kematian</span>
                     </div>
 
-                    <!-- Radio pilihan jenis -->
                     <div v-if="!dokState.suratKetKematian.id" class="flex flex-col gap-2 pl-1">
                       <label class="flex items-center gap-2 cursor-pointer select-none">
                         <input
@@ -2334,9 +2241,8 @@ const confirmFinalize = async (confirmed) => {
                         <span class="text-xs text-gray-700">Surat Pernyataan dari <strong>2 Orang Saksi</strong> (pengganti surat dokter)</span>
                       </label>
                     </div>
-                    <p v-if="!jenisSuratKematian && !dokState.suratKetKematian.id" class="text-xs text-amber-700 font-medium pl-1">⚠ Pilih salah satu di atas, lalu upload file.</p>
+                    <p v-if="!jenisSuratKematian && !dokState.suratKetKematian.id" class="text-xs text-amber-700 font-medium pl-1">âš  Pilih salah satu di atas, lalu upload file.</p>
 
-                    <!-- Upload setelah dipilih -->
                     <div v-if="jenisSuratKematian || dokState.suratKetKematian.id" class="pl-2 border-l-2 border-amber-300">
                       <div class="flex items-center justify-between gap-2 flex-wrap">
                         <span class="text-xs text-gray-600 italic">{{ labelKetKematian }}</span>
@@ -2348,7 +2254,7 @@ const confirmFinalize = async (confirmed) => {
                           </label>
                         </div>
                         <div v-else class="flex items-center gap-2 flex-shrink-0">
-                          <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                          <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
                           <button type="button" @click="removeDok('suratKetKematian')" class="text-xs text-red-500 hover:text-red-700">Hapus / Ganti</button>
                         </div>
                       </div>
@@ -2360,7 +2266,6 @@ const confirmFinalize = async (confirmed) => {
                     </div>
                   </div>
 
-                  <!-- 3. Fotocopy KTP Almarhum -->
                   <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
@@ -2375,7 +2280,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
                         <button type="button" @click="removeDok('fotoKtpAlmarhum')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                       </div>
                     </div>
@@ -2386,7 +2291,6 @@ const confirmFinalize = async (confirmed) => {
                     </div>
                   </div>
 
-                  <!-- 4. Fotocopy KK Almarhum -->
                   <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
@@ -2401,7 +2305,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
                         <button type="button" @click="removeDok('fotoKkAlmarhum')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                       </div>
                     </div>
@@ -2412,7 +2316,6 @@ const confirmFinalize = async (confirmed) => {
                     </div>
                   </div>
 
-                  <!-- 5. Fotocopy KTP Pemohon -->
                   <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
@@ -2427,7 +2330,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
                         <button type="button" @click="removeDok('fotoKtpPemohon')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                       </div>
                     </div>
@@ -2438,7 +2341,6 @@ const confirmFinalize = async (confirmed) => {
                     </div>
                   </div>
 
-                  <!-- 6. Surat Pernyataan Pelapor -->
                   <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
@@ -2453,7 +2355,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
                         <button type="button" @click="removeDok('suratPernyataanPelapor')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                       </div>
                     </div>
@@ -2467,15 +2369,12 @@ const confirmFinalize = async (confirmed) => {
 
                 </div>
               </div>
-              <!-- ══ AKHIR DOKUMEN PERSYARATAN ══ -->
             </template>
 
-            <!-- Pindahan Fields -->
             <template v-else-if="isPindah">
               <div class="sm:col-span-2">
                 <div class="space-y-4">
 
-              <!-- Banner: data terkunci dari database -->
               <div
                 v-if="pendudukLocked"
                 class="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5"
@@ -2516,7 +2415,7 @@ const confirmFinalize = async (confirmed) => {
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
                     <div class="text-xs text-gray-500">
-                      NIK: {{ item.nik }} ΓÇó RT {{ item.rt }}/RW {{ item.rw }}
+                      NIK: {{ item.nik }} Î“Ã‡Ã³ RT {{ item.rt }}/RW {{ item.rw }}
                     </div>
                   </button>
                 </div>
@@ -2524,14 +2423,14 @@ const confirmFinalize = async (confirmed) => {
                <p v-if="isSearchingPenduduk" class="mt-1 text-xs text-gray-500">Mencari data penduduk...</p>
               <p v-else-if="pendudukSearchError" class="mt-1 text-xs text-red-600">{{ pendudukSearchError }}</p>
               <div v-else-if="pendudukSelected" class="mt-1 flex items-center gap-2">
-                <p class="text-xs text-green-600">✓ Nama ditemukan di database penduduk Kelurahan Fatubesi</p>
+                <p class="text-xs text-green-600">âœ“ Nama ditemukan di database penduduk Kelurahan Fatubesi</p>
                 <button type="button" @click="clearPendudukSelection()" class="text-xs text-gray-400 hover:text-red-500 underline whitespace-nowrap">Ganti</button>
               </div>
               <p
                 v-else-if="form.nama && form.nama.length >= 2 && !showPendudukDropdown && pendudukSuggestions.length === 0"
                 class="mt-1 text-xs text-red-600"
               >
-                ✗ Nama belum ditemukan di database penduduk Kelurahan Fatubesi
+                âœ— Nama belum ditemukan di database penduduk Kelurahan Fatubesi
               </p>
               </div>
 
@@ -2644,12 +2543,10 @@ const confirmFinalize = async (confirmed) => {
                 ></textarea>
               </div>
 
-              <!-- ── ALAMAT TUJUAN (Cascading Wilayah) ── -->
               <div class="sm:col-span-2">
                 <p class="text-xs font-bold text-purple-700 mb-2 mt-1">Alamat Tujuan Pindah</p>
               </div>
 
-              <!-- Provinsi -->
               <div class="sm:col-span-2">
                 <label class="text-xs font-semibold text-gray-700">Provinsi Tujuan</label>
                 <select
@@ -2663,7 +2560,6 @@ const confirmFinalize = async (confirmed) => {
                 </select>
               </div>
 
-              <!-- Kabupaten/Kota -->
               <div class="sm:col-span-2">
                 <label class="text-xs font-semibold text-gray-700">Kabupaten/Kota Tujuan</label>
                 <select
@@ -2679,7 +2575,6 @@ const confirmFinalize = async (confirmed) => {
                 </select>
               </div>
 
-              <!-- Kecamatan -->
               <div class="sm:col-span-2">
                 <label class="text-xs font-semibold text-gray-700">Kecamatan Tujuan</label>
                 <select
@@ -2695,7 +2590,6 @@ const confirmFinalize = async (confirmed) => {
                 </select>
               </div>
 
-              <!-- Desa/Kelurahan -->
               <div class="sm:col-span-2">
                 <label class="text-xs font-semibold text-gray-700">Desa/Kelurahan Tujuan</label>
                 <select
@@ -2711,7 +2605,6 @@ const confirmFinalize = async (confirmed) => {
                 </select>
               </div>
 
-              <!-- Alamat detail (RT/RW, Jalan) -->
               <div class="sm:col-span-2">
                 <label class="text-xs font-semibold text-gray-700">Detail Alamat Tujuan <span class="font-normal text-gray-400">(RT/RW, nama jalan, dll)</span></label>
                 <textarea
@@ -2721,7 +2614,6 @@ const confirmFinalize = async (confirmed) => {
                   placeholder="Contoh: RT 005/RW 002, Jl. Soekarno No. 10"
                 ></textarea>
               </div>
-
 
               <div>
                 <label class="text-xs font-semibold text-gray-700">Tanggal Pindah</label>
@@ -2773,7 +2665,6 @@ const confirmFinalize = async (confirmed) => {
                   </div>
 
                   <div class="space-y-3">
-                    <!-- Nama dengan autocomplete dari database -->
                     <div class="relative">
                       <label class="text-xs font-semibold text-gray-700">
                         Nama
@@ -2795,10 +2686,8 @@ const confirmFinalize = async (confirmed) => {
                           ]"
                           placeholder="Ketik nama pengikut..."
                         />
-                        <!-- indikator terpilih -->
-                        <span v-if="pengikutSelected[index]" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-green-600 text-sm font-medium">✓ Terdaftar</span>
+                        <span v-if="pengikutSelected[index]" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-green-600 text-sm font-medium">âœ“ Terdaftar</span>
                       </div>
-                      <!-- dropdown saran -->
                       <ul
                         v-if="showPengikutDropdown[index] && pengikutSuggestions[index]?.length > 0"
                         class="absolute z-50 mt-1 w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg"
@@ -2814,7 +2703,6 @@ const confirmFinalize = async (confirmed) => {
                           <span class="ml-2 text-xs text-gray-400">{{ p.nik }}</span>
                         </li>
                       </ul>
-                      <!-- pesan tidak ditemukan -->
                       <p
                         v-else-if="item.nama && item.nama.length >= 2 && !showPengikutDropdown[index] && pengikutSuggestions[index]?.length === 0 && !pengikutSelected[index]"
                         class="mt-1 text-xs text-red-600"
@@ -2867,7 +2755,6 @@ const confirmFinalize = async (confirmed) => {
                 </div>
               </div>
 
-              <!-- ══ DOKUMEN PERSYARATAN SURAT PINDAH ══ -->
               <div class="mt-1">
                 <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-4">
                   <div class="flex items-start gap-2">
@@ -2896,7 +2783,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
                         <button type="button" @click="removePindahDok(doc.key)" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                       </div>
                     </div>
@@ -2909,7 +2796,6 @@ const confirmFinalize = async (confirmed) => {
 
                 </div>
               </div>
-              <!-- ══ AKHIR DOKUMEN PERSYARATAN ══ -->
 
             </div>
           </div>
@@ -2917,7 +2803,6 @@ const confirmFinalize = async (confirmed) => {
           </div>
         </div>
         
-        <!-- PREVIEW (di page, untuk lihat saja) -->
         <div
           ref="previewContainerRef"
           class="rounded-2xl border border-purple-100 bg-white p-5 shadow-sm"
@@ -2979,7 +2864,6 @@ const confirmFinalize = async (confirmed) => {
     </div>
   </AppLayout>
 
-  <!-- PRINT OVERLAY (cetak) / CAPTURE OVERLAY (export Word) -->
   <Teleport to="body">
     <div v-if="printMode || isCapturing" :class="printMode ? 'print-overlay' : 'capture-overlay'">
       <div ref="printSheetRef" class="print-sheet">
@@ -2991,7 +2875,6 @@ const confirmFinalize = async (confirmed) => {
     </div>
   </Teleport>
 
-  <!-- ✅ KONFIRMASI setelah print dialog ditutup -->
   <Teleport to="body">
     <div v-if="showPrintConfirm" class="fixed inset-0 z-[999998] flex items-center justify-center bg-black/50">
       <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">

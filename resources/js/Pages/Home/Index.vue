@@ -28,21 +28,18 @@ const loading = ref(false)
 const error = ref('')
 const metrics = ref({})
 
-// ── Month picker ──────────────────────────────────────────────────────────────
 const now = new Date()
 const selectedYear  = ref(now.getFullYear())
-const selectedMonth = ref(now.getMonth() + 1) // 1-12
+const selectedMonth = ref(now.getMonth() + 1)
 
 const monthLoadingState = ref(false)
-const monthDetail = ref(null) // data dari /dashboard/letters-by-month
+const monthDetail = ref(null)
 
-// Daftar bulan [1..12]
 const monthNames = [
   'Januari','Februari','Maret','April','Mei','Juni',
   'Juli','Agustus','September','Oktober','November','Desember',
 ]
 
-// Daftar tahun yang tersedia (5 tahun ke belakang s.d. tahun ini)
 const availableYears = computed(() => {
   const currentYear = new Date().getFullYear()
   return Array.from({ length: 5 }, (_, i) => currentYear - i)
@@ -69,9 +66,7 @@ watch([selectedYear, selectedMonth], () => {
   expandedWeek.value = null
   fetchLettersByMonth()
 })
-// ─────────────────────────────────────────────────────────────────────────────
 
-// Accordion: nomor minggu yang sedang dibuka, null = semua tertutup
 const expandedWeek = ref(null)
 const toggleWeek = (weekNum) => {
   expandedWeek.value = expandedWeek.value === weekNum ? null : weekNum
@@ -113,11 +108,9 @@ onBeforeUnmount(() => {
   if (timer) clearInterval(timer)
 })
 
-// Helpers
 const fmt = (val) => String(parseInt(val, 10))
 const num = (val) => new Intl.NumberFormat('id-ID').format(Number(val || 0))
 
-// Kelompokkan semua jiwa per RW
 const groupedGenderByRw = computed(() => {
   const rows = metrics.value?.gender_per_rt_rw ?? []
   const subtotals = metrics.value?.subtotal_per_rw ?? []
@@ -140,7 +133,6 @@ const groupedGenderByRw = computed(() => {
   return Object.values(groups).sort((a, b) => parseInt(a.rw) - parseInt(b.rw))
 })
 
-// Kelompokkan kepala keluarga per RW
 const groupedKkByRw = computed(() => {
   const rows = metrics.value?.kk_per_rt_rw ?? []
   const subtotals = metrics.value?.kk_subtotal_per_rw ?? []
@@ -200,7 +192,6 @@ const educationGroupTotals = computed(() => {
   }
 })
 
-
 </script>
 
 <template>
@@ -243,7 +234,6 @@ const educationGroupTotals = computed(() => {
           {{ error }}
         </div>
 
-        <!-- Menu Tab -->
         <div class="overflow-x-auto">
           <div class="flex min-w-max gap-2 rounded-2xl border border-amber-200 bg-white p-2 shadow-sm">
             <button
@@ -263,19 +253,14 @@ const educationGroupTotals = computed(() => {
           </div>
         </div>
 
-        <!-- Judul tab aktif -->
         <div class="rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
           <h2 class="text-lg font-semibold text-gray-800">
             {{ activeTabLabel }}
           </h2>
         </div>
 
-        <!-- ========================================================= -->
-        <!-- TAB: JUMLAH SURAT -->
-        <!-- ========================================================= -->
         <div v-if="activeTab === 'surat'" class="space-y-6">
 
-          <!-- Cards Ringkasan Cepat -->
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
               <div class="text-sm text-gray-500">Surat hari ini</div>
@@ -306,7 +291,6 @@ const educationGroupTotals = computed(() => {
             </div>
           </div>
 
-          <!-- Tabel Ringkasan 12 Bulan Terakhir -->
           <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
             <h2 class="text-lg font-semibold text-gray-800">Ringkasan 12 Bulan Terakhir</h2>
             <p class="text-sm text-gray-500 mb-3">Klik baris bulan untuk melihat detail surat bulan tersebut.</p>
@@ -356,16 +340,13 @@ const educationGroupTotals = computed(() => {
             </div>
           </div>
 
-          <!-- Panel Detail Bulan Dipilih -->
           <div class="rounded-2xl border border-amber-200 bg-white p-4 shadow-sm space-y-4">
-            <!-- Header + Pilih Bulan -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <h2 class="text-lg font-semibold text-gray-800">Detail Surat per Bulan</h2>
                 <p class="text-sm text-gray-500">Pilih tahun dan bulan untuk melihat rincian.</p>
               </div>
 
-              <!-- Selector tahun & bulan -->
               <div class="flex items-center gap-2 flex-wrap">
                 <select
                   v-model.number="selectedYear"
@@ -385,14 +366,11 @@ const educationGroupTotals = computed(() => {
               </div>
             </div>
 
-            <!-- Loading state -->
             <div v-if="monthLoadingState" class="text-gray-500 text-sm">Memuat data bulan...</div>
 
-            <!-- No data -->
             <div v-else-if="!monthDetail" class="text-gray-400 italic text-sm">Data tidak tersedia.</div>
 
             <template v-else>
-              <!-- Total & judul bulan -->
               <div class="flex items-center gap-4 rounded-xl bg-amber-50 border border-amber-200 p-4">
                 <div>
                   <div class="text-sm text-gray-500">Total Surat</div>
@@ -401,7 +379,6 @@ const educationGroupTotals = computed(() => {
                 <div class="text-lg font-semibold text-gray-700">{{ monthDetail.month_label }}</div>
               </div>
 
-              <!-- Per Minggu dalam Bulan — Accordion -->
               <div>
                 <h3 class="text-sm font-semibold text-gray-700 mb-2">Rincian per Minggu</h3>
                 <div class="space-y-2">
@@ -410,7 +387,6 @@ const educationGroupTotals = computed(() => {
                     :key="w.week"
                     class="rounded-xl border border-gray-200 overflow-hidden"
                   >
-                    <!-- Header minggu — klik untuk expand -->
                     <button
                       type="button"
                       class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition text-left"
@@ -419,7 +395,6 @@ const educationGroupTotals = computed(() => {
                       <div class="flex items-center gap-3">
                         <span class="font-semibold text-gray-800">Minggu {{ w.week }}</span>
                         <span class="text-xs text-gray-500">{{ w.start }} s.d. {{ w.end }}</span>
-                        <!-- Badge ringkasan template -->
                         <span
                           v-for="ts in w.template_summary"
                           :key="ts.template_slug"
@@ -432,7 +407,6 @@ const educationGroupTotals = computed(() => {
                         <span class="rounded-full bg-amber-100 text-amber-700 font-bold text-sm px-3 py-0.5">
                           {{ w.total }} surat
                         </span>
-                        <!-- Chevron icon -->
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           class="h-4 w-4 text-gray-400 transition-transform"
@@ -444,7 +418,6 @@ const educationGroupTotals = computed(() => {
                       </div>
                     </button>
 
-                    <!-- Body accordion: daftar surat -->
                     <div v-if="expandedWeek === w.week">
                       <div v-if="w.letters.length === 0" class="px-4 py-3 text-sm text-gray-400 italic">
                         Tidak ada surat dibuat minggu ini.
@@ -492,7 +465,6 @@ const educationGroupTotals = computed(() => {
                 </div>
               </div>
 
-              <!-- Per Template -->
               <div>
                 <h3 class="text-sm font-semibold text-gray-700 mb-2">Rincian per Jenis Surat</h3>
                 <div class="space-y-2">
@@ -518,7 +490,6 @@ const educationGroupTotals = computed(() => {
             </template>
           </div>
 
-          <!-- Top Surat 30 hari terakhir -->
           <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
             <h2 class="text-lg font-semibold text-gray-800">
               Surat paling sering dibuat (30 hari terakhir)
@@ -547,12 +518,8 @@ const educationGroupTotals = computed(() => {
           </div>
         </div>
 
-        <!-- ========================================================= -->
-        <!-- TAB: PENDUDUK -->
-        <!-- ========================================================= -->
         <div v-if="activeTab === 'penduduk'" class="space-y-6">
 
-          <!-- Ringkasan Penduduk -->
           <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
             <h2 class="text-lg font-semibold text-gray-800">Penduduk Kelurahan Fatubesi</h2>
             <p class="text-sm text-gray-500">
@@ -611,7 +578,6 @@ const educationGroupTotals = computed(() => {
             </div>
           </div>
 
-          <!-- Agama -->
           <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
             <h2 class="text-lg font-semibold text-gray-800">Pengelompokan Berdasarkan Agama</h2>
             <p class="text-sm text-gray-500">
@@ -664,9 +630,6 @@ const educationGroupTotals = computed(() => {
           </div>
         </div>
 
-        <!-- ========================================================= -->
-        <!-- TAB: GENDER -->
-        <!-- ========================================================= -->
         <div v-if="activeTab === 'gender'" class="space-y-6">
           <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
             <h2 class="text-lg font-semibold text-gray-800">
@@ -775,9 +738,6 @@ const educationGroupTotals = computed(() => {
           </div>
         </div>
 
-        <!-- ========================================================= -->
-        <!-- TAB: KEPALA KELUARGA -->
-        <!-- ========================================================= -->
         <div v-if="activeTab === 'kk'" class="space-y-6">
           <div class="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
             <div class="flex items-start gap-3">
@@ -945,9 +905,6 @@ const educationGroupTotals = computed(() => {
           </div>
         </div>
 
-        <!-- ========================================================= -->
-        <!-- TAB: USIA -->
-        <!-- ========================================================= -->
         <div v-if="activeTab === 'usia'" class="space-y-6">
           <div class="rounded-2xl border border-amber-100 bg-white p-4 shadow-sm">
             <div class="flex items-start gap-3">
@@ -1051,9 +1008,6 @@ const educationGroupTotals = computed(() => {
           </div>
         </div>
 
-                <!-- ========================================================= -->
-        <!-- TAB: PEKERJAAN -->
-        <!-- ========================================================= -->
         <div v-if="activeTab === 'pekerjaan'" class="space-y-6">
           <div class="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
             <div class="flex items-start gap-3">
@@ -1143,9 +1097,6 @@ const educationGroupTotals = computed(() => {
           </div>
         </div>
 
-                <!-- ========================================================= -->
-        <!-- TAB: PENDIDIKAN -->
-        <!-- ========================================================= -->
         <div v-if="activeTab === 'pendidikan'" class="space-y-6">
           <div class="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
             <div class="flex items-start gap-3">
@@ -1234,9 +1185,6 @@ const educationGroupTotals = computed(() => {
           </div>
         </div>
 
-
-
-        <!-- Footer info -->
         <div class="text-xs text-gray-400">
           Terakhir update: {{ metrics?.meta?.generated_at ?? '-' }} (time column: {{ metrics?.meta?.time_column ?? '-' }})
         </div>

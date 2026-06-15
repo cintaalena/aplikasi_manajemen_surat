@@ -10,7 +10,6 @@ class DummyUserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Cegah duplikasi
         if (User::where('email', 'admin@kelurahan.test')->exists()) {
             return;
         }

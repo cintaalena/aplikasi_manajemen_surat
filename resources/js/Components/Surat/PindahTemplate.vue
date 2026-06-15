@@ -49,7 +49,6 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
 <template>
   <div class="print-area mt-4 rounded-xl border border-gray-200 bg-white p-6 text-[14px] leading-6">
 
-    <!-- ================= KOP ================= -->
     <table class="w-full text-center">
         <tbody>
             <tr>
@@ -77,7 +76,6 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
 
     <hr class="my-2 border-black" />
 
-    <!-- ================= JUDUL ================= -->
     <div class="text-center mt-4">
       <div class="font-bold uppercase underline text-[15px]">
         Surat Keterangan Pindah
@@ -87,13 +85,11 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
       </div>
     </div>
 
-    <!-- ================= ISI ================= -->
     <div class="mt-6">
       <p>
         Yang bertanda tangan di bawah ini Lurah Fatubesi menerangkan dengan sebenarnya bahwa:
       </p>
 
-      <!-- DATA UTAMA -->
       <table class="mt-3">
         <tbody>
           <tr>
@@ -146,7 +142,6 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
         </tbody>
       </table>
 
-      <!-- PINDAH KE -->
       <table class="mt-4">
         <tbody>
           <tr>
@@ -200,7 +195,6 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
         </tbody>
       </table>
 
-      <!-- TABEL PENGIKUT -->
       <table class="mt-4 w-full border border-black border-collapse text-[13px]">
         <thead>
           <tr>
@@ -232,12 +226,10 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
         </tbody>
       </table>
 
-      <!-- PENUTUP -->
       <p class="mt-6 text-center">
         Demikian Surat Keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.
       </p>
 
-      <!-- TTD -->
       <div class="mt-10 flex justify-between items-stretch">
         <div class="ttd" style="display:flex; flex-direction:column;">
           <div class="ttd-tanggal">Mengetahui,</div>

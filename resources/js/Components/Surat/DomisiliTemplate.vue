@@ -48,9 +48,7 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
 </script>
 
 <template>
-  <!-- Area print (template asli) -->
   <div class="print-area mt-4 rounded-xl border border-gray-200 bg-white p-6">
-    <!-- KOP -->
     <table class="kop" cellspacing="0" cellpadding="0">
       <tbody>
         <tr>
@@ -73,18 +71,15 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
       <div class="rule-2"></div>
     </div>
 
-    <!-- JUDUL -->
     <div class="judul">
       <div class="judul-utama">SURAT KETERANGAN DOMISILI</div>
       <div class="judul-nomor">Nomor : {{ form.noSurat || '71/Kel.Ftbs.475/X/2025' }}</div>
     </div>
 
-    <!-- PEMBUKA -->
     <div class="paragraf">
       Yang bertanda tangan di bawah ini Lurah Fatubesi menerangkan dengan sebenarnya bahwa:
     </div>
 
-    <!-- DATA -->
     <table class="data-table" cellspacing="0" cellpadding="0" style="margin-top:14px; width:100%;">
       <tbody>
         <tr>
@@ -124,7 +119,6 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
       </tbody>
     </table>
 
-    <!-- ISI -->
     <div class="paragraf paragraf-isi">
     Berdasarkan laporan dan Rekomendasi dari Ketua RT.{{ pad3(form.rt) }}, yang bersangkutan
     berdomisili di RT.{{ pad3(form.rt) }}/RW.{{ pad3(form.rw) }} Kelurahan Fatubesi Kecamatan Kota Lama Kota
@@ -136,7 +130,6 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
       sebagaimana mestinya.
     </div>
 
-    <!-- TTD -->
   <div class="ttd-wrapper">
     <div class="ttd">
       <div class="ttd-tanggal">Kupang, {{ formatTanggalSurat() || '1 Oktober 2025' }}</div>
@@ -162,25 +155,24 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
   color: #000;
 }
 
-/* KOP */
 .kop{
   width: 100%;
-  table-layout: fixed; /* bikin kontrol lebar kolom lebih stabil */
+  table-layout: fixed;
 }
 .kop-logo{
-  width: 140px;          /* NAIKKAN ini, jangan kecil */
+  width: 140px;
   vertical-align: middle;
   text-align: left;
 }
 .logo{
-  width: 120px;          /* realistis untuk kop */
+  width: 120px;
   height: auto;
   display: block;
   margin: 0;
   mix-blend-mode: multiply;
 }
 .kop-spacer{
-  width: 140px;          /* samakan dengan kolom logo biar header center */
+  width: 140px;
 }
 
 .kop-text{
@@ -205,7 +197,6 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
 .rule-1{ border-top:2px solid #000; }
 .rule-2{ border-top:1px solid #000; margin-top:2px; }
 
-/* Judul */
 .judul{ text-align:center; margin-top:14px; }
 .judul-utama{
   font-weight: bold;
@@ -214,10 +205,8 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
 }
 .judul-nomor{ margin-top:2px; }
 
-/* Paragraf */
 .paragraf{ margin-top:14px; line-height:1.6; }
 
-/* Data - table layout (reliable) */
 .data-table{
   margin-top: 14px;
   border-collapse: collapse;
@@ -244,7 +233,6 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
   overflow-wrap: break-word;
 }
 
-/* TTD */
 .ttd-wrapper{
   margin-top: 40px;
   text-align: right;
@@ -273,8 +261,6 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
 .ttd-nip{
   font-size: 12pt;
 }
-
-/* PRINT */
 
 @media print {
   .print-area{

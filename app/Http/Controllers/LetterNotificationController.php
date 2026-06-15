@@ -17,7 +17,6 @@ class LetterNotificationController extends Controller
     {
         $user = $request->user();
 
-        // Konsumsi sound-ping dari cache secara atomik
         $hasSoundPing = (bool) Cache::pull("notif_sound_ping_{$user->id}", false);
 
         $notifications = LetterNotification::with('letter:id,no_surat,title,printed_at')
@@ -78,26 +77,19 @@ class LetterNotificationController extends Controller
         $user   = $request->user();
         $lastId = (int) $request->header('Last-Event-ID', 0);
 
-        // Lepas session file lock SEKARANG — sebelum query DB apapun.
-        // Selama session masih terkunci, setiap request lain dari browser yang sama
-        // (upload, navigasi, dsb) mengantri. Dengan melepas di sini, upload 300 KB
-        // tidak perlu menunggu SSE menyelesaikan query-nya.
         session()->save();
         session_write_close();
 
-        // Titik awal: pakai Last-Event-ID saat reconnect, atau ID notif terbesar saat ini
         $since = $lastId > 0
             ? $lastId
             : (LetterNotification::where('user_id', $user->id)->max('id') ?? 0);
 
-        // Kumpulkan data SEBELUM streaming (DB query di luar closure)
         $newNotifs = LetterNotification::with('letter:id,no_surat,title,printed_at')
             ->where('user_id', $user->id)
             ->where('id', '>', $since)
             ->orderBy('id')
             ->get(['id', 'letter_id', 'message', 'is_read', 'created_at']);
 
-        // Cache::pull = get + delete atomik (tidak perlu forget terpisah)
         $pingKey = "notif_sound_ping_{$user->id}";
         $hasPing = (bool) Cache::pull($pingKey, false);
 
@@ -106,18 +98,15 @@ class LetterNotificationController extends Controller
             : 0;
 
         return response()->stream(function () use ($newNotifs, $hasPing, $unreadCount): void {
-            // Bersihkan output buffer
             while (ob_get_level() > 0) {
                 ob_end_clean();
             }
 
-            // Sound-ping (testing) — bunyi saja, tidak masuk panel notifikasi
             if ($hasPing) {
                 echo "event: sound\n";
                 echo 'data: ' . json_encode(['ts' => time()]) . "\n\n";
             }
 
-            // Notifikasi arsip baru
             foreach ($newNotifs as $notif) {
                 echo "id: {$notif->id}\n";
                 echo "event: notification\n";
@@ -127,7 +116,6 @@ class LetterNotificationController extends Controller
                 ]) . "\n\n";
             }
 
-            // Instruksi reconnect: browser sambung lagi dalam 3 detik
             echo "retry: 3000\n";
             echo ": ok\n\n";
 

@@ -1,16 +1,6 @@
 <?php
 
 return [
-    /*
-    |--------------------------------------------------------------------------
-    | Jabatan Credential Mapping
-    |--------------------------------------------------------------------------
-    |
-    | Mapping antara jabatan dengan credential code yang tetap.
-    | Setiap jabatan memiliki satu credential yang sama untuk semua user
-    | dengan jabatan tersebut.
-    |
-    */
 
     'jabatan_credentials' => [
         'lurah' => 'A-001',
@@ -23,13 +13,5 @@ return [
         'ptt' => 'A-008',
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Default Credential
-    |--------------------------------------------------------------------------
-    |
-    | Credential default untuk jabatan yang tidak terdaftar di mapping
-    |
-    */
     'default_credential' => 'A-999',
 ];

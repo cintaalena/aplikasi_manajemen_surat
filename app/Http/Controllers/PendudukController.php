@@ -263,7 +263,6 @@ class PendudukController extends Controller
         if ($rt !== '') $query->where('rt', $this->normalizeRtRw($rt));
         if ($rw !== '') $query->where('rw', $this->normalizeRtRw($rw));
 
-        // Hanya admin yang bisa melihat penduduk berstatus Pindah
         if (auth()->user()->role !== 'admin') {
             $query->where('status_kehidupan', '!=', 'Pindah');
             if ($statusKehidupan !== '' && $statusKehidupan !== 'Pindah') {
@@ -330,7 +329,6 @@ class PendudukController extends Controller
         if ($rt !== '') $query->where('rt', $this->normalizeRtRw($rt));
         if ($rw !== '') $query->where('rw', $this->normalizeRtRw($rw));
 
-        // Export hanya penduduk hidup
         $query->where('status_kehidupan', '!=', 'Meninggal');
 
         $filename = 'penduduk-fatubesi-' . now()->format('Y-m-d_His') . '.csv';
@@ -343,7 +341,6 @@ class PendudukController extends Controller
         return response()->streamDownload(function () use ($query) {
             $out = fopen('php://output', 'w');
 
-            // UTF-8 BOM for Excel
             fwrite($out, "\xEF\xBB\xBF");
 
             fputcsv($out, [
@@ -400,13 +397,11 @@ class PendudukController extends Controller
 
     public function import(Request $request)
     {
-        // Tambahan: Batasi Content-Length maksimal 10MB (10485760 bytes)
         if ($request->server('CONTENT_LENGTH') !== null && (int)$request->server('CONTENT_LENGTH') > 10485760) {
             return $this->importRedirect('error', '❌ Upload Gagal: Ukuran file melebihi 10MB (server limit)');
         }
-        // STEP 1: Validasi file upload
         $validator = Validator::make($request->all(), [
-            'file' => ['required', 'file', 'extensions:csv,txt,xlsx,xls', 'max:10240'], // 10MB
+            'file' => ['required', 'file', 'extensions:csv,txt,xlsx,xls', 'max:10240'],
         ], [
             'file.required' => 'File harus dipilih!',
             'file.extensions' => 'Format file harus .csv, .txt, .xlsx, atau .xls',
@@ -424,7 +419,6 @@ class PendudukController extends Controller
 
         $rows = [];
 
-        // STEP 2: Baca file sesuai format
         try {
             if ($extension === 'xlsx') {
                 $xlsx = SimpleXLSX::parse($path);
@@ -469,7 +463,6 @@ class PendudukController extends Controller
             return $this->importRedirect('error', "❌ Error membaca file '{$filename}': {$e->getMessage()}\n\nSolusi: Coba tutup file di Excel/LibreOffice, lalu upload ulang.");
         }
 
-        // STEP 3: Validasi file tidak kosong
         if (empty($rows)) {
             return $this->importRedirect('error', "❌ File '{$filename}' kosong atau tidak memiliki data.\n\nSolusi: Pastikan file memiliki minimal 1 baris header dan 1 baris data.");
         }
@@ -478,20 +471,17 @@ class PendudukController extends Controller
             return $this->importRedirect('error', "❌ File hanya memiliki header tanpa data.\n\nData ditemukan: " . count($rows) . " baris\n\nSolusi: Tambahkan minimal 1 baris data setelah header.");
         }
 
-        // STEP 4: Validasi header dan mapping
         $header = array_shift($rows);
         $headerMap = $this->buildHeaderMap($header);
 
-        // Cek apakah ada kolom yang berhasil dimapping
         if (empty($headerMap)) {
             $headerList = implode(', ', array_slice($header, 0, 12));
             return $this->importRedirect('error', "❌ Tidak ada kolom yang dikenali dari header file.\n\nHeader ditemukan: {$headerList}...\n\nSolusi: Pastikan file memiliki kolom minimal:\n- 'Nama' / 'Nama Anggota Keluarga'\n- 'Kode Keluarga'\n- 'RT', 'RW', 'Dusun'");
         }
 
-        // Validasi kolom wajib
         $requiredMapped = ['nama', 'kode_keluarga'];
         $missingRequired = [];
-        $mappedFields = array_values($headerMap); // nilai map adalah field DB
+        $mappedFields = array_values($headerMap);
 
         foreach ($requiredMapped as $req) {
             if (!in_array($req, $mappedFields, true)) {
@@ -505,24 +495,21 @@ class PendudukController extends Controller
             return $this->importRedirect('error', "❌ Kolom wajib tidak ditemukan: {$missing}\n\nHeader file Anda: {$headerList}\n\nSolusi: Pastikan kolom 'Nama Anggota Keluarga' dan 'Kode Keluarga' ada di file Excel.");
         }
 
-        // STEP 5: Import data
         $inserted = 0;
         $updated = 0;
         $skipped = 0;
         $errors = [];
-        $rowNumber = 2; // Mulai dari baris 2 (setelah header)
+        $rowNumber = 2;
 
         DB::beginTransaction();
         try {
             foreach ($rows as $row) {
-                // Skip baris kosong
                 if (empty(array_filter($row))) {
                     $skipped++;
                     $rowNumber++;
                     continue;
                 }
 
-                // Validasi jumlah kolom (longgar sedikit)
                 if (count($row) < 4) {
                     $skipped++;
                     if (count($errors) < 5) {
@@ -532,14 +519,11 @@ class PendudukController extends Controller
                     continue;
                 }
 
-
                 $data = $this->mapRowToData($row, $header, $headerMap);
-                // Set status_kehidupan default 'Hidup' jika tidak ada
                 if (empty($data['status_kehidupan'])) {
                     $data['status_kehidupan'] = 'Hidup';
                 }
 
-                // Validasi data minimal
                 if (empty($data['kode_keluarga'])) {
                     $skipped++;
                     if (count($errors) < 5) {
@@ -558,8 +542,6 @@ class PendudukController extends Controller
                     continue;
                 }
 
-
-                // Check for existing by NIK (hash) atau kode_keluarga+nama
                 $existing = null;
                 if (!empty($data['nik'])) {
                     $existing = Penduduk::where('nik', $data['nik'])->first();
@@ -681,7 +663,6 @@ class PendudukController extends Controller
     {
         $nama = $penduduk->nama;
 
-        // Pastikan HANYA update status, tidak ada delete sama sekali
         \DB::table('penduduks')
             ->where('id', $penduduk->id)
             ->update(['status_kehidupan' => 'Pindah', 'updated_at' => now()]);
@@ -788,7 +769,6 @@ class PendudukController extends Controller
     {
         $map = [];
 
-        // Alias berdasarkan file excel kamu (database_penduduk.xlsx)
         $aliases = [
             'no_urut' => ['no', 'no.', 'nomor', 'no urut'],
 
@@ -800,12 +780,10 @@ class PendudukController extends Controller
                 'nama kepala keluarga', 'nama kk', 'kepala keluarga', 'namakepalakeluarga'
             ],
 
-            // file kamu pakai "Nama Anggota Keluarga"
             'nama' => [
                 'nama', 'nama anggota', 'nama anggota keluarga', 'namaanggotakeluarga'
             ],
 
-            // file kamu pakai "N I K"
             'nik' => [
                 'nik', 'n i k'
             ],
@@ -822,14 +800,12 @@ class PendudukController extends Controller
 
             'status_perkawinan' => ['status', 'status perkawinan', 'status kawin', 'statusperkawinan'],
 
-            // file kamu pakai "GDarah"
             'golongan_darah' => ['gdarah', 'gol darah', 'golongan darah', 'gol. darah', 'goldarah', 'golongandarah'],
 
             'agama' => ['agama'],
 
             'kewarganegaraan' => ['warga negara', 'kewarganegaraan', 'wn', 'kewarganegaraan'],
 
-            // file kamu pakai "Etnis / Suku"
             'etnis' => ['etnis', 'suku', 'etnis/suku', 'etnis / suku', 'etnissuku'],
 
             'pendidikan' => ['pendidikan', 'pend', 'pend.', 'pendidikan'],
@@ -842,7 +818,6 @@ class PendudukController extends Controller
             'alamat' => ['alamat'],
         ];
 
-        // Pre-normalize alias list (biar cepat dan konsisten)
         $aliasNormalized = [];
         foreach ($aliases as $field => $possibleNames) {
             foreach ($possibleNames as $name) {
@@ -926,7 +901,6 @@ class PendudukController extends Controller
             case 'nik':
     $rawNik = trim((string) $value);
 
-    // Jika format scientific notation dari Excel, anggap tidak valid
     if (
         stripos($rawNik, 'E+') !== false ||
         stripos($rawNik, 'E-') !== false ||
@@ -937,10 +911,8 @@ class PendudukController extends Controller
         break;
     }
 
-    // Hilangkan semua karakter selain angka
     $nik = preg_replace('/\D+/', '', $rawNik);
 
-    // Kalau kosong atau terlalu panjang, anggap tidak valid
     if ($nik === '' || strlen($nik) > 20) {
         $data[$field] = null;
     } else {
@@ -1059,7 +1031,6 @@ private function cleanCellValue($value): ?string
     $value = $this->cleanCellValue($value);
     if (!$value) return null;
 
-    // Handle numeric Excel date serial (e.g. 32874.0 from SimpleXLSX without datetimeFormat)
     if (is_numeric($value) && (float)$value > 1000) {
         $unix = ((float)$value - 25569) * 86400;
         $date = gmdate('Y-m-d', (int)$unix);
@@ -1067,7 +1038,7 @@ private function cleanCellValue($value): ?string
     }
 
     $formats = [
-        'Y-m-d H:i:s', // SimpleXLSX default datetimeFormat
+        'Y-m-d H:i:s',
         'Y-m-d',
         'd-m-Y',
         'd/m/Y',

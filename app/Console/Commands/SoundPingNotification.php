@@ -39,7 +39,6 @@ class SoundPingNotification extends Command
         }
 
         foreach ($lurahan as $lurah) {
-            // Tulis ping ke cache — SSE stream akan membaca & langsung hapus
             Cache::put("notif_sound_ping_{$lurah->id}", true, now()->addMinutes(5));
             $this->line("<fg=green>✓</> Sound ping dikirim ke: <fg=yellow>{$lurah->name}</> (ID: {$lurah->id})");
         }

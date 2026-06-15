@@ -18,19 +18,16 @@ class SecureSession
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // SECURITY: Session fingerprinting untuk detect hijacking
         $currentFingerprint = $this->generateFingerprint($request);
         $storedFingerprint = $request->session()->get('_fingerprint');
 
         if ($storedFingerprint && $storedFingerprint !== $currentFingerprint) {
-            // Possible session hijacking detected!
             Log::warning('Possible session hijacking detected', [
                 'ip'         => $request->ip(),
                 'user_agent' => $request->userAgent(),
                 'user_id'    => $request->user()?->id,
             ]);
 
-            // SECURITY (A09): Record session hijack attempt to security events table
             SecurityEvent::record(
                 SecurityEvent::EVENT_SESSION_HIJACK,
                 SecurityEvent::SEVERITY_CRITICAL,
@@ -39,24 +36,20 @@ class SecureSession
                 ['stored_ua_hash' => substr($storedFingerprint, 0, 8) . '...']
             );
 
-            // Force logout
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
             abort(401, 'Session invalid. Please login again.');
         }
 
-        // Set fingerprint pada session baru
         if (!$storedFingerprint) {
             $request->session()->put('_fingerprint', $currentFingerprint);
         }
 
-        // SECURITY: Update last activity timestamp
         $request->session()->put('_last_activity', now()->timestamp);
 
         $response = $next($request);
 
-        // SECURITY: Set secure cookie attributes via response
         if ($response instanceof \Illuminate\Http\Response || $response instanceof \Illuminate\Http\RedirectResponse) {
             $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate, private');
             $response->headers->set('Pragma', 'no-cache');

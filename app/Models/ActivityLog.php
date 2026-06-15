@@ -26,7 +26,6 @@ use Illuminate\Support\Facades\Log;
  */
 class ActivityLog extends Model
 {
-    // Tidak ada updated_at — log immutable
     const UPDATED_AT = null;
 
     protected $fillable = [
@@ -61,7 +60,6 @@ class ActivityLog extends Model
         try {
             $user = Auth::user();
 
-            // Filter field yang tidak perlu dilog (timestamps, deleted_at)
             $exclude = ['updated_at', 'created_at', 'deleted_at', 'remember_token'];
             $newValues = array_diff_key($newValues, array_flip($exclude));
             $oldValues = array_diff_key($oldValues, array_flip($exclude));
@@ -78,7 +76,6 @@ class ActivityLog extends Model
                 'user_agent' => substr(request()->userAgent() ?? '', 0, 512),
             ]);
         } catch (\Throwable $e) {
-            // Jangan biarkan kegagalan audit log menghentikan operasi utama
             Log::error('ActivityLog::record gagal: ' . $e->getMessage(), [
                 'action'     => $action,
                 'model_type' => class_basename($model),
