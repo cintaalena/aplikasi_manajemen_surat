@@ -32,7 +32,6 @@ class LoginRequest extends FormRequest
         return [
             'name'            => ['required', 'string'],
             'password'        => ['required', 'string'],
-            // credential_code bersifat opsional — tidak diperlukan untuk login admin
             'credential_code' => ['nullable', 'string'],
         ];
     }
@@ -57,16 +56,12 @@ class LoginRequest extends FormRequest
 
         $user = User::where('name', $name)->first();
 
-        // SECURITY (A07): Always run password/hash checks even when user is not found
-        // to prevent timing-based username enumeration attacks.
         if (! $user) {
-            // Perform a dummy hash check to equalise response time
             Hash::check($password, '$2y$10$dummyhashtopreventtimingattacks..............');
             $this->recordFailedAttempt(null, $name);
             $this->throwFailedAuthentication();
         }
 
-        // SECURITY (A07): Check persistent account lockout (DB-level)
         if ($user->isLockedOut()) {
             SecurityEvent::record(
                 SecurityEvent::EVENT_ACCOUNT_LOCKED,
@@ -83,12 +78,9 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        // SECURITY (A07): Generic check — keep same error path for all failures
-        // to prevent distinguishing "wrong user" vs "wrong password".
         $credentialOk  = true;
         $passwordOk    = Hash::check($password, $user->password);
 
-        // Credential code required for all non-admin roles
         if ($user->role !== 'admin') {
             $credential = strtoupper(trim($this->input('credential_code') ?? ''));
             $credentialOk = $credential !== ''
@@ -113,14 +105,11 @@ class LoginRequest extends FormRequest
             $this->throwFailedAuthentication();
         }
 
-        // ── Successful login ────────────────────────────────────────────────
         Auth::login($user, $this->boolean('remember'));
         RateLimiter::clear($this->throttleKey());
 
-        // SECURITY (A07): Reset persistent lockout counters on success
         $user->clearLoginAttempts();
 
-        // SECURITY (A09): Log successful login
         SecurityEvent::record(
             SecurityEvent::EVENT_LOGIN_SUCCESS,
             SecurityEvent::SEVERITY_INFO,
@@ -163,7 +152,6 @@ class LoginRequest extends FormRequest
 
         event(new Lockout($this));
 
-        // SECURITY (A09): Log rate limit exceeded
         SecurityEvent::record(
             SecurityEvent::EVENT_RATE_LIMIT_EXCEEDED,
             SecurityEvent::SEVERITY_WARNING,

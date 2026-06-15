@@ -19,7 +19,6 @@ class SanitizeResponse
     {
         $response = $next($request);
 
-        // Only sanitize JSON responses
         if ($response instanceof JsonResponse) {
             $data = $response->getData(true);
             
@@ -46,19 +45,17 @@ class SanitizeResponse
             'private_key',
             'access_token',
             'refresh_token',
-            'credential_code_hash', // Our custom field
+            'credential_code_hash',
             'otp_hash',
             'remember_token',
         ];
 
         foreach ($data as $key => &$value) {
-            // Remove sensitive keys completely
             if (in_array($key, $sensitiveKeys, true)) {
                 unset($data[$key]);
                 continue;
             }
 
-            // Recursively sanitize nested arrays
             if (is_array($value)) {
                 $value = $this->sanitizeArray($value);
             }

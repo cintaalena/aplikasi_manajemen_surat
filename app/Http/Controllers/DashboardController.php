@@ -30,7 +30,6 @@ class DashboardController extends Controller
         $year  = (int) $request->query('year', now()->year);
         $month = (int) $request->query('month', now()->month);
 
-        // Clamp
         $year  = max(2000, min($year, 2100));
         $month = max(1, min($month, 12));
 
@@ -38,12 +37,10 @@ class DashboardController extends Controller
         $startDate = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
         $endDate   = $startDate->copy()->endOfMonth();
 
-        // Total bulan ini
         $total = DB::table('letters')
             ->whereBetween($timeCol, [$startDate, $endDate])
             ->count();
 
-        // Per template
         $byTemplate = DB::table('letters')
             ->select('template_slug', DB::raw('COUNT(*) as total'))
             ->whereBetween($timeCol, [$startDate, $endDate])
@@ -58,7 +55,6 @@ class DashboardController extends Controller
             ->values()
             ->toArray();
 
-        // Per minggu dalam bulan — inklusif daftar surat tiap minggu
         $weeks = [];
         $cursor = $startDate->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
         $weekNum = 1;
@@ -66,7 +62,6 @@ class DashboardController extends Controller
             $weekStart = $cursor->copy()->max($startDate);
             $weekEnd   = $cursor->copy()->endOfWeek(\Carbon\Carbon::SUNDAY)->min($endDate);
 
-            // Ambil daftar surat di minggu ini (urut by time asc)
             $letters = DB::table('letters')
                 ->whereBetween($timeCol, [$weekStart, $weekEnd])
                 ->orderBy($timeCol)
@@ -86,7 +81,6 @@ class DashboardController extends Controller
                 ->values()
                 ->toArray();
 
-            // Rekap per template dalam minggu ini
             $templateSummary = collect($letters)
                 ->groupBy('template_slug')
                 ->map(fn($items, $slug) => [
@@ -132,9 +126,6 @@ class DashboardController extends Controller
 
     private function buildMetricsData(): array
     {
-        // ==========================
-        // 1) METRIK SURAT
-        // ==========================
         $timeCol = $this->resolveLetterTimeColumn();
 
         $now          = now();
@@ -148,7 +139,6 @@ class DashboardController extends Controller
         $lettersMonth = DB::table('letters')->where($timeCol, '>=', $startOfMonth)->count();
         $lettersYear  = DB::table('letters')->where($timeCol, '>=', $startOfYear)->count();
 
-        // Ringkasan 12 bulan terakhir (inklusif bulan ini)
         $monthly12 = [];
         for ($i = 11; $i >= 0; $i--) {
             $m = $now->copy()->subMonths($i)->startOfMonth();
@@ -162,7 +152,6 @@ class DashboardController extends Controller
             ];
         }
 
-        // Tambahan untuk export sheet surat
         $totalLetters = DB::table('letters')->count();
 
         $lettersByTemplate = DB::table('letters')
@@ -180,9 +169,6 @@ class DashboardController extends Controller
             ->values()
             ->toArray();
 
-        // ==========================
-        // 2) TOP SURAT 30 HARI TERAKHIR
-        // ==========================
         $since30 = $now->copy()->subDays(30);
 
         $topTemplates = DB::table('letters')
@@ -202,9 +188,6 @@ class DashboardController extends Controller
             ->values()
             ->toArray();
 
-        // ==========================
-        // 3) METRIK PENDUDUK
-        // ==========================
         $pendudukQuery = DB::table('penduduks')
             ->whereNull('deleted_at')
             ->where('status_kehidupan', '!=', 'Meninggal');
@@ -240,9 +223,6 @@ class DashboardController extends Controller
 
         $totalKk = $jumlahKepalaKeluarga;
 
-        // ==========================
-        // 4) METRIK AGAMA
-        // ==========================
         $totalKristen = (clone $pendudukQuery)
             ->whereNotNull('agama')
             ->where(function ($q) {
@@ -285,7 +265,6 @@ class DashboardController extends Controller
             })
             ->count();
 
-        // Untuk export sheet penduduk/agama
         $religionRows = [
             ['agama' => 'Kristen', 'jumlah' => (int) $totalKristen],
             ['agama' => 'Islam', 'jumlah' => (int) $totalIslam],
@@ -295,9 +274,6 @@ class DashboardController extends Controller
             ['agama' => 'Konghucu', 'jumlah' => (int) $totalKonghucu],
         ];
 
-        // ==========================
-        // 5) GENDER SEMUA JIWA PER RT/RW
-        // ==========================
         $genderPerRtRw = DB::table('penduduks')
             ->whereNull('deleted_at')
             ->where('status_kehidupan', '!=', 'Meninggal')
@@ -352,9 +328,6 @@ class DashboardController extends Controller
             'jumlah'    => $genderPerRtRw->sum('jumlah'),
         ];
 
-        // ==========================
-        // 6) KEPALA KELUARGA PER RT/RW
-        // ==========================
         $kepalaKeluargaBase = DB::table('penduduks')
             ->whereNull('deleted_at')
             ->where('status_kehidupan', '!=', 'Meninggal')
@@ -437,9 +410,6 @@ class DashboardController extends Controller
             'jumlah'    => (int) ($kkGrandTotal->total_kk ?? 0),
         ];
 
-        // ==========================
-        // 7) KELOMPOK UMUR
-        // ==========================
         $ageRanges = [
             ['label' => '00-05', 'min' => 0, 'max' => 5],
             ['label' => '06-10', 'min' => 6, 'max' => 10],
@@ -521,9 +491,6 @@ class DashboardController extends Controller
             ? (int) round(($ageGrandTotalLakiLaki / $ageGrandTotalPerempuan) * 100)
             : 0;
 
-        // ==========================
-        // 8) PEKERJAAN / PROFESI
-        // ==========================
         $jobRows = DB::table('penduduks')
             ->whereNull('deleted_at')
             ->where('status_kehidupan', '!=', 'Meninggal')
@@ -592,9 +559,6 @@ class DashboardController extends Controller
             'jumlah'    => $jobStatsCollection->sum('jumlah'),
         ];
 
-        // ==========================
-        // 9) PENDIDIKAN TERAKHIR
-        // ==========================
         $educationCategories = [
             'Belum Sekolah',
             'PAUD',
@@ -662,7 +626,6 @@ class DashboardController extends Controller
 
             'letters_monthly_12' => $monthly12,
 
-            // dipakai untuk export
             'total_letters' => $totalLetters,
             'letters_by_template' => $lettersByTemplate,
 
@@ -677,7 +640,6 @@ class DashboardController extends Controller
                 'jumlah_kepala_keluarga' => $jumlahKepalaKeluarga,
                 'total_kk'               => $totalKk,
 
-                // tambahan untuk export
                 'total'                  => $jumlahJiwa,
                 'laki_laki'              => $jumlahLakiLaki,
                 'perempuan'              => $jumlahPerempuan,
@@ -693,7 +655,6 @@ class DashboardController extends Controller
                 'konghucu' => $totalKonghucu,
             ],
 
-            // tambahan untuk export
             'religion_groups' => [
                 'rows' => $religionRows,
                 'totals' => [
@@ -704,7 +665,6 @@ class DashboardController extends Controller
             'gender_per_rt_rw' => $genderPerRtRw,
             'subtotal_per_rw'  => $subtotalPerRw,
 
-            // tambahan untuk export
             'gender_groups' => [
                 'rows' => $genderPerRtRw,
                 'totals' => $genderTotals,
@@ -718,7 +678,6 @@ class DashboardController extends Controller
                 'total_kk'     => (int) ($kkGrandTotal->total_kk ?? 0),
             ],
 
-            // tambahan untuk export
             'kk_groups' => [
                 'rows' => $kkPerRtRw,
                 'totals' => $kkTotals,
@@ -758,9 +717,9 @@ class DashboardController extends Controller
     public function rekapSurat(Request $request)
     {
         $timeCol  = $this->resolveLetterTimeColumn();
-        $jenis    = $request->query('jenis', '');      // template_slug
-        $bulan    = (int) $request->query('bulan', 0); // 1-12, 0 = semua
-        $tahun    = (int) $request->query('tahun', 0); // 0 = semua
+        $jenis    = $request->query('jenis', '');
+        $bulan    = (int) $request->query('bulan', 0);
+        $tahun    = (int) $request->query('tahun', 0);
         $dateFrom = $request->query('date_from', '');
         $dateTo   = $request->query('date_to', '');
 
@@ -800,7 +759,6 @@ class DashboardController extends Controller
             ])
             ->values();
 
-        // Rekap per jenis
         $perJenis = $letters
             ->groupBy('template_slug')
             ->map(fn($items, $slug) => [
@@ -823,7 +781,6 @@ class DashboardController extends Controller
                 return 'printed_at';
             }
         } catch (\Throwable $e) {
-            // fallback
         }
 
         return 'created_at';

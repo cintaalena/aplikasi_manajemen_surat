@@ -167,7 +167,6 @@ $tanggalSurat = $p['tanggalSurat'] ?? $letter->printed_at?->format('Y-m-d') ?? d
 $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
 ?>
 
-{{-- Toolbar --}}
 <div class="toolbar">
    <button id="btn-print" type="button" class="btn btn-print">
     &#128438; Cetak / Simpan PDF
@@ -181,7 +180,6 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
 
 <div class="page">
 
-  {{-- ══════════════ KOP ══════════════ --}}
   <table class="kop-table" cellspacing="0" cellpadding="0">
     <tbody>
       <tr>
@@ -209,7 +207,6 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
     <div class="rule-2"></div>
   </div>
 
-  {{-- ══════════════ DOMISILI ══════════════ --}}
   @if($slug === 'keterangan-domisili')
   <div class="judul">
     <div class="judul-utama">SURAT KETERANGAN DOMISILI</div>
@@ -280,7 +277,6 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
     </div>
   </div>
 
-  {{-- ══════════════ KELAHIRAN ══════════════ --}}
   @elseif($slug === 'keterangan-kelahiran')
   <div class="judul">
     <div class="judul-utama">SURAT KETERANGAN KELAHIRAN</div>
@@ -349,7 +345,6 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
     </div>
   </div>
 
-  {{-- ══════════════ KEMATIAN ══════════════ --}}
   @elseif($slug === 'keterangan-kematian')
   <div class="judul">
     <div class="judul-utama">SURAT KETERANGAN KEMATIAN</div>
@@ -405,7 +400,6 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
     </div>
   </div>
 
-  {{-- ══════════════ PINDAH ══════════════ --}}
   @elseif($slug === 'keterangan-pindah')
   <div class="judul">
     <div class="judul-utama">SURAT KETERANGAN PINDAH</div>
@@ -501,7 +495,7 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
   </div>
   @endif
 
-</div><!-- /page -->
+</div>
 <script nonce="{{ $cspNonce ?? '' }}">
   document.addEventListener('DOMContentLoaded', function () {
     const printButton = document.getElementById('btn-print');

@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('letters', function (Blueprint $table) {
-            // Change index_code from unsignedInteger to string to support codes like "400.12.2.1"
             $table->string('index_code', 50)->nullable()->change();
         });
     }

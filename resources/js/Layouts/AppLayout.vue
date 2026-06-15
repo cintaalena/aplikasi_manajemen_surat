@@ -36,7 +36,6 @@ const templates = [
   { label: 'Surat Keterangan Pindah', slug: 'keterangan-pindah' },
 ]
 
-// submenu auto-open kalau user ada di halaman template
 const onTemplatePage = computed(() => {
   try {
     return route().current('surat-templates.index') || route().current('surat-templates.show')
@@ -53,7 +52,6 @@ const onArsipPage = computed(() => {
   }
 })
 
-
 const templatesOpen = ref(false)
 watchEffect(() => {
   if (onTemplatePage.value) templatesOpen.value = true
@@ -67,7 +65,6 @@ const isTemplateActive = (slug) => {
   return currentUrl.value === `/template-surat/${slug}`
 }
 
-// ── Audio Context untuk bunyi notifikasi ──────────────────────────
 let audioCtx = null
 
 const initAudioContext = () => {
@@ -77,7 +74,7 @@ const initAudioContext = () => {
   }
   try {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-  } catch (e) { /* browser tidak mendukung */ }
+  } catch (e) {}
 }
 
 const playNotificationSound = () => {
@@ -86,7 +83,6 @@ const playNotificationSound = () => {
     if (!audioCtx) return
     if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {})
     const now = audioCtx.currentTime
-    // Nada 1: A5 (880 Hz)
     const osc1 = audioCtx.createOscillator()
     const gain1 = audioCtx.createGain()
     osc1.type = 'sine'
@@ -97,7 +93,6 @@ const playNotificationSound = () => {
     gain1.connect(audioCtx.destination)
     osc1.start(now)
     osc1.stop(now + 0.45)
-    // Nada 2: E6 (1318 Hz) dengan jeda kecil — efek "ding-dong"
     const osc2 = audioCtx.createOscillator()
     const gain2 = audioCtx.createGain()
     osc2.type = 'sine'
@@ -109,10 +104,9 @@ const playNotificationSound = () => {
     gain2.connect(audioCtx.destination)
     osc2.start(now + 0.15)
     osc2.stop(now + 0.65)
-  } catch (e) { /* silent */ }
+  } catch (e) {}
 }
 
-// ── Notifikasi (hanya untuk lurah) ─────────────────────────────────
 const notifOpen = ref(false)
 const notifications = ref([])
 const unreadCount = ref(0)
@@ -131,10 +125,9 @@ const updatePanelPos = () => {
   }
 }
 
-// ── Polling notifikasi (setiap 3 detik) ───────────────────────────
 let pollInterval = null
 let initialized  = false
-const seenIds    = new Set()   // ID notifikasi yang sudah pernah diterima browser
+const seenIds    = new Set()
 
 const fetchNotifications = async () => {
   if (userRole.value !== 'lurah' && userRole.value !== 'staff') return
@@ -149,33 +142,27 @@ const fetchNotifications = async () => {
     if (data.has_sound_ping) {
       playNotificationSound()
     } else if (initialized) {
-      // Setelah init: hanya proses notifikasi dengan ID yang benar-benar baru
       const newNotifs = data.notifications.filter(n => !seenIds.has(n.id))
       if (newNotifs.length > 0) {
         playNotificationSound()
         const newUnread = newNotifs.filter(n => !n.is_read).length
         if (newUnread > 0) unreadCount.value += newUnread
-        // Sisipkan di depan, jangan timpa notif lama (agar is_read lokal tidak di-reset)
         notifications.value = [...newNotifs, ...notifications.value].slice(0, 20)
       }
-      // JANGAN timpa notifications.value / unreadCount dari server setelah init —
-      // cegah polling membalik status "sudah dibaca" yang sudah diset lokal
     } else {
-      // Fetch pertama saja: ambil semua dari server
       notifications.value = data.notifications
       unreadCount.value   = data.unread_count
     }
 
     data.notifications.forEach(n => seenIds.add(n.id))
     initialized = true
-  } catch (e) { /* silent */ }
+  } catch (e) {}
 }
 
 const toggleNotif = () => {
   notifOpen.value = !notifOpen.value
   if (notifOpen.value) {
     updatePanelPos()
-    // Badge langsung hilang dan semua ditandai dibaca saat lonceng dibuka
     if (unreadCount.value > 0) {
       markAllRead()
     }
@@ -183,11 +170,9 @@ const toggleNotif = () => {
 }
 
 const markAllRead = async () => {
-  // Optimistic update — UI berubah langsung
   notifications.value = notifications.value.map(n => ({ ...n, is_read: true }))
   unreadCount.value   = 0
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? ''
-  // Tunggu server selesai sebelum lanjut (penting saat dipakai sebelum navigasi)
   try {
     await fetch(route('notifications.mark-all-read'), {
       method: 'POST',
@@ -198,12 +183,11 @@ const markAllRead = async () => {
       },
       credentials: 'same-origin',
     })
-  } catch (e) { /* silent */ }
+  } catch (e) {}
 }
 
 const markRead = async (notif) => {
   if (notif.is_read) return
-  // Optimistic update
   notif.is_read     = true
   unreadCount.value = Math.max(0, unreadCount.value - 1)
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? ''
@@ -220,7 +204,6 @@ const markRead = async (notif) => {
 
 const openNotif = (notif) => {
   notifOpen.value = false
-  // Tandai semua dibaca (fire-and-forget)
   markAllRead()
   const url = userRole.value === 'staff'
     ? '/disposisi-tugas'
@@ -238,7 +221,6 @@ onMounted(async () => {
   if (userRole.value === 'lurah' || userRole.value === 'staff') {
     document.addEventListener('click', initAudioContext, { once: true })
 
-    // Fetch pertama — tunggu hasilnya
     await fetchNotifications()
 
     pollInterval = setInterval(fetchNotifications, 3000)
@@ -254,7 +236,6 @@ onUnmounted(() => {
   <div class="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50 to-white">
     <div class="mx-auto max-w-7xl px-4 py-6">
       <div class="grid gap-6 lg:grid-cols-12">
-        <!-- Sidebar -->
 <aside class="lg:col-span-3">
   <div class="rounded-2xl border border-green-100 bg-white/80 backdrop-blur shadow-sm overflow-hidden">
     <div class="p-4 border-b border-green-100">
@@ -277,7 +258,6 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Notification Bell — lurah & staff -->
         <div v-if="userRole === 'lurah' || userRole === 'staff'" class="shrink-0">
           <button
             ref="bellRef"
@@ -300,7 +280,6 @@ onUnmounted(() => {
     </div>
 
     <nav class="p-3 space-y-2">
-      <!-- HOME -->
       <Link
         :href="route('dashboard')"
         class="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition border"
@@ -315,7 +294,6 @@ onUnmounted(() => {
         <span v-if="isCurrent('dashboard')" class="text-xs" style="color:#0369a1">Aktif</span>
       </Link>
 
-            <!-- TEMPLATE SURAT (EXPANDABLE) — hanya untuk staff & admin -->
       <div v-if="userRole !== 'lurah'" class="rounded-xl border border-transparent bg-white">
         <button
           type="button"
@@ -330,7 +308,7 @@ onUnmounted(() => {
             Template Surat ({{ templates.length }})
           </span>
           <span class="text-xs">
-            {{ templatesOpen ? '—' : '+' }}
+            {{ templatesOpen ? 'â€”' : '+' }}
           </span>
         </button>
 
@@ -358,7 +336,6 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- ARSIP SURAT -->
       <Link
         :href="route('arsip-surat.index')"
         class="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition border"
@@ -373,7 +350,6 @@ onUnmounted(() => {
         <span v-if="onArsipPage" class="text-xs text-amber-700">Aktif</span>
       </Link>
 
-      <!-- DISPOSISI TUGAS — hanya staff -->
       <Link
         v-if="userRole === 'staff'"
         :href="route('disposisi-tugas.index')"
@@ -393,8 +369,6 @@ onUnmounted(() => {
         <span v-else-if="isCurrent('disposisi-tugas.index')" class="text-xs text-blue-700">Aktif</span>
       </Link>
 
-
-      <!-- PENDUDUK -->
       <a
         href="/penduduk"
         @click.prevent="goToPenduduk"
@@ -410,7 +384,6 @@ onUnmounted(() => {
         <span v-if="isCurrent('penduduk.index')" class="text-xs text-emerald-700">Aktif</span>
       </a>
 
-      <!-- MANAJEMEN PENGGUNA — hanya admin -->
       <Link
         v-if="userRole === 'admin'"
         :href="route('admin.pengguna.index')"
@@ -426,7 +399,6 @@ onUnmounted(() => {
         <span v-if="isCurrent('admin.pengguna.index')" class="text-xs text-rose-700">Aktif</span>
       </Link>
 
-      <!-- LOG OUT -->
       <button
         @click="logout"
         class="w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition border
@@ -442,8 +414,6 @@ onUnmounted(() => {
   </div>
 </aside>
 
-
-        <!-- Main -->
         <main class="lg:col-span-9">
           <div class="rounded-2xl border border-green-100 bg-white/80 backdrop-blur shadow-sm">
             <div class="p-6">
@@ -456,7 +426,6 @@ onUnmounted(() => {
     </div>
   </div>
 
-  <!-- Notification Panel — Teleport ke body agar tidak terpotong sidebar -->
   <Teleport to="body">
     <div v-if="notifOpen" :style="panelStyle" class="rounded-2xl border border-green-100 bg-white shadow-2xl">
       <div class="flex items-center justify-between border-b border-green-50 px-4 py-3">
@@ -497,17 +466,16 @@ onUnmounted(() => {
           :href="route('disposisi-tugas.index')"
           @click="notifOpen = false"
           class="text-xs font-medium text-blue-600 hover:text-blue-800 transition"
-        >Lihat Disposisi Tugas →</Link>
+        >Lihat Disposisi Tugas â†’</Link>
         <Link
           v-else
           :href="route('arsip-surat.index')"
           @click="notifOpen = false"
           class="text-xs font-medium text-green-600 hover:text-green-800 transition"
-        >Lihat Arsip Surat →</Link>
+        >Lihat Arsip Surat â†’</Link>
       </div>
     </div>
 
-    <!-- Overlay transparan untuk tutup panel saat klik luar -->
     <div v-if="notifOpen" class="fixed inset-0" style="z-index: 9998;" @click="notifOpen = false"></div>
   </Teleport>
 </template>

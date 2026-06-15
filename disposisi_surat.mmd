@@ -1,0 +1,53 @@
+sequenceDiagram
+    actor Lurah as Lurah
+    actor Staff as Staff
+    participant App as Aplikasi
+    participant DB as Database
+
+    %% ── LURAH MENDISPOSISIKAN SURAT ───────────────────────
+    Lurah->>App: Buka arsip surat lalu pilih surat yang akan didisposisikan
+    App->>DB: Ambil daftar staff aktif untuk pilihan penerima
+    DB-->>App: Daftar nama staff
+    App-->>Lurah: Tampilkan formulir disposisi dengan pilihan staff
+
+    Lurah->>App: Pilih staff penerima dan isi catatan disposisi
+    alt Staff yang dipilih tidak aktif atau tidak ditemukan
+        App-->>Lurah: Pesan error — staff tidak tersedia
+    else Staff valid
+        App->>DB: Simpan disposisi dengan status Menunggu
+        App->>DB: Kirim notifikasi ke Staff yang dituju
+        App-->>Lurah: Surat berhasil didisposisikan
+    end
+
+    %% ── STAFF MENERIMA NOTIFIKASI ─────────────────────────
+    App-->>Staff: Notifikasi masuk — ada tugas disposisi baru
+
+    %% ── STAFF LIHAT DAFTAR TUGAS ──────────────────────────
+    Staff->>App: Buka halaman daftar tugas disposisi
+    App->>DB: Ambil tugas disposisi milik Staff ini (status Menunggu dan Diterima)
+    DB-->>App: Daftar tugas beserta detail surat dan dokumen lampirannya
+    App-->>Staff: Tampilkan daftar tugas disposisi
+
+    %% ── STAFF KONFIRMASI PENERIMAAN TUGAS ────────────────
+    Staff->>App: Klik konfirmasi penerimaan tugas
+    alt Tugas sudah pernah dikonfirmasi sebelumnya
+        App-->>Staff: Pesan error — tugas sudah dikonfirmasi
+    else Tugas masih berstatus Menunggu
+        App->>DB: Ubah status disposisi menjadi Diterima
+        App->>DB: Kirim notifikasi ke Lurah bahwa tugas telah diterima
+        App-->>Staff: Tugas berhasil dikonfirmasi diterima
+    end
+
+    App-->>Lurah: Notifikasi masuk — Staff telah mengkonfirmasi penerimaan tugas
+
+    %% ── STAFF MENYELESAIKAN TUGAS ─────────────────────────
+    Staff->>App: Klik tandai tugas selesai
+    alt Tugas belum dikonfirmasi diterima
+        App-->>Staff: Pesan error — konfirmasi penerimaan terlebih dahulu
+    else Tugas sudah berstatus Diterima
+        App->>DB: Ubah status disposisi menjadi Selesai
+        App->>DB: Kirim notifikasi ke Lurah bahwa tugas telah selesai
+        App-->>Staff: Tugas disposisi selesai dan hilang dari daftar tugas
+    end
+
+    App-->>Lurah: Notifikasi masuk — Staff telah menyelesaikan tugas disposisi

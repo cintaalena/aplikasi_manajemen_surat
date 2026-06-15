@@ -19,7 +19,7 @@ class LetterDocumentController extends Controller
         'application/pdf',
     ];
 
-    private const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+    private const MAX_SIZE_BYTES = 5 * 1024 * 1024;
 
     /**
      * Upload satu file dokumen pendukung surat.
@@ -35,7 +35,6 @@ class LetterDocumentController extends Controller
 
         $file = $request->file('file');
 
-        // SECURITY: Validasi MIME dari konten nyata (bukan hanya extension)
         $realMime = $file->getMimeType();
         if (!in_array($realMime, self::ALLOWED_MIMES, true)) {
             Log::warning('LetterDocument upload: MIME ditolak', [
@@ -47,12 +46,10 @@ class LetterDocumentController extends Controller
             return response()->json(['message' => 'Tipe file tidak diizinkan. Gunakan JPG, PNG, WEBP, atau PDF.'], 422);
         }
 
-        // SECURITY: Cek ukuran file
         if ($file->getSize() > self::MAX_SIZE_BYTES) {
             return response()->json(['message' => 'Ukuran file terlalu besar. Maksimal 5 MB.'], 422);
         }
 
-        // SECURITY: Untuk gambar — cek konten agar tidak ada PHP/script injection
         if (str_starts_with($realMime, 'image/')) {
             $content = file_get_contents($file->getRealPath());
             if (preg_match('/<\?php|<\?=|<script/i', $content)) {
@@ -65,21 +62,20 @@ class LetterDocumentController extends Controller
             }
         }
 
-        // Simpan dengan nama acak agar tidak bisa ditebak
         $ext      = strtolower($file->getClientOriginalExtension()) ?: 'bin';
         $filename = Str::uuid() . '.' . $ext;
         $dir      = 'dokumen-surat/' . now()->format('Y/m');
         $path     = $file->storeAs($dir, $filename, 'public');
 
         $doc = LetterDocument::create([
-            'letter_id'     => null, // akan di-link saat finalize
+            'letter_id'     => null,
             'doc_key'       => $request->input('doc_key'),
             'doc_label'     => $request->input('doc_label'),
             'file_path'     => $path,
             'original_name' => $file->getClientOriginalName(),
             'mime_type'     => $realMime,
             'file_size'     => $file->getSize(),
-            'uploaded_by'   => $request->user()?->id, // SECURITY (A01): Track uploader
+            'uploaded_by'   => $request->user()?->id,
         ]);
 
         return response()->json([
@@ -136,7 +132,6 @@ class LetterDocumentController extends Controller
             return response()->json(['message' => 'Dokumen sudah terikat pada arsip surat dan tidak dapat dihapus.'], 403);
         }
 
-        // SECURITY (A01): Only the uploader or admin can delete pending documents
         $user = $request->user();
         if ($document->uploaded_by !== null
             && $document->uploaded_by !== $user->id

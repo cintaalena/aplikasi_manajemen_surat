@@ -39,8 +39,6 @@ public function down(): void
         if (Schema::hasColumn('users', 'is_active')) {
             $table->dropColumn('is_active');
         }
-        // jabatan jangan didrop kalau kolom ini sudah ada dari sebelumnya/legacy
-        // kalau Anda yakin jabatan hanya dibuat dari migration ini, baru drop di sini.
     });
 }
 };

@@ -18,7 +18,6 @@ export function useFormArrowNav() {
     const el  = e.target
     const tag = el.tagName.toLowerCase()
 
-    // Biarkan textarea menangani panahnya sendiri
     if (tag === 'textarea') return
 
     const type       = (el.type || '').toLowerCase()
@@ -33,11 +32,9 @@ export function useFormArrowNav() {
     } else if (e.key === 'ArrowUp') {
       direction = -1
     } else if (e.key === 'ArrowRight') {
-      // Text input: navigasi hanya jika kursor sudah di akhir teks
       if (isTextLike && el.selectionStart !== el.value.length) return
       direction = 1
     } else if (e.key === 'ArrowLeft') {
-      // Text input: navigasi hanya jika kursor sudah di awal teks
       if (isTextLike && el.selectionStart !== 0) return
       direction = -1
     }

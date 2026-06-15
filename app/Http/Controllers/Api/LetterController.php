@@ -85,7 +85,6 @@ class LetterController extends Controller
             }
         }
 
-        // Validasi pengikut surat pindah — semua harus ada di database
         if ($templateSlug === 'keterangan-pindah') {
             $payload  = $validated['payload'] ?? [];
             $pengikut = $payload['pengikut'] ?? [];
@@ -154,27 +153,23 @@ class LetterController extends Controller
                 ]);
             });
         } catch (\Illuminate\Database\QueryException $e) {
-            // Duplicate no_surat — cari urut berikutnya yang benar-benar belum ada (cek global)
             if ($e->getCode() === '23000' && str_contains($e->getMessage(), 'no_surat')) {
                 $indexCode = (string) $validated['index_code'];
 
                 $nextUrut = DB::transaction(function () use ($templateSlug, $indexCode, $monthRoman, $year) {
                     $counter = LetterCounter::where('template_slug', $templateSlug)->lockForUpdate()->first();
 
-                    // Titik mulai: ambil yang lebih besar antara counter saat ini+1 atau max urut template+1
                     $maxForTemplate = Letter::where('template_slug', $templateSlug)->max('urut') ?? 0;
                     $start = max(
                         ($counter ? (int) $counter->count : 0) + 1,
                         $maxForTemplate + 1
                     );
 
-                    // Loop sampai menemukan noSurat yang belum ada sama sekali di tabel letters
                     $urut = $start;
                     while (Letter::where('no_surat', "{$urut}/Kel.Ftbs.{$indexCode}/{$monthRoman}/{$year}")->exists()) {
                         $urut++;
                     }
 
-                    // Setel counter ke urut-1 agar finalize berikutnya menghasilkan urut ini
                     if ($counter) {
                         $counter->count = $urut - 1;
                         $counter->save();
@@ -197,7 +192,6 @@ class LetterController extends Controller
             }
         }
 
-        // Link dokumen persyaratan yang sudah di-upload ke letter ini
         $docIds = $validated['doc_ids'] ?? [];
         if (!empty($docIds)) {
             LetterDocument::whereIn('id', $docIds)
@@ -205,7 +199,6 @@ class LetterController extends Controller
                 ->update(['letter_id' => $letter->id]);
         }
 
-        // Jika surat kematian → otomatis tandai penduduk sebagai Meninggal
         if ($templateSlug === 'keterangan-kematian') {
             $pendudukId = $validated['payload']['penduduk_id'] ?? null;
             if ($pendudukId) {
@@ -214,7 +207,6 @@ class LetterController extends Controller
             }
         }
 
-        // Jika surat pindah → tandai kepala keluarga + pengikut sebagai Pindah (tidak dihapus)
         if ($templateSlug === 'keterangan-pindah') {
             $pendudukId = $validated['payload']['penduduk_id'] ?? null;
             if ($pendudukId) {
@@ -236,7 +228,6 @@ class LetterController extends Controller
             }
         }
 
-        // Jika surat kelahiran → otomatis simpan data bayi ke tabel penduduk
         if ($templateSlug === 'keterangan-kelahiran') {
             $p = $validated['payload'];
             $nama = trim((string) ($p['nama'] ?? ''));
@@ -246,12 +237,9 @@ class LetterController extends Controller
                 $nikBayi = trim((string) ($p['nik'] ?? ''));
                 $nikBayi = $nikBayi !== '' ? $nikBayi : null;
 
-                // Hindari duplikat jika sudah pernah disimpan (NIK sama)
                 $sudahAda = $nikBayi ? Penduduk::where('nik', $nikBayi)->exists() : false;
 
                 if (!$sudahAda) {
-                    // ── Tentukan keluarga bayi ─────────────────────────────
-                    // Prioritas 1: Ayah terdata di database
                     $kodeKeluarga = null;
                     $namaKepala   = null;
                     $dusun        = null;
@@ -265,7 +253,6 @@ class LetterController extends Controller
                     $ibuId  = $p['ibu_id']  ?? null;
 
                     if ($ayahId) {
-                        // Ayah terdata → masuk keluarga ayah
                         $ayah = Penduduk::select(
                             'kode_keluarga', 'nama_kepala_keluarga', 'dusun', 'alamat', 'rt', 'rw'
                         )->find($ayahId);
@@ -279,7 +266,6 @@ class LetterController extends Controller
                             $rw           = $rw ?: ($ayah->rw ? str_pad($ayah->rw, 3, '0', STR_PAD_LEFT) : null);
                         }
                     } elseif ($ibuId) {
-                        // Ayah tidak terdata, tapi ibu terdata → masuk keluarga ibu
                         $ibu = Penduduk::select(
                             'kode_keluarga', 'nama_kepala_keluarga', 'dusun', 'alamat', 'rt', 'rw'
                         )->find($ibuId);
@@ -293,13 +279,11 @@ class LetterController extends Controller
                             $rw           = $rw ?: ($ibu->rw ? str_pad($ibu->rw, 3, '0', STR_PAD_LEFT) : null);
                         }
                     } else {
-                        // Tidak ada ayah/ibu terdata → pakai data payload langsung
                         $kodeKeluarga = trim((string) ($p['kode_keluarga'] ?? '')) ?: null;
                         $namaKepala   = trim((string) ($p['nama_kepala_keluarga'] ?? '')) ?: null;
                         $dusun        = trim((string) ($p['dusun'] ?? '')) ?: null;
                     }
 
-                    // Hitung no_urut berikutnya dalam KK yang sama
                     $noUrut = 1;
                     if ($kodeKeluarga) {
                         $maxUrut = Penduduk::where('kode_keluarga', $kodeKeluarga)

@@ -16,7 +16,6 @@ const page = usePage()
 const importMessage    = ref(null)
 const importMessageErr = ref(null)
 
-// Tangkap pesan langsung dari prop — berlaku untuk full reload maupun XHR redirect
 watch(() => props.importSuccess, (val) => { if (val) importMessage.value = val }, { immediate: true })
 watch(() => props.importError,   (val) => { if (val) importMessageErr.value = val }, { immediate: true })
 
@@ -112,7 +111,6 @@ const exportCsv = () => {
     rt: filtersForm.rt ?? '',
     rw: filtersForm.rw ?? '',
   }).toString()
-  // Export selalu hanya Hidup (sesuai kebijakan)
   window.location.href = route('penduduk.export') + (params ? `?${params}` : '')
 }
 

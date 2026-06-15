@@ -9,14 +9,14 @@ const stream        = ref(null)
 const capturedCount = ref(0)
 const error         = ref('')
 const cameraReady   = ref(false)
-const flash         = ref(false)   // efek kilat saat capture
+const flash         = ref(false)
 
 const startCamera = async () => {
   error.value = ''
   try {
     stream.value = await navigator.mediaDevices.getUserMedia({
       video: {
-        facingMode: 'environment',   // kamera belakang di HP, webcam di PC
+        facingMode: 'environment',
         width:  { ideal: 1920 },
         height: { ideal: 1080 },
       },
@@ -64,7 +64,6 @@ const capture = () => {
     URL.revokeObjectURL(url)
   }, 'image/jpeg', 0.92)
 
-  // Efek kilat
   flash.value = true
   setTimeout(() => { flash.value = false }, 200)
 }
@@ -88,11 +87,9 @@ startCamera()
 </script>
 
 <template>
-  <!-- Overlay -->
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
     <div class="relative w-full max-w-2xl rounded-2xl bg-gray-900 shadow-2xl overflow-hidden">
 
-      <!-- Header -->
       <div class="flex items-center justify-between px-4 py-3 bg-gray-800">
         <div class="flex items-center gap-2">
           <span class="h-2.5 w-2.5 rounded-full" :class="cameraReady ? 'bg-green-400 animate-pulse' : 'bg-red-400'"></span>
@@ -110,7 +107,6 @@ startCamera()
         </div>
       </div>
 
-      <!-- Error state -->
       <div v-if="error" class="p-6 text-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-3 h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
@@ -122,9 +118,7 @@ startCamera()
         </button>
       </div>
 
-      <!-- Video preview -->
       <div v-else class="relative bg-black">
-        <!-- Kilat efek saat capture -->
         <div
           v-if="flash"
           class="pointer-events-none absolute inset-0 z-10 bg-white transition-opacity"
@@ -140,18 +134,14 @@ startCamera()
           style="max-height: 60vh; object-fit: cover;"
         ></video>
 
-        <!-- Overlay garis pemandu dokumen -->
         <div class="pointer-events-none absolute inset-4 rounded-xl border-2 border-dashed border-white/40 flex items-center justify-center">
           <span class="rounded-full bg-black/40 px-3 py-1 text-xs text-white/70">Tempatkan dokumen dalam bingkai</span>
         </div>
       </div>
 
-      <!-- Canvas tersembunyi — untuk render frame sebelum download -->
       <canvas ref="canvasRef" class="hidden"></canvas>
 
-      <!-- Footer kontrol -->
       <div v-if="!error" class="flex items-center justify-center gap-6 bg-gray-800 px-6 py-5">
-        <!-- Tombol capture utama -->
         <button
           type="button"
           :disabled="!cameraReady"
@@ -163,7 +153,6 @@ startCamera()
         </button>
       </div>
 
-      <!-- Petunjuk -->
       <div class="bg-gray-900 px-4 py-2 text-center text-xs text-gray-500">
         Foto tersimpan otomatis ke folder Unduhan komputer Anda — gunakan saat upload surat masuk
       </div>

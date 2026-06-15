@@ -1,0 +1,44 @@
+sequenceDiagram
+    actor User as Pengguna
+    participant App as Aplikasi
+    participant DB as Database
+
+    %% ── BUKA DASHBOARD ────────────────────────────────────
+    User->>App: Buka halaman dashboard
+    App-->>User: Tampilkan halaman dashboard
+
+    %% ── MUAT DATA STATISTIK SURAT ─────────────────────────
+    User->>App: Halaman memuat data statistik secara otomatis
+    App->>DB: Ambil jumlah surat hari ini, minggu ini, bulan ini, dan tahun ini
+    App->>DB: Ambil grafik jumlah surat 12 bulan terakhir
+    App->>DB: Ambil jenis surat paling banyak dicetak dalam 30 hari terakhir
+    DB-->>App: Data statistik surat
+
+    %% ── MUAT DATA KEPENDUDUKAN ────────────────────────────
+    App->>DB: Ambil total penduduk, jumlah KK, jumlah RT dan RW
+    App->>DB: Ambil jumlah penduduk laki-laki dan perempuan per RT/RW
+    App->>DB: Ambil jumlah kepala keluarga laki-laki dan perempuan per RT/RW
+    App->>DB: Ambil sebaran penduduk berdasarkan kelompok usia (0–5, 6–10, ..., 61 ke atas)
+    App->>DB: Ambil sebaran penduduk berdasarkan agama (Kristen, Islam, Katholik, Hindu, Buddha, Konghucu)
+    App->>DB: Ambil sebaran penduduk berdasarkan pekerjaan
+    App->>DB: Ambil sebaran penduduk berdasarkan tingkat pendidikan (SD, SMP, SMA, D3, S1, S2, S3, dst)
+    DB-->>App: Semua data kependudukan
+    App-->>User: Tampilkan grafik dan tabel ringkasan statistik penduduk
+
+    %% ── LIHAT DETAIL SURAT PER BULAN ─────────────────────
+    User->>App: Klik salah satu bulan pada grafik
+    App->>DB: Ambil daftar surat di bulan tersebut, dikelompokkan per minggu
+    DB-->>App: Rincian surat per minggu beserta jenis suratnya
+    App-->>User: Tampilkan rincian surat tiap minggu dalam bulan yang dipilih
+
+    %% ── REKAP SURAT DENGAN FILTER ────────────────────────
+    User->>App: Pilih filter rekap surat (jenis, bulan, tahun, atau rentang tanggal)
+    App->>DB: Ambil daftar surat sesuai filter yang dipilih
+    DB-->>App: Daftar surat beserta rekap jumlah per jenis
+    App-->>User: Tampilkan hasil rekap surat
+
+    %% ── EKSPOR DATA KE EXCEL ──────────────────────────────
+    User->>App: Klik tombol ekspor data dashboard
+    App->>DB: Ambil seluruh data statistik surat dan kependudukan
+    DB-->>App: Data lengkap
+    App-->>User: Unduh file Excel berisi data statistik dashboard

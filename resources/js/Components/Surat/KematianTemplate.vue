@@ -43,7 +43,6 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
 
 <template>
   <div class="print-area mt-4 rounded-xl border border-gray-200 bg-white p-6">
-    <!-- KOP -->
     <table class="kop" cellspacing="0" cellpadding="0">
       <tbody>
         <tr>
@@ -66,19 +65,16 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
       <div class="rule-2"></div>
     </div>
 
-    <!-- JUDUL -->
     <div class="judul">
       <div class="judul-utama">SURAT KETERANGAN KEMATIAN</div>
       <div class="judul-nomor">Nomor : {{ form.noSurat || '71/Kel.Ftbs.474/VIII/2025' }}</div>
     </div>
 
-    <!-- PEMBUKA -->
     <div class="paragraf">
       Yang bertanda tangan di bawah ini Lurah Fatubesi, menerangkan dengan
       sebenarnya bahwa :
     </div>
 
-    <!-- DATA -->
     <table class="data" cellspacing="0" cellpadding="0">
       <tbody>
         <tr>
@@ -111,7 +107,6 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
       </tbody>
     </table>
 
-    <!-- ISI -->
     <div class="paragraf paragraf-isi">
       Telah meninggal dunia karena {{ form.sebabKematian || '____________________' }} pada :
     </div>
@@ -138,7 +133,6 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
       sebagaimana mestinya.
     </div>
 
-    <!-- TTD -->
     <div class="ttd-wrapper">
       <div class="ttd">
         <div class="ttd-tanggal">Kupang, {{ formatTanggalSurat() || '1 Oktober 2025' }}</div>

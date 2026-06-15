@@ -1,0 +1,60 @@
+sequenceDiagram
+    actor User as Pengguna
+    participant App as Aplikasi
+    participant DB as Database
+
+    %% ── LIHAT DAFTAR ──────────────────────────────────────
+    User->>App: Buka halaman data penduduk
+    App->>DB: Ambil data sesuai filter (nama, dusun, RT/RW)
+    DB-->>App: Daftar data penduduk per halaman
+    App-->>User: Tampilkan tabel data penduduk
+
+    %% ── TAMBAH PENDUDUK ───────────────────────────────────
+    User->>App: Buka formulir tambah penduduk
+    App-->>User: Tampilkan formulir kosong
+    User->>App: Kirim data penduduk baru
+
+    alt Data tidak lengkap atau NIK sudah terdaftar
+        App-->>User: Tampilkan pesan kesalahan
+    else Didaftarkan sebagai Kepala Keluarga
+        App->>DB: Cek apakah No. KK sudah digunakan
+        alt No. KK sudah ada
+            App-->>User: Pesan error "No. KK sudah terdaftar"
+        else No. KK belum ada
+            App->>DB: Simpan data penduduk baru
+            App-->>User: Berhasil ditambahkan, kembali ke daftar
+        end
+    else Didaftarkan sebagai Anggota Keluarga
+        App->>DB: Cari kepala keluarga berdasarkan No. KK
+        alt Kepala keluarga tidak ditemukan
+            App-->>User: Pesan error "Kepala keluarga tidak ditemukan"
+        else Kepala keluarga ditemukan
+            App->>DB: Simpan data anggota keluarga
+            App-->>User: Berhasil ditambahkan, kembali ke daftar
+        end
+    end
+
+    %% ── EDIT DATA PENDUDUK ────────────────────────────────
+    User->>App: Pilih penduduk lalu buka formulir edit
+    App->>DB: Ambil data penduduk yang dipilih
+    DB-->>App: Data penduduk
+    App-->>User: Tampilkan formulir yang sudah terisi
+    User->>App: Kirim perubahan data
+
+    alt Data tidak valid atau NIK milik orang lain
+        App-->>User: Tampilkan pesan kesalahan
+    else Data valid
+        App->>DB: Perbarui data penduduk
+        App-->>User: Berhasil diperbarui, kembali ke daftar
+    end
+
+    %% ── TANDAI PINDAH ─────────────────────────────────────
+    User->>App: Pilih penduduk lalu klik Tandai Pindah
+    App->>DB: Ubah status menjadi "Pindah"
+    App-->>User: Berhasil ditandai Pindah (data tetap tersimpan)
+
+    %% ── HAPUS PENDUDUK ────────────────────────────────────
+    User->>App: Pilih penduduk lalu klik Hapus
+    App->>DB: Hapus data penduduk dari database
+    App-->>User: Data berhasil dihapus, kembali ke daftar
+

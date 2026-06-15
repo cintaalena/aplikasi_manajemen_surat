@@ -26,7 +26,6 @@ class DisposisiController extends Controller
             ->where('is_active', true)
             ->firstOrFail();
 
-        // Buat record disposisi
         LetterDisposition::create([
             'letter_id'    => $letter->id,
             'from_user_id' => $request->user()->id,
@@ -35,7 +34,6 @@ class DisposisiController extends Controller
             'status'       => 'pending',
         ]);
 
-        // Kirim notifikasi ke staff yang dituju
         LetterNotification::create([
             'user_id'   => $toUser->id,
             'letter_id' => $letter->id,
@@ -84,7 +82,6 @@ class DisposisiController extends Controller
         $disposisi->load('letter:id,no_surat,title');
         $disposisi->update(['status' => 'diterima']);
 
-        // Kirim notifikasi ke lurah bahwa tugas sudah diterima
         LetterNotification::create([
             'user_id'   => $disposisi->from_user_id,
             'letter_id' => $disposisi->letter_id,
@@ -111,7 +108,6 @@ class DisposisiController extends Controller
         $disposisi->load('letter:id,no_surat,title');
         $disposisi->update(['status' => 'selesai']);
 
-        // Kirim notifikasi ke lurah bahwa tugas sudah selesai dikerjakan
         LetterNotification::create([
             'user_id'   => $disposisi->from_user_id,
             'letter_id' => $disposisi->letter_id,

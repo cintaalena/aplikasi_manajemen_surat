@@ -16,7 +16,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
     }
 
     /**
@@ -26,9 +25,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Vite::prefetch(concurrency: 3);
 
-        // Inject SSL stream options (cafile) ke Symfony SocketStream.
-        // Laravel 12 (Symfony Mailer) tidak meneruskan config 'stream' ke SocketStream,
-        // sehingga perlu di-patch manual melalui custom transport creator.
         $this->app->resolving('mail.manager', function ($manager) {
             $manager->extend('smtp', function (array $config) {
                 $scheme = $config['scheme'] ?? null;
@@ -46,7 +42,6 @@ class AppServiceProvider extends ServiceProvider
                     $config
                 ));
 
-                // Set SSL stream context options (cafile, verify_peer, dll.)
                 if (isset($config['stream']['ssl']) && $transport instanceof EsmtpTransport) {
                     $stream = $transport->getStream();
                     if ($stream instanceof SocketStream) {
@@ -54,7 +49,6 @@ class AppServiceProvider extends ServiceProvider
                     }
                 }
 
-                // Set timeout
                 if (isset($config['timeout'])) {
                     $stream = $transport->getStream();
                     if ($stream instanceof SocketStream) {

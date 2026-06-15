@@ -33,7 +33,6 @@ function markSelesai(id) {
   })
 }
 
-// ── Dokumen: expand row + modal viewer ────────────────────────────
 const expandedId = ref(null)
 const viewDoc    = ref(null)
 
@@ -49,7 +48,6 @@ function isPdf(mime)     { return mime === 'application/pdf' }
 <template>
   <AppLayout>
     <div class="space-y-5">
-      <!-- Header -->
       <div>
         <h1 class="text-xl font-bold text-gray-900">Disposisi Tugas</h1>
         <p class="mt-1 text-sm text-gray-600">
@@ -57,7 +55,6 @@ function isPdf(mime)     { return mime === 'application/pdf' }
         </p>
       </div>
 
-      <!-- Flash messages -->
       <div v-if="flashSuccess" class="rounded-xl border-2 border-green-200 bg-green-50 p-3 text-green-800 text-sm">
         {{ flashSuccess }}
       </div>
@@ -65,7 +62,6 @@ function isPdf(mime)     { return mime === 'application/pdf' }
         {{ flashError }}
       </div>
 
-      <!-- Tabel disposisi -->
       <div class="rounded-2xl border border-blue-100 bg-white shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
         <table class="w-full text-sm min-w-[700px]">
@@ -82,7 +78,6 @@ function isPdf(mime)     { return mime === 'application/pdf' }
           </thead>
           <tbody>
             <template v-for="(item, idx) in dispositions.data" :key="item.id">
-              <!-- Baris utama -->
               <tr
                 :class="[
                   item.status === 'pending'   ? 'bg-blue-50/60 border-l-4 border-l-blue-400' :
@@ -91,17 +86,14 @@ function isPdf(mime)     { return mime === 'application/pdf' }
                 ]"
                 class="border-t border-gray-100 hover:bg-blue-50/30 transition-colors"
               >
-                <!-- Tanggal disposisi -->
                 <td class="p-3 text-gray-600 whitespace-nowrap text-xs">
                   {{ formatDate(item.created_at) }}
                 </td>
 
-                <!-- Nomor surat -->
                 <td class="p-3 font-mono font-semibold text-gray-900 text-xs whitespace-nowrap">
                   {{ item.letter?.no_surat ?? '-' }}
                 </td>
 
-                <!-- Judul surat -->
                 <td class="p-3 text-gray-700 max-w-xs">
                   <div class="flex items-center gap-2">
                     <span>{{ item.letter?.title ?? '-' }}</span>
@@ -116,19 +108,16 @@ function isPdf(mime)     { return mime === 'application/pdf' }
                   </div>
                 </td>
 
-                <!-- Dari (lurah) -->
                 <td class="p-3 text-gray-700 text-xs whitespace-nowrap">
                   {{ item.from_user?.name ?? '-' }}
                   <span v-if="item.from_user?.jabatan" class="text-gray-400">({{ item.from_user.jabatan }})</span>
                 </td>
 
-                <!-- Catatan -->
                 <td class="p-3 text-gray-600 text-xs max-w-xs">
                   <span v-if="item.catatan" class="italic">{{ item.catatan }}</span>
                   <span v-else class="text-gray-300">—</span>
                 </td>
 
-                <!-- Status -->
                 <td class="p-3 whitespace-nowrap">
                   <span
                     v-if="item.status === 'pending'"
@@ -144,10 +133,8 @@ function isPdf(mime)     { return mime === 'application/pdf' }
                   >Selesai</span>
                 </td>
 
-                <!-- Aksi -->
                 <td class="p-3">
                   <div class="flex items-center gap-1.5 flex-wrap">
-                    <!-- Pratinjau surat (bukan manual) -->
                     <a
                       v-if="item.letter && !item.letter.is_manual && item.letter.template_slug"
                       :href="`/arsip-surat/${item.letter.id}/pratinjau`"
@@ -158,7 +145,6 @@ function isPdf(mime)     { return mime === 'application/pdf' }
                       Lihat Surat
                     </a>
 
-                    <!-- Tombol dokumen pendukung -->
                     <button
                       v-if="item.letter?.documents?.length"
                       type="button"
@@ -178,7 +164,6 @@ function isPdf(mime)     { return mime === 'application/pdf' }
                       ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
 
-                    <!-- Konfirmasi diterima (hanya untuk pending) -->
                     <button
                       v-if="item.status === 'pending'"
                       type="button"
@@ -192,7 +177,6 @@ function isPdf(mime)     { return mime === 'application/pdf' }
                       Konfirmasi Diterima
                     </button>
 
-                    <!-- Tandai selesai (hanya untuk diterima) -->
                     <button
                       v-if="item.status === 'diterima'"
                       type="button"
@@ -211,7 +195,6 @@ function isPdf(mime)     { return mime === 'application/pdf' }
                 </td>
               </tr>
 
-              <!-- Expandable row: dokumen pendukung -->
               <tr
                 v-if="expandedId === item.id && item.letter?.documents?.length"
                 class="border-t border-amber-100"
@@ -284,9 +267,8 @@ function isPdf(mime)     { return mime === 'application/pdf' }
             </tr>
           </tbody>
         </table>
-        </div><!-- end overflow-x-auto -->
+        </div>
 
-        <!-- Pagination -->
         <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm">
           <div class="text-gray-500">
             Menampilkan
@@ -319,12 +301,10 @@ function isPdf(mime)     { return mime === 'application/pdf' }
       </div>
     </div>
 
-    <!-- Modal viewer dokumen -->
     <Teleport to="body">
       <div v-if="viewDoc" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/70" @click="closeViewer"></div>
         <div class="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden z-10 flex flex-col" style="max-height: 90vh;">
-          <!-- Header modal -->
           <div class="flex items-center justify-between border-b border-gray-100 px-5 py-3 shrink-0">
             <div>
               <p class="text-sm font-semibold text-gray-900">{{ viewDoc.doc_label }}</p>
@@ -334,7 +314,6 @@ function isPdf(mime)     { return mime === 'application/pdf' }
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
           </div>
-          <!-- Konten -->
           <div class="flex-1 overflow-auto bg-gray-900 flex items-center justify-center p-4">
             <img
               v-if="isImage(viewDoc.mime_type)"

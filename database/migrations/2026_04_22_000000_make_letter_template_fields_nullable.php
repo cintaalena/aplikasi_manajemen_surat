@@ -6,8 +6,6 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration {
     public function up(): void
     {
-        // Pastikan kolom-kolom yang dibutuhkan surat masuk manual bersifat nullable.
-        // Beberapa mungkin sudah nullable dari migrasi sebelumnya — cek dulu.
         $columns = collect(DB::select('SHOW COLUMNS FROM letters'))->keyBy('Field');
 
         if (($columns['template_slug']->Null ?? 'NO') === 'NO') {
@@ -19,7 +17,6 @@ return new class extends Migration {
         if (($columns['printed_at']->Null ?? 'NO') === 'NO') {
             DB::statement('ALTER TABLE letters MODIFY printed_at TIMESTAMP NULL');
         }
-        // index_code sudah varchar di database ini, cukup pastikan nullable
         if (($columns['index_code']->Null ?? 'NO') === 'NO') {
             $type = $columns['index_code']->Type ?? 'varchar(50)';
             DB::statement("ALTER TABLE letters MODIFY index_code {$type} NULL");
@@ -37,6 +34,5 @@ return new class extends Migration {
 
     public function down(): void
     {
-        // Tidak di-revert karena bisa merusak data existing
     }
 };

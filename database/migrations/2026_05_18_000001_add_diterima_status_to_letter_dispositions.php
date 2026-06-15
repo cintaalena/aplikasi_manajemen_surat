@@ -12,7 +12,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Kembalikan ke hanya pending/selesai (record diterima menjadi pending)
         DB::statement("UPDATE letter_dispositions SET status = 'pending' WHERE status = 'diterima'");
         DB::statement("ALTER TABLE letter_dispositions MODIFY COLUMN status ENUM('pending', 'selesai') DEFAULT 'pending'");
     }

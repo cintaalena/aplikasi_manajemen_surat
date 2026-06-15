@@ -25,10 +25,6 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
-
     Route::get('/template-surat', function () {
         return Inertia::render('SuratTemplates/Index');
     })->name('surat-templates.index');
@@ -54,18 +50,15 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // ── Arsip Surat ────────────────────────────────────────────────────────
     Route::get('/arsip-surat', [LetterArchiveController::class, 'index'])->name('arsip-surat.index');
     Route::get('/arsip-surat/{letter}', [LetterArchiveController::class, 'show'])->name('arsip-surat.show');
     Route::get('/arsip-surat/{letter}/pratinjau', [LetterArchiveController::class, 'pratinjau'])->name('arsip-surat.pratinjau');
     Route::post('/arsip-surat/{letter}/viewed', [LetterArchiveController::class, 'markViewed'])->name('arsip-surat.viewed');
 
-    // Tambah arsip manual — staff & admin saja
     Route::post('/arsip-surat', [LetterArchiveController::class, 'store'])
         ->middleware('role:staff,admin')
         ->name('arsip-surat.store');
 
-    // ── Penduduk — lihat boleh semua, create/edit hanya staff & admin ──────
     Route::get('/penduduk', [PendudukController::class, 'index'])->name('penduduk.index');
     Route::get('/penduduk/export', [PendudukController::class, 'export'])->name('penduduk.export');
     Route::get('/penduduk/search-by-name', [PendudukController::class, 'searchByName'])->name('penduduk.searchByName');
@@ -82,19 +75,16 @@ Route::middleware('auth')->group(function () {
         Route::delete('/penduduk/{penduduk}', [PendudukController::class, 'destroy'])->name('penduduk.destroy');
     });
 
-    // Import — staff & admin
     Route::post('/penduduk/import', [PendudukController::class, 'import'])
         ->middleware(['secure.upload', 'role:admin,staff'])
         ->name('penduduk.import');
 
-    // ── Template & Finalize Surat — staff & admin saja ─────────────────────
     Route::middleware('role:staff,admin')->group(function () {
         Route::post('/surat/{templateSlug}/finalize', [LetterController::class, 'finalize'])
             ->middleware('throttle:10,1')
             ->name('surat.finalize');
     });
 
-    // Upload & stream dokumen surat — semua role yang login
     Route::post('/surat/dokumen/upload', [LetterDocumentController::class, 'upload'])
         ->middleware('throttle:30,1')
         ->name('surat.dokumen.upload');
@@ -105,7 +95,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/surat/dokumen/{document}', [LetterDocumentController::class, 'destroy'])
         ->name('surat.dokumen.destroy');
 
-    // ── Notifikasi — lurah & staff ────────────────────────────────────────────
     Route::middleware('role:lurah,staff')->group(function () {
         Route::get('/notifications', [LetterNotificationController::class, 'index'])->name('notifications.index');
         Route::get('/notifications/stream', [LetterNotificationController::class, 'stream'])->name('notifications.stream');
@@ -113,7 +102,6 @@ Route::middleware('auth')->group(function () {
         Route::patch('/notifications/{notification}/mark-read', [LetterNotificationController::class, 'markRead'])->name('notifications.mark-read');
     });
 
-    // ── Disposisi Surat — lurah mendisposisi, staff melihat tugas ─────────
     Route::get('/disposisi/staff-list', [DisposisiController::class, 'staffList'])
         ->middleware('role:lurah')
         ->name('disposisi.staff-list');
@@ -130,7 +118,6 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:staff')
         ->name('disposisi-tugas.selesai');
 
-    // ── Admin — manajemen pengguna ──────────────────────────────────────────
     Route::prefix('admin')->middleware('role:admin')->group(function () {
         Route::get('/pengguna', [AdminUserController::class, 'index'])->name('admin.pengguna.index');
         Route::post('/pengguna', [AdminUserController::class, 'store'])->name('admin.pengguna.store');

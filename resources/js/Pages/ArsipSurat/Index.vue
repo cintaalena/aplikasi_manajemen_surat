@@ -15,7 +15,6 @@ const flashError   = computed(() => page.props.flash?.error)
 
 const userRole = computed(() => page.props.auth?.user?.role ?? 'staff')
 
-// Set ID surat yang sudah dilihat — diupdate secara lokal saat user berinteraksi
 const localViewedIds = ref(new Set(props.viewed_ids ?? []))
 
 function isViewed(id) {
@@ -32,7 +31,6 @@ function markAsViewed(id) {
   })
 }
 
-// ── Filter / Pencarian ──────────────────────────────────────────────
 const form = ref({
   no_surat:  props.filters?.no_surat  ?? '',
   title:     props.filters?.title     ?? '',
@@ -55,16 +53,14 @@ const reset = () => {
   router.get(route('arsip-surat.index'), {}, { preserveState: false })
 }
 
-// ── Form tambah manual ──────────────────────────────────────────────
 const showManualForm = ref(false)
 
 const manualForm = useForm({
   no_surat: '',
   title:    '',
-  files:    [],  // array of File — dikirim langsung dengan form (satu request)
+  files:    [],
 })
 
-// Daftar file yang dipilih pengguna (untuk tampilan)
 const selectedFiles = ref([])
 const uploadError   = ref('')
 
@@ -76,7 +72,7 @@ const formatBytes = (bytes) => {
 }
 
 const ALLOWED_MIMES = ['image/jpeg','image/png','image/webp','application/pdf']
-const MAX_BYTES     = 5 * 1024 * 1024  // 5 MB
+const MAX_BYTES     = 5 * 1024 * 1024
 
 const handleFileChange = (e) => {
   const files = Array.from(e.target.files || [])
@@ -114,7 +110,6 @@ const submitManual = () => {
   })
 }
 
-// ── Format tanggal ──────────────────────────────────────────────────
 const formatDate = (raw) => {
   if (!raw) return '-'
   const d = new Date(raw)
@@ -124,7 +119,6 @@ const formatDate = (raw) => {
     hour: '2-digit', minute: '2-digit',
   })
 }
-// ── Dokumen Pendukung — expandable row + modal viewer ─────────────
 const expandedId    = ref(null)
 const viewDoc       = ref(null)
 const viewDocError  = ref(false)
@@ -151,7 +145,6 @@ function isPdf(mime) {
   return mime === 'application/pdf'
 }
 
-// ── Disposisi Surat (hanya lurah) ─────────────────────────────────
 const showDisposisiModal = ref(false)
 const disposisiLetterId  = ref(null)
 const disposisiLetterTitle = ref('')
@@ -199,7 +192,6 @@ function submitDisposisi() {
 <template>
   <AppLayout>
     <div class="space-y-5">
-      <!-- Header -->
       <div class="flex items-start justify-between gap-3">
         <div>
           <h1 class="text-xl font-bold text-gray-900">Arsip Surat</h1>
@@ -217,7 +209,6 @@ function submitDisposisi() {
         </button>
       </div>
 
-      <!-- Flash messages -->
       <div
         v-if="flashSuccess"
         class="rounded-xl border-2 border-green-200 bg-green-50 p-3 text-green-800 text-sm"
@@ -231,7 +222,6 @@ function submitDisposisi() {
         {{ flashError }}
       </div>
 
-      <!-- Form tambah surat manual — hanya staff & admin -->
       <div
         v-if="showManualForm && userRole !== 'lurah'"
         class="rounded-2xl border border-green-200 bg-white p-5 shadow-sm space-y-4"
@@ -263,7 +253,6 @@ function submitDisposisi() {
           </div>
         </div>
 
-        <!-- Upload Berkas -->
         <div class="flex flex-col gap-2">
           <label class="text-xs font-semibold text-gray-600">
             Upload Berkas Surat
@@ -271,7 +260,6 @@ function submitDisposisi() {
             <span class="ml-1 font-normal text-gray-400">(Wajib — JPG, PNG, WEBP, PDF · maks 5 MB/file)</span>
           </label>
 
-          <!-- Drag-drop / klik area -->
           <label
             class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-green-200 bg-green-50/40 px-4 py-5 text-center transition hover:border-green-400 hover:bg-green-50"
           >
@@ -283,21 +271,16 @@ function submitDisposisi() {
             <input type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" class="sr-only" @change="handleFileChange" />
           </label>
 
-
-          <!-- Peringatan jika belum ada file -->
           <p v-if="selectedFiles.length === 0" class="text-xs text-red-600 font-medium">⚠ Wajib upload minimal 1 file berkas surat sebelum menyimpan.</p>
 
-          <!-- Error upload -->
           <p v-if="uploadError" class="text-xs text-red-600">{{ uploadError }}</p>
 
-          <!-- Daftar file yang dipilih -->
           <div v-if="selectedFiles.length" class="space-y-2">
             <div
               v-for="(file, idx) in selectedFiles"
               :key="idx"
               class="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm"
             >
-              <!-- Ikon tipe file -->
               <span class="text-lg shrink-0">
                 <template v-if="file.mime === 'application/pdf'">📄</template>
                 <template v-else-if="file.mime?.startsWith('image/')">🖼️</template>
@@ -309,7 +292,6 @@ function submitDisposisi() {
                 <p class="text-xs text-gray-400">{{ formatBytes(file.size) }}</p>
               </div>
 
-              <!-- Tombol hapus -->
               <button
                 type="button"
                 class="shrink-0 rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 transition"
@@ -344,11 +326,9 @@ function submitDisposisi() {
         </div>
       </div>
 
-      <!-- Panel Filter -->
       <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm space-y-3">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
-          <!-- Nomor Surat -->
           <div class="flex flex-col gap-1">
             <label class="text-xs font-semibold text-gray-600">Nomor Surat</label>
             <input
@@ -360,7 +340,6 @@ function submitDisposisi() {
             />
           </div>
 
-          <!-- Judul Surat -->
           <div class="flex flex-col gap-1">
             <label class="text-xs font-semibold text-gray-600">Judul Surat</label>
             <input
@@ -372,7 +351,6 @@ function submitDisposisi() {
             />
           </div>
 
-          <!-- Tanggal Dari -->
           <div class="flex flex-col gap-1">
             <label class="text-xs font-semibold text-gray-600">Tanggal Dari</label>
             <input
@@ -382,7 +360,6 @@ function submitDisposisi() {
             />
           </div>
 
-          <!-- Tanggal Sampai -->
           <div class="flex flex-col gap-1">
             <label class="text-xs font-semibold text-gray-600">Tanggal Sampai</label>
             <input
@@ -393,7 +370,6 @@ function submitDisposisi() {
           </div>
         </div>
 
-        <!-- Tombol cari / reset -->
         <div class="flex gap-2">
           <button
             type="button"
@@ -413,7 +389,6 @@ function submitDisposisi() {
           </button>
         </div>
 
-        <!-- Badge filter aktif -->
         <div v-if="hasActiveFilter" class="flex flex-wrap gap-2 pt-1">
           <span
             v-if="form.no_surat"
@@ -446,7 +421,6 @@ function submitDisposisi() {
         </div>
       </div>
 
-      <!-- Tabel hasil -->
       <div class="rounded-2xl border border-green-100 bg-white shadow-sm overflow-hidden">
         <table class="w-full text-sm">
           <thead class="bg-green-50 text-gray-700">
@@ -461,7 +435,6 @@ function submitDisposisi() {
           </thead>
           <tbody>
             <template v-for="(row, idx) in letters.data" :key="row.id">
-              <!-- Baris utama arsip surat -->
               <tr
                 :class="[
                   !isViewed(row.id)
@@ -516,7 +489,6 @@ function submitDisposisi() {
                     >
                       Lihat Surat
                     </a>
-                    <!-- Tombol Dokumen Pendukung -->
                     <button
                       v-if="row.documents && row.documents.length > 0"
                       type="button"
@@ -534,7 +506,6 @@ function submitDisposisi() {
                       ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <span v-else-if="row.is_manual" class="text-gray-300 text-xs">—</span>
-                    <!-- Info Disposisi — hanya admin, tanpa tombol -->
                     <span
                       v-if="userRole === 'admin' && row.dispositions && row.dispositions.length > 0"
                       class="inline-flex items-center gap-1 rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-800 whitespace-nowrap"
@@ -544,7 +515,6 @@ function submitDisposisi() {
                       Didisposisikan
                       <span class="rounded-full bg-purple-200 px-1.5">{{ row.dispositions.length }}</span>
                     </span>
-                    <!-- Tombol Disposisi — hanya lurah -->
                     <button
                       v-if="userRole === 'lurah'"
                       type="button"
@@ -558,7 +528,6 @@ function submitDisposisi() {
                 </td>
               </tr>
 
-              <!-- Expandable row: langsung di bawah baris surat ini -->
               <tr
                 v-if="expandedId === row.id && row.documents && row.documents.length > 0"
                 class="border-t border-amber-100"
@@ -628,7 +597,6 @@ function submitDisposisi() {
           </tbody>
         </table>
 
-        <!-- Pagination -->
         <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm">
           <div class="text-gray-500">
             Menampilkan
@@ -675,7 +643,6 @@ function submitDisposisi() {
       </div>
     </div>
 
-    <!-- ── Modal Viewer Dokumen ──────────────────────────────────────── -->
     <Teleport to="body">
       <div
         v-if="viewDoc"
@@ -683,7 +650,6 @@ function submitDisposisi() {
         @click.self="closeViewer"
       >
         <div class="relative bg-white rounded-2xl shadow-2xl flex flex-col max-w-4xl w-full max-h-[90vh]">
-          <!-- Header modal -->
           <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 flex-shrink-0">
             <span class="text-sm font-semibold text-gray-800 truncate pr-4">{{ viewDoc.doc_label }}</span>
             <div class="flex items-center gap-2 flex-shrink-0">
@@ -706,9 +672,7 @@ function submitDisposisi() {
               </button>
             </div>
           </div>
-          <!-- Konten -->
           <div class="flex-1 overflow-auto flex items-center justify-center p-4 bg-gray-50 min-h-0">
-            <!-- Error state: file tidak ditemukan -->
             <div v-if="viewDocError" class="text-center space-y-3 py-8">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
@@ -746,12 +710,9 @@ function submitDisposisi() {
       </div>
     </Teleport>
 
-  <!-- Modal Disposisi Surat — hanya lurah -->
   <Teleport to="body">
     <div v-if="showDisposisiModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <!-- Overlay -->
       <div class="absolute inset-0 bg-black/40" @click="closeDisposisi"></div>
-      <!-- Panel -->
       <div class="relative w-full max-w-md rounded-2xl border border-blue-100 bg-white shadow-2xl z-10">
         <div class="flex items-center justify-between border-b border-blue-50 px-5 py-4">
           <h2 class="text-base font-bold text-gray-900">Disposisi Surat</h2>
@@ -765,7 +726,6 @@ function submitDisposisi() {
             Disposisikan surat <span class="font-semibold text-gray-900">"{{ disposisiLetterTitle }}"</span> kepada:
           </p>
 
-          <!-- Pilih staff -->
           <div class="flex flex-col gap-1">
             <label class="text-xs font-semibold text-gray-600">Tujuan Disposisi <span class="text-red-500">*</span></label>
             <div v-if="staffLoading" class="text-sm text-gray-400 italic">Memuat daftar staff...</div>
@@ -782,7 +742,6 @@ function submitDisposisi() {
             <p v-if="disposisiForm.errors.to_user_id" class="text-xs text-red-600">{{ disposisiForm.errors.to_user_id }}</p>
           </div>
 
-          <!-- Catatan disposisi -->
           <div class="flex flex-col gap-1">
             <label class="text-xs font-semibold text-gray-600">Catatan <span class="text-gray-400 font-normal">(opsional)</span></label>
             <textarea

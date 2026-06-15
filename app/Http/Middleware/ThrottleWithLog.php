@@ -29,7 +29,6 @@ class ThrottleWithLog extends ThrottleRequests
         $maxAttempts = $this->resolveMaxAttempts($request, $maxAttempts);
 
         if ($this->limiter->tooManyAttempts($key, $maxAttempts)) {
-            // SECURITY LOGGING: Log suspicious activity
             Log::warning('Rate limit exceeded', [
                 'ip' => $request->ip(),
                 'url' => $request->fullUrl(),

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -17,22 +16,19 @@ class User extends Authenticatable
         'name', 'nip', 'email', 'recovery_email', 'password', 'jabatan',
         'role', 'is_active', 'email_verified_at',
         'credential_code_hash', 'credential_issued_at',
-        // SECURITY (A07): Persistent brute-force lockout fields
         'failed_login_attempts', 'locked_until', 'last_failed_login_at',
     ];
 
-    // Field sensitif — tidak pernah dikembalikan dalam JSON/API response
     protected $hidden = [
         'password',
         'remember_token',
-        'credential_code_hash',  // hash kode kredensial jangan bocor
+        'credential_code_hash',
     ];
 
     protected $casts = [
         'email_verified_at'      => 'datetime',
         'credential_issued_at'   => 'datetime',
         'is_active'              => 'boolean',
-        // SECURITY (A07): Cast lockout timestamp
         'locked_until'           => 'datetime',
         'last_failed_login_at'   => 'datetime',
     ];
@@ -60,7 +56,7 @@ class User extends Authenticatable
         if ($this->failed_login_attempts >= self::MAX_LOGIN_ATTEMPTS) {
             $this->locked_until = now()->addMinutes(self::LOCKOUT_DURATION_MINUTES);
             $this->save();
-            return true; // account just locked
+            return true;
         }
 
         $this->save();

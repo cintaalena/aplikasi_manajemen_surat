@@ -16,7 +16,7 @@ class AdminSeeder extends Seeder
                 'name'                  => 'SuperAdmin',
                 'nip'                   => null,
                 'email'                 => 'superadmin@kelurahan.local',
-                'password'              => Hash::make('Admin123!'),
+                'password'              => Hash::make(env('ADMIN_DEFAULT_PASSWORD', 'Admin123!')),
                 'credential_code_hash'  => null,
                 'jabatan'               => 'admin',
                 'role'                  => 'admin',

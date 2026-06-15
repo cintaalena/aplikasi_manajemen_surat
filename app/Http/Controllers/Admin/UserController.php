@@ -36,7 +36,6 @@ class UserController extends Controller
             'password_confirmation' => ['required', 'string'],
         ]);
 
-        // Generate email unik otomatis dari nama
         $baseEmail = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['name']));
         $email = $baseEmail . '@fatubesi.local';
         $suffix = 1;
@@ -45,7 +44,6 @@ class UserController extends Controller
             $suffix++;
         }
 
-        // Credential otomatis: A-001 untuk lurah, B-001 untuk staff
         $credentialCode = $data['role'] === 'lurah' ? 'A-001' : 'B-001';
 
         User::create([
@@ -84,7 +82,6 @@ class UserController extends Controller
             'role'    => $data['role'],
         ];
 
-        // Jika role berubah, regenerate credential sesuai role baru
         if ($user->role !== $data['role']) {
             $credentialCode = $data['role'] === 'lurah' ? 'A-001' : 'B-001';
             $updateData['credential_code_hash'] = Hash::make($credentialCode);

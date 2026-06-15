@@ -64,7 +64,6 @@ const submit = () => {
             {{ status }}
         </div>
 
-        <!-- Mode indicator -->
         <div v-if="adminMode" class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
             Mode Admin — masukkan username dan password admin.
         </div>
@@ -73,7 +72,6 @@ const submit = () => {
             <div>
                 <InputLabel for="name" value="Nama" />
 
-                <!-- Staff: dropdown dari daftar nama aktif -->
                 <select
                     v-if="!adminMode"
                     id="name"
@@ -88,7 +86,6 @@ const submit = () => {
                     </option>
                 </select>
 
-                <!-- Admin: input teks bebas -->
                 <TextInput
                     v-else
                     id="name"
@@ -104,7 +101,6 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.name" />
             </div>
 
-            <!-- Credential code — disembunyikan saat mode admin -->
             <div v-if="!adminMode" class="mt-4">
                 <InputLabel for="credential_code" value="Credential Code" />
 

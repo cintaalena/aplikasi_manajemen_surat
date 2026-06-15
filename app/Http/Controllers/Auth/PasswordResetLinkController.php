@@ -47,23 +47,19 @@ class PasswordResetLinkController extends Controller
             ->where('is_active', true)
             ->first();
 
-        // Pesan error generik — tidak membocorkan field mana yang salah
         if (! $user) {
             return back()->withErrors([
                 'recovery_email' => 'Username atau email pemulihan tidak sesuai.',
             ]);
         }
 
-        // Buat token dan simpan di password_reset_tokens dengan email AKUN sebagai key
         $token = Password::broker()->getRepository()->create($user);
 
-        // Bangun URL reset; email di URL adalah email AKUN (untuk verifikasi token)
         $resetUrl = route('password.reset', [
             'token' => $token,
             'email' => $user->email,
         ]);
 
-        // Kirim ke RECOVERY EMAIL — bukan email akun
         Mail::raw(
             "Halo {$user->name},\n\n" .
             "Kami menerima permintaan reset password untuk akun Anda di Sistem Kelurahan Fatubesi.\n\n" .

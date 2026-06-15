@@ -14,7 +14,6 @@ class Penduduk extends Model
     protected $table = 'penduduks';
 
     protected $fillable = [
-        // Data Keluarga
         'kode_keluarga',
         'nama_kepala_keluarga',
         'alamat',
@@ -22,7 +21,6 @@ class Penduduk extends Model
         'rw',
         'dusun',
 
-        // Data Individu
         'no_urut',
         'nik',
         'nama',
@@ -41,8 +39,6 @@ class Penduduk extends Model
         'status_kehidupan',
     ];
 
-    // Field ini tidak akan pernah muncul dalam JSON response otomatis
-    // NIK adalah data sensitif PII (Personally Identifiable Information)
     protected $hidden = [
         'deleted_at',
     

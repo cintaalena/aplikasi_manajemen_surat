@@ -1,0 +1,33 @@
+sequenceDiagram
+    actor Staff as Staff
+    participant App as Aplikasi
+    participant DB as Database
+
+    %% ── CETAK / DOWNLOAD SURAT ────────────────────────────
+    Staff->>App: Klik tombol Cetak
+    App->>App: Periksa kelengkapan data dan dokumen persyaratan
+
+    alt Data atau dokumen belum lengkap
+        App-->>Staff: Tampilkan pesan kesalahan
+    else Semua lengkap
+        App-->>Staff: Buka dialog cetak browser
+        Staff->>App: Cetak ke printer atau simpan sebagai PDF
+
+        App-->>Staff: Muncul konfirmasi — apakah surat sudah berhasil dicetak?
+
+        alt Staff memilih Tidak / Batal
+            App-->>Staff: Kembali ke formulir, surat tidak disimpan ke arsip
+        else Staff memilih Ya, sudah tercetak
+            App->>DB: Buat nomor surat otomatis dan simpan surat ke arsip
+            App->>DB: Tautkan dokumen persyaratan ke surat
+            App->>DB: Kirim notifikasi ke Lurah
+
+            alt Nomor surat sudah dipakai surat lain
+                DB-->>App: Konflik nomor surat
+                App-->>Staff: Nomor surat diubah otomatis ke nomor berikutnya
+                Staff->>App: Cetak ulang dengan nomor baru
+            else Nomor surat berhasil disimpan
+                App-->>Staff: Surat tersimpan di arsip, diarahkan ke halaman dashboard
+            end
+        end
+    end

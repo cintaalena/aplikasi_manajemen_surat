@@ -23,14 +23,12 @@ const tanggalIndo = (yyyy_mm_dd) => {
   return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
-// Rekonstruksi objek form dari payload yang tersimpan di database
 const form = computed(() => ({
   ...(props.letter.payload ?? {}),
   noSurat: props.letter.no_surat,
   judulSurat: props.letter.title,
 }))
 
-// Penanda tangan — data user yang mencetak surat
 const signer = computed(() => props.letter.printed_by ?? null)
 
 const slug = computed(() => props.letter.template_slug ?? '')
@@ -51,9 +49,8 @@ const formatDate = (raw) => {
   })
 }
 
-// ── Dokumen Pendukung — accordion + modal viewer ──────────────────────
 const dokOpen = ref(true)
-const viewDoc = ref(null) // { url, doc_label, mime_type, original_name }
+const viewDoc = ref(null)
 
 function openViewer(doc) {
   viewDoc.value = doc
@@ -72,7 +69,6 @@ function isPdf(mime) {
 <template>
   <AppLayout>
     <div class="space-y-4">
-      <!-- Header -->
       <div class="flex items-start justify-between gap-3">
         <div class="flex items-start gap-3">
           <Link
@@ -99,7 +95,6 @@ function isPdf(mime) {
         </button>
       </div>
 
-      <!-- Template Surat -->
       <DomisiliTemplate  v-if="isDomisili"  :form="form" :tanggalIndo="tanggalIndo" :signer="signer" />
       <KelahiranTemplate v-else-if="isKelahiran" :form="form" :tanggalIndo="tanggalIndo" :signer="signer" />
       <KematianTemplate  v-else-if="isKematian"  :form="form" :tanggalIndo="tanggalIndo" :signer="signer" />
@@ -109,9 +104,7 @@ function isPdf(mime) {
         Pratinjau tidak tersedia untuk surat ini.
       </div>
 
-      <!-- ── Dokumen Pendukung Accordion ─────────────────────────────── -->
       <div class="print:hidden rounded-xl border border-amber-200 bg-white overflow-hidden">
-        <!-- Header / toggle -->
         <button
           type="button"
           class="w-full flex items-center justify-between px-5 py-3 bg-amber-50 hover:bg-amber-100 transition"
@@ -126,7 +119,6 @@ function isPdf(mime) {
               <span class="ml-1 rounded-full bg-amber-200 text-amber-800 text-xs px-2 py-0.5">{{ documents.length }}</span>
             </span>
           </div>
-          <!-- chevron -->
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="h-4 w-4 text-amber-500 transition-transform duration-200"
@@ -137,14 +129,11 @@ function isPdf(mime) {
           </svg>
         </button>
 
-        <!-- Body -->
         <div v-show="dokOpen">
-          <!-- Kosong -->
           <div v-if="documents.length === 0" class="px-5 py-6 text-center text-sm text-gray-400 italic">
             Tidak ada dokumen pendukung untuk surat ini.
           </div>
 
-          <!-- Daftar dokumen — grid gambar langsung -->
           <div v-else class="p-4">
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               <div
@@ -152,14 +141,12 @@ function isPdf(mime) {
                 :key="doc.id"
                 class="flex flex-col rounded-xl border border-amber-200 bg-white overflow-hidden shadow-sm"
               >
-                <!-- Nomor + label -->
                 <div class="px-2 py-1.5 bg-amber-50 border-b border-amber-100">
                   <p class="text-xs font-semibold text-amber-800 leading-tight truncate" :title="doc.doc_label">
                     {{ idx + 1 }}. {{ doc.doc_label }}
                   </p>
                 </div>
 
-                <!-- Preview -->
                 <div class="bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition" style="min-height: 140px;" @click="openViewer(doc)">
                   <template v-if="isImage(doc.mime_type)">
                     <img
@@ -188,7 +175,6 @@ function isPdf(mime) {
                   </template>
                 </div>
 
-                <!-- Nama file + tombol buka -->
                 <div class="px-2 py-2 bg-white flex items-center justify-between gap-1">
                   <p class="text-xs text-gray-400 truncate flex-1" :title="doc.original_name">{{ doc.original_name ?? '—' }}</p>
                   <a
@@ -207,7 +193,6 @@ function isPdf(mime) {
       </div>
     </div>
 
-    <!-- ── Modal Viewer Dokumen ──────────────────────────────────────── -->
     <Teleport to="body">
       <div
         v-if="viewDoc"
@@ -215,7 +200,6 @@ function isPdf(mime) {
         @click.self="closeViewer"
       >
         <div class="relative bg-white rounded-2xl shadow-2xl flex flex-col max-w-4xl w-full max-h-[90vh]">
-          <!-- Header modal -->
           <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 flex-shrink-0">
             <div class="flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -245,23 +229,19 @@ function isPdf(mime) {
             </div>
           </div>
 
-          <!-- Konten -->
           <div class="flex-1 overflow-auto flex items-center justify-center p-4 bg-gray-50 min-h-0">
-            <!-- Gambar -->
             <img
               v-if="isImage(viewDoc.mime_type)"
               :src="viewDoc.url"
               :alt="viewDoc.doc_label"
               class="max-w-full max-h-full object-contain rounded-lg shadow"
             />
-            <!-- PDF via iframe -->
             <iframe
               v-else-if="isPdf(viewDoc.mime_type)"
               :src="viewDoc.url"
               class="w-full h-[70vh] rounded-lg border-0"
               title="PDF Viewer"
             />
-            <!-- File lain -->
             <div v-else class="text-center space-y-3">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>

@@ -7,41 +7,36 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        // Drop existing table
         Schema::dropIfExists('penduduks');
         
-        // Create new table with individual data structure
         Schema::create('penduduks', function (Blueprint $table) {
             $table->id();
             
-            // Data Keluarga
-            $table->string('kode_keluarga', 32)->index(); // No KK (tidak unique karena 1 KK bisa banyak anggota)
+            $table->string('kode_keluarga', 32)->index();
             $table->string('nama_kepala_keluarga', 150)->nullable();
             $table->string('alamat', 255)->nullable();
-            $table->string('rt', 3)->nullable(); // "001"
-            $table->string('rw', 3)->nullable(); // "001"
+            $table->string('rt', 3)->nullable();
+            $table->string('rw', 3)->nullable();
             $table->string('dusun', 100)->nullable();
             
-            // Data Individu
-            $table->unsignedInteger('no_urut')->nullable(); // No. urut dalam keluarga
-            $table->string('nik', 20)->unique()->nullable(); // NIK
-            $table->string('nama', 150); // Nama Anggota Keluarga
-            $table->enum('jenis_kelamin', ['L', 'P'])->nullable(); // L/P
-            $table->string('hubungan', 50)->nullable(); // Hubungan dengan kepala keluarga
+            $table->unsignedInteger('no_urut')->nullable();
+            $table->string('nik', 20)->unique()->nullable();
+            $table->string('nama', 150);
+            $table->enum('jenis_kelamin', ['L', 'P'])->nullable();
+            $table->string('hubungan', 50)->nullable();
             $table->string('tempat_lahir', 100)->nullable();
             $table->date('tanggal_lahir')->nullable();
             $table->unsignedTinyInteger('usia')->nullable();
-            $table->string('status_perkawinan', 50)->nullable(); // Status
+            $table->string('status_perkawinan', 50)->nullable();
             $table->string('agama', 30)->nullable();
-            $table->string('golongan_darah', 3)->nullable(); // A, B, AB, O
+            $table->string('golongan_darah', 3)->nullable();
             $table->string('kewarganegaraan', 50)->default('WNI');
-            $table->string('etnis', 50)->nullable(); // Etnis/Suku
+            $table->string('etnis', 50)->nullable();
             $table->string('pendidikan', 100)->nullable();
             $table->string('pekerjaan', 100)->nullable();
             
             $table->timestamps();
             
-            // Indexes
             $table->index(['dusun', 'rt', 'rw']);
             $table->index('nama');
         });

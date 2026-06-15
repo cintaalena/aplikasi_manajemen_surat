@@ -30,9 +30,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // ── Step 1: Ubah tipe kolom ke TEXT ──────────────────────────────────
-        // Ciphertext AES-256-CBC (base64) jauh lebih panjang dari nilai aslinya.
-        // Contoh: NIK 16 karakter → ~200+ karakter setelah enkripsi.
         Schema::table('penduduks', function (Blueprint $table) {
             $table->text('nik')->nullable()->change();
             $table->text('nama')->change();
@@ -41,26 +38,19 @@ return new class extends Migration
             $table->text('tempat_lahir')->nullable()->change();
         });
 
-        // ── Step 2: Tangani constraint & index pada kolom terenkripsi ────────
         Schema::table('penduduks', function (Blueprint $table) {
-            // Hapus UNIQUE index pada nik — tidak berlaku untuk ciphertext non-deterministik
             $table->dropUnique(['nik']);
 
-            // Hapus index nama — index string pada ciphertext tidak berguna
             $table->dropIndex(['nama']);
 
-            // Tambah kolom nik_hash: HMAC-SHA256 dari NIK plaintext
-            // Digunakan untuk deteksi duplikasi dan lookup aman
             $table->string('nik_hash', 64)
                   ->nullable()
                   ->after('nik')
                   ->comment('HMAC-SHA256 of plaintext NIK — used for secure deduplication');
 
-            // Index pada nik_hash untuk performa lookup
             $table->index('nik_hash');
         });
 
-        // ── Step 3: Enkripsi data plaintext yang sudah ada di tabel ─────────
         DB::table('penduduks')->orderBy('id')->each(function ($row) {
             $updates = [];
 
@@ -93,7 +83,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        // ── Step 1: Dekripsi data kembali ke plaintext ───────────────────────
         DB::table('penduduks')->orderBy('id')->each(function ($row) {
             $updates = [];
 
@@ -101,7 +90,7 @@ return new class extends Migration
                 if ($row->nik !== null) {
                     $updates['nik'] = Crypt::decryptString($row->nik);
                 }
-            } catch (\Exception $e) { /* abaikan jika sudah plaintext */ }
+            } catch (\Exception $e) {}
 
             try {
                 if ($row->nama !== null) {
@@ -132,13 +121,11 @@ return new class extends Migration
             }
         });
 
-        // ── Step 2: Hapus nik_hash ────────────────────────────────────────────
         Schema::table('penduduks', function (Blueprint $table) {
             $table->dropIndex(['nik_hash']);
             $table->dropColumn('nik_hash');
         });
 
-        // ── Step 3: Kembalikan tipe kolom & constraint semula ─────────────────
         Schema::table('penduduks', function (Blueprint $table) {
             $table->string('nik', 20)->nullable()->change();
             $table->string('nama', 150)->change();

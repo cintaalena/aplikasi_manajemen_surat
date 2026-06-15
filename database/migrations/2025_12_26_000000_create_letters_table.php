@@ -10,24 +10,20 @@ return new class extends Migration {
         Schema::create('letters', function (Blueprint $table) {
             $table->id();
 
-            // identitas surat
-            $table->string('template_slug');                 // contoh: keterangan-domisili
-            $table->string('title');                         // judul surat (untuk arsip)
-            $table->string('no_surat')->unique();            // harus unik (anti bentrok)
+            $table->string('template_slug');
+            $table->string('title');
+            $table->string('no_surat')->unique();
 
-            // komponen nomor
-            $table->unsignedInteger('index_code');           // contoh: 475
-            $table->unsignedBigInteger('urut');              // contoh: 71
-            $table->string('month_roman', 4);                // I-XII
-            $table->unsignedSmallInteger('year');            // 2025
+            $table->unsignedInteger('index_code');
+            $table->unsignedBigInteger('urut');
+            $table->string('month_roman', 4);
+            $table->unsignedSmallInteger('year');
 
-            // isi surat (flexibel antar template)
             $table->json('payload');
 
-            // finalisasi
-            $table->timestamp('printed_at');                 // kapan final/cetak
+            $table->timestamp('printed_at');
             $table->foreignId('printed_by')->nullable()
-                ->constrained('users')->nullOnDelete();      // siapa yang cetak (opsional)
+                ->constrained('users')->nullOnDelete();
 
             $table->timestamps();
 

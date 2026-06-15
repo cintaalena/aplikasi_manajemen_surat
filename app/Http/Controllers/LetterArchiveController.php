@@ -21,7 +21,6 @@ class LetterArchiveController extends Controller
         $date_from = trim((string) $request->query('date_from', ''));
         $date_to   = trim((string) $request->query('date_to', ''));
 
-        // Backward-compat: jika masih ada param `q` lama
         $q = trim((string) $request->query('q', ''));
 
         $letters = Letter::query()
@@ -69,7 +68,6 @@ class LetterArchiveController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        // Ambil ID surat yang sudah dilihat oleh user saat ini
         $viewedIds = LetterView::where('user_id', $request->user()->id)
             ->whereIn('letter_id', $letters->pluck('id')->toArray())
             ->pluck('letter_id')
@@ -132,12 +130,10 @@ class LetterArchiveController extends Controller
             'printed_by' => $request->user()?->id,
         ]);
 
-        // Simpan file yang di-upload langsung bersama form
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
                 $realMime = $file->getMimeType();
 
-                // Security: tolak MIME yang tidak diizinkan
                 if (!in_array($realMime, self::ALLOWED_MIMES, true)) {
                     continue;
                 }
