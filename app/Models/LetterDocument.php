@@ -30,6 +30,6 @@ class LetterDocument extends Model
      */
     public function getUrlAttribute(): string
     {
-        return route('surat.dokumen.file', ['document' => $this->id]);
+        return route('surat.dokumen.file', ['document' => $this->id], false);
     }
 }
