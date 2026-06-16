@@ -466,13 +466,13 @@ onUnmounted(() => {
           :href="route('disposisi-tugas.index')"
           @click="notifOpen = false"
           class="text-xs font-medium text-blue-600 hover:text-blue-800 transition"
-        >Lihat Disposisi Tugas â†’</Link>
+        >Lihat Disposisi Tugas →</Link>
         <Link
           v-else
           :href="route('arsip-surat.index')"
           @click="notifOpen = false"
           class="text-xs font-medium text-green-600 hover:text-green-800 transition"
-        >Lihat Arsip Surat â†’</Link>
+        >Lihat Arsip Surat →</Link>
       </div>
     </div>
 
