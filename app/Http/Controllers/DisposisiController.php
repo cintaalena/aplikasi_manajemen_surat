@@ -82,14 +82,23 @@ class DisposisiController extends Controller
         $disposisi->load('letter:id,no_surat,title');
         $disposisi->update(['status' => 'diterima']);
 
-        LetterNotification::create([
-            'user_id'   => $disposisi->from_user_id,
-            'letter_id' => $disposisi->letter_id,
-            'message'   => $request->user()->name . " telah mengkonfirmasi penerimaan tugas disposisi surat \"{$disposisi->letter->title}\" (No. {$disposisi->letter->no_surat}).",
-            'is_read'   => false,
-        ]);
+        $notifGagal = false;
+        try {
+            LetterNotification::create([
+                'user_id'   => $disposisi->from_user_id,
+                'letter_id' => $disposisi->letter_id,
+                'message'   => $request->user()->name . " telah mengkonfirmasi penerimaan tugas disposisi surat \"{$disposisi->letter->title}\" (No. {$disposisi->letter->no_surat}).",
+                'is_read'   => false,
+            ]);
+        } catch (\Throwable $e) {
+            $notifGagal = true;
+            \Log::error('Gagal mengirim notifikasi diterima disposisi #' . $disposisi->id . ': ' . $e->getMessage());
+        }
 
-        return back()->with('success', 'Tugas berhasil dikonfirmasi diterima. Lurah telah dinotifikasi.');
+        $pesan = 'Tugas berhasil dikonfirmasi diterima.';
+        $pesan .= $notifGagal ? ' Notifikasi ke Lurah gagal dikirim.' : ' Lurah telah dinotifikasi.';
+
+        return back()->with('success', $pesan);
     }
 
     /**
@@ -108,14 +117,23 @@ class DisposisiController extends Controller
         $disposisi->load('letter:id,no_surat,title');
         $disposisi->update(['status' => 'selesai']);
 
-        LetterNotification::create([
-            'user_id'   => $disposisi->from_user_id,
-            'letter_id' => $disposisi->letter_id,
-            'message'   => $request->user()->name . " telah menyelesaikan tugas disposisi surat \"{$disposisi->letter->title}\" (No. {$disposisi->letter->no_surat}).",
-            'is_read'   => false,
-        ]);
+        $notifGagal = false;
+        try {
+            LetterNotification::create([
+                'user_id'   => $disposisi->from_user_id,
+                'letter_id' => $disposisi->letter_id,
+                'message'   => $request->user()->name . " telah menyelesaikan tugas disposisi surat \"{$disposisi->letter->title}\" (No. {$disposisi->letter->no_surat}).",
+                'is_read'   => false,
+            ]);
+        } catch (\Throwable $e) {
+            $notifGagal = true;
+            \Log::error('Gagal mengirim notifikasi selesai disposisi #' . $disposisi->id . ': ' . $e->getMessage());
+        }
 
-        return back()->with('success', 'Tugas disposisi selesai dan telah dihapus dari daftar tugas Anda. Lurah telah dinotifikasi.');
+        $pesan = 'Tugas disposisi selesai dan telah dihapus dari daftar tugas Anda.';
+        $pesan .= $notifGagal ? ' Notifikasi ke Lurah gagal dikirim.' : ' Lurah telah dinotifikasi.';
+
+        return back()->with('success', $pesan);
     }
 
     /**
