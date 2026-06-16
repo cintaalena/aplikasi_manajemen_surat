@@ -36,6 +36,13 @@ class UserController extends Controller
             'password_confirmation' => ['required', 'string'],
         ]);
 
+        // Validasi uniqueness username (case-insensitive, karena nama disimpan uppercase)
+        if (User::whereRaw('UPPER(name) = ?', [strtoupper($data['name'])])->exists()) {
+            return back()
+                ->withErrors(['name' => 'Username ini sudah digunakan oleh pengguna lain.'])
+                ->withInput();
+        }
+
         $baseEmail = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['name']));
         $email = $baseEmail . '@fatubesi.local';
         $suffix = 1;
@@ -74,6 +81,13 @@ class UserController extends Controller
             'jabatan' => ['required', 'string', 'max:100'],
             'role'    => ['required', 'in:lurah,staff'],
         ]);
+
+        // Validasi uniqueness username, kecualikan user yang sedang diedit
+        if (User::whereRaw('UPPER(name) = ?', [strtoupper($data['name'])])->where('id', '!=', $user->id)->exists()) {
+            return back()
+                ->withErrors(['name' => 'Username ini sudah digunakan oleh pengguna lain.'])
+                ->withInput();
+        }
 
         $updateData = [
             'name'    => strtoupper($data['name']),
