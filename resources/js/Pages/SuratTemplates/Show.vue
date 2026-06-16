@@ -380,20 +380,20 @@ const loadIndexGroups = async () => {
     })
     if (!res.ok) {
       const errorText = await res.text()
-      console.error('âŒ Index Groups API Error:', res.status, errorText)
+      console.error('❌ Index Groups API Error:', res.status, errorText)
       throw new Error(`Gagal mengambil kategori nomor index: ${res.status}`)
     }
     const data = await res.json()
-    console.log('âœ… Index Groups loaded successfully:', data)
-    console.log('ðŸ“Š Total categories:', data.length)
+    console.log('✅ Index Groups loaded successfully:', data)
+    console.log('📊 Total categories:', data.length)
     indexGroups.value = data
     isLoadingIndexes.value = false
     
     if (data.length === 0) {
-      console.warn('âš ï¸ No index groups found in response')
+      console.warn('⚠️ No index groups found in response')
     }
   } catch (error) {
-    console.error('âŒ loadIndexGroups error:', error)
+    console.error('❌ loadIndexGroups error:', error)
     indexLoadError.value = error.message
     isLoadingIndexes.value = false
   }
@@ -866,7 +866,7 @@ const validateDokKelahiranBeforePrint = () => {
     .filter(d => d.wajib && !kelDokState[d.key].id)
     .map(d => d.label)
   if (missing.length > 0) {
-    throw new Error('Dokumen persyaratan belum lengkap:\nâ€¢ ' + missing.join('\nâ€¢ '))
+    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
   }
   return true
 }
@@ -990,7 +990,7 @@ const validateDokKematianBeforePrint = () => {
   }
 
   if (missing.length > 0) {
-    throw new Error('Dokumen persyaratan belum lengkap:\nâ€¢ ' + missing.join('\nâ€¢ '))
+    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
   }
   return true
 }
@@ -1065,7 +1065,7 @@ const validateDokPindahBeforePrint = () => {
   if (!isPindah.value) return true
   const missing = PINDAH_DOCS.filter(d => d.wajib && !pindahDokState[d.key].id).map(d => d.label)
   if (missing.length > 0) {
-    throw new Error('Dokumen persyaratan belum lengkap:\nâ€¢ ' + missing.join('\nâ€¢ '))
+    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
   }
   return true
 }
@@ -1137,7 +1137,7 @@ const validateDokDomisiliBeforePrint = () => {
   if (!isDomisili.value) return true
   const missing = DOMISILI_DOCS.filter(d => d.wajib && !domDokState[d.key].id).map(d => d.label)
   if (missing.length > 0) {
-    throw new Error('Dokumen persyaratan belum lengkap:\nâ€¢ ' + missing.join('\nâ€¢ '))
+    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
   }
   return true
 }
@@ -1333,7 +1333,7 @@ const confirmFinalize = async (confirmed) => {
         <div>
           <h1 class="text-xl font-bold text-gray-900">{{ form.judulSurat }}</h1>
           <p class="mt-1 text-sm text-gray-600">
-            Isi form â†’ <b>View</b> untuk preview â†’ <b>Cetak</b> untuk arsip.
+            Isi form → <b>View</b> untuk preview → <b>Cetak</b> untuk arsip.
           </p>
         </div>
 
@@ -1398,7 +1398,7 @@ const confirmFinalize = async (confirmed) => {
               </select>
               <p v-if="indexLoadError" class="mt-1 text-xs text-red-600">{{ indexLoadError }}</p>
               <p v-else-if="!isLoadingIndexes && indexGroups.length > 0" class="mt-1 text-xs text-green-600">
-                âœ“ {{ indexGroups.length }} kategori tersedia
+                ✓ {{ indexGroups.length }} kategori tersedia
               </p>
             </div>
 
@@ -1430,7 +1430,7 @@ const confirmFinalize = async (confirmed) => {
                 class="mt-1 w-full rounded-xl border-gray-200 bg-gray-50 focus:border-purple-400 focus:ring-purple-400"
               />
               <p class="mt-1 text-xs text-gray-500">
-                <span v-if="!selectedIndexCode" class="text-amber-600 font-semibold">âš ï¸ Pilih kategori dan nomor index terlebih dahulu.</span>
+                <span v-if="!selectedIndexCode" class="text-amber-600 font-semibold">⚠️ Pilih kategori dan nomor index terlebih dahulu.</span>
                 <span v-else>Nomor urut naik hanya saat <b>Cetak</b>. Saat edit, memakai nomor final terakhir.</span>
               </p>
             </div>
@@ -1508,21 +1508,21 @@ const confirmFinalize = async (confirmed) => {
                     @click="applyPendudukToForm(item)"
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
-                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} â€¢ RT {{ item.rt }}/RW {{ item.rw }}</div>
+                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} • RT {{ item.rt }}/RW {{ item.rw }}</div>
                   </button>
                 </div>
 
                 <p v-if="isSearchingPenduduk" class="mt-1 text-xs text-gray-500">Mencari data penduduk...</p>
                 <p v-else-if="pendudukSearchError" class="mt-1 text-xs text-red-600">{{ pendudukSearchError }}</p>
                 <div v-else-if="pendudukSelected" class="mt-1 flex items-center gap-2">
-                  <p class="text-xs text-green-600">âœ“ Nama ditemukan di database penduduk Kelurahan Fatubesi</p>
+                  <p class="text-xs text-green-600">✓ Nama ditemukan di database penduduk Kelurahan Fatubesi</p>
                   <button type="button" @click="clearPendudukSelection()" class="text-xs text-gray-400 hover:text-red-500 underline whitespace-nowrap">Ganti</button>
                 </div>
                 <p
                   v-else-if="form.nama && form.nama.length >= 2 && !showPendudukDropdown && pendudukSuggestions.length === 0"
                   class="mt-1 text-xs text-red-600"
                 >
-                  âœ— Nama belum ditemukan di database penduduk Kelurahan Fatubesi
+                  ✗ Nama belum ditemukan di database penduduk Kelurahan Fatubesi
                 </p>
               </div>
 
@@ -1714,7 +1714,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
                         <button type="button" @click="removeDomDok(doc.key)" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                       </div>
                     </div>
@@ -1807,12 +1807,12 @@ const confirmFinalize = async (confirmed) => {
                     @click="applyAyah(item)"
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
-                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} â€¢ RT {{ item.rt }}/RW {{ item.rw }}</div>
+                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} • RT {{ item.rt }}/RW {{ item.rw }}</div>
                   </button>
                 </div>
                 <div v-if="isSearchingAyah" class="mt-1 text-xs text-gray-500">Mencari...</div>
                 <div v-else-if="ayahLocked" class="mt-1 flex items-center gap-2">
-                  <span class="text-xs text-green-600">âœ“ Data ayah dari database</span>
+                  <span class="text-xs text-green-600">✓ Data ayah dari database</span>
                   <button type="button" @click="resetAyah()" class="text-xs text-gray-400 hover:text-red-500 underline whitespace-nowrap">Ganti</button>
                 </div>
 
@@ -1859,12 +1859,12 @@ const confirmFinalize = async (confirmed) => {
                     @click="applyIbu(item)"
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
-                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} â€¢ RT {{ item.rt }}/RW {{ item.rw }}</div>
+                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} • RT {{ item.rt }}/RW {{ item.rw }}</div>
                   </button>
                 </div>
                 <div v-if="isSearchingIbu" class="mt-1 text-xs text-gray-500">Mencari...</div>
                 <div v-else-if="ibuLocked" class="mt-1 flex items-center gap-2">
-                  <span class="text-xs text-green-600">âœ“ Data ibu dari database</span>
+                  <span class="text-xs text-green-600">✓ Data ibu dari database</span>
                   <button type="button" @click="resetIbu()" class="text-xs text-gray-400 hover:text-red-500 underline whitespace-nowrap">Ganti</button>
                 </div>
               </div>
@@ -1963,7 +1963,7 @@ const confirmFinalize = async (confirmed) => {
                     <div class="flex flex-col gap-2 pl-1">
                       <label class="flex items-start gap-2 cursor-pointer select-none">
                         <input type="radio" name="jenisPendaftaranKelahiran" value="normal_0_60" v-model="jenisPendaftaranKelahiran" class="accent-green-600 h-4 w-4 mt-0.5 flex-shrink-0" />
-                        <span class="text-xs text-gray-700"><strong>Kasus 1:</strong> Bayi usia <strong>0â€“60 hari</strong> (didaftarkan tepat waktu, dalam pernikahan sah)</span>
+                        <span class="text-xs text-gray-700"><strong>Kasus 1:</strong> Bayi usia <strong>0–60 hari</strong> (didaftarkan tepat waktu, dalam pernikahan sah)</span>
                       </label>
                       <label class="flex items-start gap-2 cursor-pointer select-none">
                         <input type="radio" name="jenisPendaftaranKelahiran" value="normal_lebih_60" v-model="jenisPendaftaranKelahiran" class="accent-green-600 h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -1974,17 +1974,17 @@ const confirmFinalize = async (confirmed) => {
                         <span class="text-xs text-gray-700"><strong>Kasus 3:</strong> Anak lahir <strong>di luar nikah</strong></span>
                       </label>
                     </div>
-                    <p v-if="!jenisPendaftaranKelahiran" class="text-xs text-amber-700 font-medium pl-1">âš  Pilih salah satu studi kasus di atas untuk melihat daftar dokumen yang diperlukan.</p>
+                    <p v-if="!jenisPendaftaranKelahiran" class="text-xs text-amber-700 font-medium pl-1">⚠ Pilih salah satu studi kasus di atas untuk melihat daftar dokumen yang diperlukan.</p>
                   </div>
 
                   <div v-if="jenisPendaftaranKelahiran" class="rounded-lg bg-white border border-green-100 p-3">
                     <p class="text-xs font-semibold text-gray-700 mb-2">Dokumen yang diperlukan untuk kasus ini:</p>
                     <ul class="space-y-1 pl-1">
                       <li v-for="(doc, idx) in activeKelahiranDocs" :key="doc.key" class="flex items-center gap-2 text-xs text-gray-700">
-                        <span :class="doc.wajib ? 'text-green-600' : 'text-gray-400'" class="flex-shrink-0">{{ doc.wajib ? 'â—' : 'â—‹' }}</span>
+                        <span :class="doc.wajib ? 'text-green-600' : 'text-gray-400'" class="flex-shrink-0">{{ doc.wajib ? '●' : '○' }}</span>
                         {{ idx + 1 }}. {{ doc.label }}
                         <span v-if="!doc.wajib" class="text-gray-400">(opsional)</span>
-                        <span v-if="kelDokState[doc.key].id" class="ml-auto text-green-700 font-semibold">âœ“</span>
+                        <span v-if="kelDokState[doc.key].id" class="ml-auto text-green-700 font-semibold">✓</span>
                       </li>
                     </ul>
                   </div>
@@ -2013,7 +2013,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-3 py-2">
-                        <span class="text-xs text-green-700 font-semibold">âœ“ File tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">✓ File tersimpan</span>
                         <button type="button" @click="removeKelDok(doc.key)" class="text-xs text-red-500 hover:text-red-700 font-medium">Hapus</button>
                       </div>
                       <p v-if="kelDokState[doc.key].error" class="text-xs text-red-600">{{ kelDokState[doc.key].error }}</p>
@@ -2070,21 +2070,21 @@ const confirmFinalize = async (confirmed) => {
                     @click="applyPendudukToForm(item)"
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
-                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} â€¢ RT {{ item.rt }}/RW {{ item.rw }}</div>
+                    <div class="text-xs text-gray-500">NIK: {{ item.nik }} • RT {{ item.rt }}/RW {{ item.rw }}</div>
                   </button>
                 </div>
 
                 <p v-if="isSearchingPenduduk" class="mt-1 text-xs text-gray-500">Mencari data penduduk...</p>
                 <p v-else-if="pendudukSearchError" class="mt-1 text-xs text-red-600">{{ pendudukSearchError }}</p>
                 <div v-else-if="pendudukSelected" class="mt-1 flex items-center gap-2">
-                  <p class="text-xs text-green-600">âœ“ Nama ditemukan di database penduduk Kelurahan Fatubesi</p>
+                  <p class="text-xs text-green-600">✓ Nama ditemukan di database penduduk Kelurahan Fatubesi</p>
                   <button type="button" @click="clearPendudukSelection()" class="text-xs text-gray-400 hover:text-red-500 underline whitespace-nowrap">Ganti</button>
                 </div>
                 <p
                   v-else-if="form.nama && form.nama.length >= 2 && !showPendudukDropdown && pendudukSuggestions.length === 0"
                   class="mt-1 text-xs text-red-600"
                 >
-                  âœ— Nama belum ditemukan di database penduduk Kelurahan Fatubesi
+                  ✗ Nama belum ditemukan di database penduduk Kelurahan Fatubesi
                 </p>
               </div>
 
@@ -2221,7 +2221,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
                         <button type="button" @click="removeDok('suratPengantarRtRw')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                       </div>
                     </div>
@@ -2260,7 +2260,7 @@ const confirmFinalize = async (confirmed) => {
                         <span class="text-xs text-gray-700">Surat Pernyataan dari <strong>2 Orang Saksi</strong> (pengganti surat dokter)</span>
                       </label>
                     </div>
-                    <p v-if="!jenisSuratKematian && !dokState.suratKetKematian.id" class="text-xs text-amber-700 font-medium pl-1">âš  Pilih salah satu di atas, lalu upload file.</p>
+                    <p v-if="!jenisSuratKematian && !dokState.suratKetKematian.id" class="text-xs text-amber-700 font-medium pl-1">⚠ Pilih salah satu di atas, lalu upload file.</p>
 
                     <div v-if="jenisSuratKematian || dokState.suratKetKematian.id" class="pl-2 border-l-2 border-amber-300">
                       <div class="flex items-center justify-between gap-2 flex-wrap">
@@ -2273,7 +2273,7 @@ const confirmFinalize = async (confirmed) => {
                           </label>
                         </div>
                         <div v-else class="flex items-center gap-2 flex-shrink-0">
-                          <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
+                          <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
                           <button type="button" @click="removeDok('suratKetKematian')" class="text-xs text-red-500 hover:text-red-700">Hapus / Ganti</button>
                         </div>
                       </div>
@@ -2299,7 +2299,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
                         <button type="button" @click="removeDok('fotoKtpAlmarhum')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                       </div>
                     </div>
@@ -2324,7 +2324,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
                         <button type="button" @click="removeDok('fotoKkAlmarhum')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                       </div>
                     </div>
@@ -2349,7 +2349,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
                         <button type="button" @click="removeDok('fotoKtpPemohon')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                       </div>
                     </div>
@@ -2374,7 +2374,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
                         <button type="button" @click="removeDok('suratPernyataanPelapor')" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                       </div>
                     </div>
@@ -2442,14 +2442,14 @@ const confirmFinalize = async (confirmed) => {
                <p v-if="isSearchingPenduduk" class="mt-1 text-xs text-gray-500">Mencari data penduduk...</p>
               <p v-else-if="pendudukSearchError" class="mt-1 text-xs text-red-600">{{ pendudukSearchError }}</p>
               <div v-else-if="pendudukSelected" class="mt-1 flex items-center gap-2">
-                <p class="text-xs text-green-600">âœ“ Nama ditemukan di database penduduk Kelurahan Fatubesi</p>
+                <p class="text-xs text-green-600">✓ Nama ditemukan di database penduduk Kelurahan Fatubesi</p>
                 <button type="button" @click="clearPendudukSelection()" class="text-xs text-gray-400 hover:text-red-500 underline whitespace-nowrap">Ganti</button>
               </div>
               <p
                 v-else-if="form.nama && form.nama.length >= 2 && !showPendudukDropdown && pendudukSuggestions.length === 0"
                 class="mt-1 text-xs text-red-600"
               >
-                âœ— Nama belum ditemukan di database penduduk Kelurahan Fatubesi
+                ✗ Nama belum ditemukan di database penduduk Kelurahan Fatubesi
               </p>
               </div>
 
@@ -2705,7 +2705,7 @@ const confirmFinalize = async (confirmed) => {
                           ]"
                           placeholder="Ketik nama pengikut..."
                         />
-                        <span v-if="pengikutSelected[index]" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-green-600 text-sm font-medium">âœ“ Terdaftar</span>
+                        <span v-if="pengikutSelected[index]" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-green-600 text-sm font-medium">✓ Terdaftar</span>
                       </div>
                       <ul
                         v-if="showPengikutDropdown[index] && pengikutSuggestions[index]?.length > 0"
@@ -2802,7 +2802,7 @@ const confirmFinalize = async (confirmed) => {
                         </label>
                       </div>
                       <div v-else class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-xs text-green-700 font-semibold">âœ“ Tersimpan</span>
+                        <span class="text-xs text-green-700 font-semibold">✓ Tersimpan</span>
                         <button type="button" @click="removePindahDok(doc.key)" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                       </div>
                     </div>
