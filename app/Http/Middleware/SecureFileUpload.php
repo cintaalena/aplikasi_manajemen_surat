@@ -23,20 +23,28 @@ class SecureFileUpload
            $realMimeType = $file->getMimeType();
 
             $allowedMimeTypes = [
+                // CSV / teks
                 'text/plain',
                 'text/csv',
                 'application/csv',
                 'text/x-csv',
 
+                // Excel
                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 'application/zip',
                 'application/x-zip-compressed',
                 'multipart/x-zip',
-
                 'application/vnd.ms-excel',
                 'application/CDFV2',
                 'application/msword',
                 'application/octet-stream',
+
+                // Gambar & PDF (untuk upload dokumen surat)
+                'image/jpeg',
+                'image/png',
+                'image/webp',
+                'image/gif',
+                'application/pdf',
             ];
             
             $ext = strtolower($file->getClientOriginalExtension());
