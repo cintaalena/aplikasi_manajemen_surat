@@ -118,31 +118,38 @@
 
 <?php
 /* ── helpers ──────────────────────────────────────────────────────── */
-function bl_titleCase(string $s): string {
-    return mb_convert_case(trim($s), MB_CASE_TITLE, 'UTF-8');
+if (!function_exists('bl_titleCase')) {
+    function bl_titleCase(string $s): string {
+        return mb_convert_case(trim($s), MB_CASE_TITLE, 'UTF-8');
+    }
 }
 
-function bl_tanggalIndo(?string $d): string {
-    if (!$d) return '';
-    $bulan = ['','Januari','Februari','Maret','April','Mei','Juni',
-              'Juli','Agustus','September','Oktober','November','Desember'];
-    try {
-        // handle "YYYY-MM-DD" or full datetime
-        $ts = strtotime($d);
-        if (!$ts) return $d;
-        return date('d', $ts) . ' ' . $bulan[(int)date('n', $ts)] . ' ' . date('Y', $ts);
-    } catch (Exception $e) { return $d; }
+if (!function_exists('bl_tanggalIndo')) {
+    function bl_tanggalIndo(?string $d): string {
+        if (!$d) return '';
+        $bulan = ['','Januari','Februari','Maret','April','Mei','Juni',
+                  'Juli','Agustus','September','Oktober','November','Desember'];
+        try {
+            $ts = strtotime($d);
+            if (!$ts) return $d;
+            return date('d', $ts) . ' ' . $bulan[(int)date('n', $ts)] . ' ' . date('Y', $ts);
+        } catch (Exception $e) { return $d; }
+    }
 }
 
-function bl_pad3($v): string {
-    $s = preg_replace('/\D/', '', (string)($v ?? ''));
-    if (!$s) return '___';
-    return str_pad(substr($s, -3), 3, '0', STR_PAD_LEFT);
+if (!function_exists('bl_pad3')) {
+    function bl_pad3($v): string {
+        $s = preg_replace('/\D/', '', (string)($v ?? ''));
+        if (!$s) return '___';
+        return str_pad(substr($s, -3), 3, '0', STR_PAD_LEFT);
+    }
 }
 
-function bl_terbilang(int $n): string {
-    $map = ['','Satu','Dua','Tiga','Empat','Lima','Enam','Tujuh','Delapan','Sembilan','Sepuluh'];
-    return $map[$n] ?? (string)$n;
+if (!function_exists('bl_terbilang')) {
+    function bl_terbilang(int $n): string {
+        $map = ['','Satu','Dua','Tiga','Empat','Lima','Enam','Tujuh','Delapan','Sembilan','Sepuluh'];
+        return $map[$n] ?? (string)$n;
+    }
 }
 
 $jabatanLabel = [
