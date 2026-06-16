@@ -45,9 +45,14 @@ class SecurityHeaders
         if (config('app.env') !== 'local') {
             $csp[] = "upgrade-insecure-requests";
         }
-        $response->headers->set('Content-Security-Policy', implode('; ', $csp));
 
-        $response->headers->set('X-Frame-Options', 'DENY');
+        $contentType = $response->headers->get('Content-Type', '');
+        $isHtml = str_contains($contentType, 'text/html');
+
+        if ($isHtml) {
+            $response->headers->set('Content-Security-Policy', implode('; ', $csp));
+            $response->headers->set('X-Frame-Options', 'DENY');
+        }
 
         $response->headers->set('X-Content-Type-Options', 'nosniff');
 
