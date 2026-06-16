@@ -113,7 +113,7 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
         </tr>
         <tr><td colspan="3" style="height:10px;"></td></tr>
         <tr>
-          <td class="lbl" style="white-space:nowrap;">A l a m a t&nbsp;&nbsp;Domisili</td><td class="sep">:</td>
+          <td class="lbl">Alamat Domisili</td><td class="sep">:</td>
           <td class="val">RT.{{ form.rt || '___' }}/RW.{{ form.rw || '___' }} Kel. Fatubesi Kec. Kota Lama Kota Kupang</td>
         </tr>
       </tbody>
