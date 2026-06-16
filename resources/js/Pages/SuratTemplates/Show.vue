@@ -807,12 +807,7 @@ const handleKelDokUpload = async (key, event) => {
     fd.append('file', file)
     fd.append('doc_key', key)
     fd.append('doc_label', cfg.label)
-    const res = await fetch('/surat/dokumen/upload', {
-      method: 'POST',
-      headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
-      credentials: 'include',
-      body: fd,
-    })
+    const res = await fetchWithCsrf('/surat/dokumen/upload', { method: 'POST', body: fd })
     const data = await res.json().catch(() => null)
     if (!res.ok) {
       if (res.status === 419) throw new Error('Sesi Anda telah berakhir. Silakan muat ulang halaman lalu coba lagi.')
@@ -831,11 +826,7 @@ const removeKelDok = async (key) => {
   const id = kelDokState[key].id
   if (id) {
     try {
-      await fetch(`/surat/dokumen/${id}`, {
-        method: 'DELETE',
-        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
-        credentials: 'include',
-      })
+      await fetchWithCsrf(`/surat/dokumen/${id}`, { method: 'DELETE' })
     } catch {}
   }
   kelDokState[key].id  = null
@@ -898,6 +889,30 @@ const dokState = reactive(
 
 const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? ''
 
+const refreshCsrfToken = async () => {
+  try {
+    const res = await fetch('/csrf-refresh', { credentials: 'include', headers: { 'Accept': 'application/json' } })
+    if (res.ok) {
+      const { token } = await res.json()
+      document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', token)
+      return token
+    }
+  } catch {}
+  return getCsrfToken()
+}
+
+const fetchWithCsrf = async (url, options = {}) => {
+  const token = getCsrfToken()
+  const headers = { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': token, ...(options.headers ?? {}) }
+  const res = await fetch(url, { credentials: 'include', ...options, headers })
+  if (res.status === 419) {
+    const newToken = await refreshCsrfToken()
+    const retryHeaders = { ...headers, 'X-CSRF-TOKEN': newToken }
+    return fetch(url, { credentials: 'include', ...options, headers: retryHeaders })
+  }
+  return res
+}
+
 const uploadDokumen = async (key, file) => {
   const label = key === 'suratKetKematian' ? labelKetKematian.value : (KEMATIAN_DOCS.find(d => d.key === key)?.label ?? key)
 
@@ -910,16 +925,7 @@ const uploadDokumen = async (key, file) => {
     fd.append('doc_key', key)
     fd.append('doc_label', label)
 
-    const res = await fetch('/surat/dokumen/upload', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRF-TOKEN': getCsrfToken(),
-      },
-      credentials: 'include',
-      body: fd,
-    })
+    const res = await fetchWithCsrf('/surat/dokumen/upload', { method: 'POST', body: fd })
 
     const data = await res.json().catch(() => null)
     if (!res.ok) {
@@ -955,15 +961,7 @@ const removeDok = async (key) => {
   const id = dokState[key].id
   if (id) {
     try {
-      await fetch(`/surat/dokumen/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRF-TOKEN': getCsrfToken(),
-        },
-        credentials: 'include',
-      })
+      await fetchWithCsrf(`/surat/dokumen/${id}`, { method: 'DELETE' })
     } catch {}
   }
   dokState[key].id  = null
@@ -1025,12 +1023,7 @@ const handlePindahDokUpload = async (key, event) => {
     fd.append('file', file)
     fd.append('doc_key', key)
     fd.append('doc_label', label)
-    const res = await fetch('/surat/dokumen/upload', {
-      method: 'POST',
-      headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
-      credentials: 'include',
-      body: fd,
-    })
+    const res = await fetchWithCsrf('/surat/dokumen/upload', { method: 'POST', body: fd })
     const data = await res.json().catch(() => null)
     if (!res.ok) {
       if (res.status === 419) throw new Error('Sesi Anda telah berakhir. Silakan muat ulang halaman lalu coba lagi.')
@@ -1049,11 +1042,7 @@ const removePindahDok = async (key) => {
   const id = pindahDokState[key].id
   if (id) {
     try {
-      await fetch(`/surat/dokumen/${id}`, {
-        method: 'DELETE',
-        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
-        credentials: 'include',
-      })
+      await fetchWithCsrf(`/surat/dokumen/${id}`, { method: 'DELETE' })
     } catch {}
   }
   pindahDokState[key].id  = null
@@ -1097,12 +1086,7 @@ const handleDomDokUpload = async (key, event) => {
     fd.append('file', file)
     fd.append('doc_key', key)
     fd.append('doc_label', label)
-    const res = await fetch('/surat/dokumen/upload', {
-      method: 'POST',
-      headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
-      credentials: 'include',
-      body: fd,
-    })
+    const res = await fetchWithCsrf('/surat/dokumen/upload', { method: 'POST', body: fd })
     const data = await res.json().catch(() => null)
     if (!res.ok) {
       if (res.status === 419) throw new Error('Sesi Anda telah berakhir. Silakan muat ulang halaman lalu coba lagi.')
@@ -1121,11 +1105,7 @@ const removeDomDok = async (key) => {
   const id = domDokState[key].id
   if (id) {
     try {
-      await fetch(`/surat/dokumen/${id}`, {
-        method: 'DELETE',
-        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
-        credentials: 'include',
-      })
+      await fetchWithCsrf(`/surat/dokumen/${id}`, { method: 'DELETE' })
     } catch {}
   }
   domDokState[key].id  = null
@@ -1165,15 +1145,9 @@ const finalizeLetter = async (templateSlug) => {
     body.doc_ids = getPindahDokIds()
   }
 
-  const res = await fetch(`/surat/${templateSlug}/finalize`, {
+  const res = await fetchWithCsrf(`/surat/${templateSlug}/finalize`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest',
-      'X-CSRF-TOKEN': getCsrfToken(),
-    },
-    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
 
