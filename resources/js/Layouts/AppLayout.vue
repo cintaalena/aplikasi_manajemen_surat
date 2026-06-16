@@ -308,7 +308,7 @@ onUnmounted(() => {
             Template Surat ({{ templates.length }})
           </span>
           <span class="text-xs">
-            {{ templatesOpen ? 'â€”' : '+' }}
+            {{ templatesOpen ? '−' : '+' }}
           </span>
         </button>
 
