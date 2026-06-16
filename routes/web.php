@@ -24,6 +24,10 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get('/csrf-refresh', function () {
+    return response()->json(['token' => csrf_token()]);
+})->middleware('web')->name('csrf.refresh');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/template-surat', function () {
         return Inertia::render('SuratTemplates/Index');
