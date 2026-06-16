@@ -1447,6 +1447,18 @@ const confirmFinalize = async (confirmed) => {
             <template v-if="isDomisili">
 
               <div
+                v-if="!pendudukSelected"
+                class="sm:col-span-2 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mt-0.5 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="text-xs text-amber-700">
+                  <span class="font-semibold">Mulai dengan mengisi kolom Nama di bawah.</span>
+                  NIK dan data lainnya akan terisi otomatis dari database penduduk setelah nama dipilih.
+                </p>
+              </div>
+              <div
                 v-if="pendudukLocked"
                 class="sm:col-span-2 flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5"
               >
@@ -1463,9 +1475,11 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">NIK</label>
                 <input
                   v-model="form.nik"
+                  :disabled="!pendudukSelected"
                   :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
+                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
                   class="mt-1 w-full rounded-xl border-gray-200"
+                  placeholder="Terisi otomatis setelah nama dipilih"
                 />
               </div>
 
@@ -1516,9 +1530,8 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Jenis Kelamin</label>
                 <select
                   v-model="form.jenisKelamin"
-                  :disabled="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected || pendudukLocked"
+                  class="mt-1 w-full rounded-xl border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed"
                 >
                   <option value="">Pilih</option>
                   <option>Laki-laki</option>
@@ -1530,8 +1543,9 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Tempat Lahir</label>
                 <input
                   v-model="form.tempatLahir"
+                  :disabled="!pendudukSelected"
                   :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
+                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
                   class="mt-1 w-full rounded-xl border-gray-200"
                 />
               </div>
@@ -1541,8 +1555,9 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   type="date"
                   v-model="form.tanggalLahir"
+                  :disabled="!pendudukSelected"
                   :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
+                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
                   class="mt-1 w-full rounded-xl border-gray-200"
                 />
               </div>
@@ -1551,8 +1566,9 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Pekerjaan</label>
                 <input
                   v-model="form.pekerjaan"
+                  :disabled="!pendudukSelected"
                   :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
+                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
                   class="mt-1 w-full rounded-xl border-gray-200"
                 />
               </div>
@@ -1635,8 +1651,9 @@ const confirmFinalize = async (confirmed) => {
                 <textarea
                   v-model="form.alamatDomisili"
                   rows="2"
+                  :disabled="!pendudukSelected"
                   :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
+                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
                   class="mt-1 w-full rounded-xl border-gray-200"
                 ></textarea>
               </div>
@@ -1647,8 +1664,9 @@ const confirmFinalize = async (confirmed) => {
                   v-model="form.rt"
                   type="text"
                   inputmode="numeric"
+                  :disabled="!pendudukSelected"
                   :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
+                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
                   class="mt-1 w-full rounded-xl border-gray-200"
                   @input="!pendudukLocked && (form.rt = $event.target.value.replace(/\D/g, ''))"
                 />
@@ -1660,8 +1678,9 @@ const confirmFinalize = async (confirmed) => {
                   v-model="form.rw"
                   type="text"
                   inputmode="numeric"
+                  :disabled="!pendudukSelected"
                   :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
+                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
                   class="mt-1 w-full rounded-xl border-gray-200"
                   @input="!pendudukLocked && (form.rw = $event.target.value.replace(/\D/g, ''))"
                 />
@@ -1673,7 +1692,7 @@ const confirmFinalize = async (confirmed) => {
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <div>
                       <div class="text-sm font-semibold text-purple-800">Dokumen Persyaratan</div>
-                      <p class="text-xs text-purple-700 mt-0.5">Semua dokumen <span class="font-semibold">Wajib</span> harus diupload sebelum surat dapat dicetak dan masuk arsip.</p>
+                      <p class="text-xs text-purple-700 mt-0.5">Semua dokumen <span class="font-semibold">Wajib</span> harus diupload sebelum surat dapat dicetak dan masuk arsip. Format: JPG, PNG, WEBP, atau PDF · maks 5 MB.</p>
                     </div>
                   </div>
 
