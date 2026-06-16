@@ -248,7 +248,7 @@ $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);
       </tr>
       <tr><td colspan="3" style="height:10px;"></td></tr>
       <tr>
-        <td class="lbl" style="white-space:nowrap;">A l a m a t&nbsp;&nbsp;Domisili</td><td class="sep">:</td>
+        <td class="lbl">Alamat Domisili</td><td class="sep">:</td>
         <td class="val">RT.{{ $p['rt'] ?? '' ?: '___' }}/RW.{{ $p['rw'] ?? '' ?: '___' }} Kel. Fatubesi Kec. Kota Lama Kota Kupang</td>
       </tr>
     </tbody>
