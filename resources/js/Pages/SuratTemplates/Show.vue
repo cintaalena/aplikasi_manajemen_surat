@@ -174,6 +174,7 @@ const form = reactive({
   tanggalPindah: '',
   alasanPindah: '',
   pengikut: [],
+  jenisPendaftaranKelahiran: '',
 })
 
 watch(
@@ -860,8 +861,6 @@ onBeforeUnmount(() => {
   previewResizeObserver?.disconnect()
 })
 
-const jenisPendaftaranKelahiran = ref('')
-
 const KELAHIRAN_DOCS_CONFIG = {
   suratKetLahir:      { label: 'Surat Keterangan Lahir dari RS/Bidan/Puskesmas',          wajib: true,  kasus: ['normal_0_60', 'normal_lebih_60'] },
   fotoKkKelahiran:    { label: 'Kartu Keluarga (KK)',                                     wajib: true,  kasus: ['normal_0_60', 'normal_lebih_60'] },
@@ -885,9 +884,9 @@ const kelDokState = reactive(
 )
 
 const activeKelahiranDocs = computed(() => {
-  if (!jenisPendaftaranKelahiran.value) return []
+  if (!form.jenisPendaftaranKelahiran) return []
   return Object.entries(KELAHIRAN_DOCS_CONFIG)
-    .filter(([, cfg]) => cfg.kasus.includes(jenisPendaftaranKelahiran.value))
+    .filter(([, cfg]) => cfg.kasus.includes(form.jenisPendaftaranKelahiran))
     .map(([key, cfg]) => ({ key, ...cfg }))
 })
 
@@ -944,20 +943,6 @@ const validateOrtuKelahiranBeforePrint = () => {
       'Minimal salah satu (ayah atau ibu) harus terdaftar sebagai penduduk Kelurahan Fatubesi.\n\n' +
       'Silakan ketik nama ayah atau ibu lalu pilih dari daftar yang muncul.'
     )
-  }
-  return true
-}
-
-const validateDokKelahiranBeforePrint = () => {
-  if (!isKelahiran.value) return true
-  if (!jenisPendaftaranKelahiran.value) {
-    throw new Error('Silakan pilih studi kasus pendaftaran kelahiran terlebih dahulu.')
-  }
-  const missing = activeKelahiranDocs.value
-    .filter(d => d.wajib && !kelDokState[d.key].id)
-    .map(d => d.label)
-  if (missing.length > 0) {
-    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
   }
   return true
 }
@@ -1072,27 +1057,6 @@ const removeDok = async (key) => {
   }
 }
 
-const validateDokKematianBeforePrint = () => {
-  if (!isKematian.value) return true
-
-  if (!jenisSuratKematian.value) {
-    throw new Error('Silakan pilih jenis dokumen keterangan kematian (dokter/bidan atau pernyataan saksi).')
-  }
-
-  const missing = []
-  for (const d of KEMATIAN_DOCS) {
-    if (d.wajib && !dokState[d.key].id) {
-      const label = d.key === 'suratKetKematian' ? labelKetKematian.value : d.label
-      missing.push(label)
-    }
-  }
-
-  if (missing.length > 0) {
-    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
-  }
-  return true
-}
-
 const getDokIds = () => KEMATIAN_DOCS.map(d => dokState[d.key].id).filter(Boolean)
 
 const PINDAH_DOCS = [
@@ -1150,15 +1114,6 @@ const removePindahDok = async (key) => {
   pindahDokState[key].error = ''
 }
 
-const validateDokPindahBeforePrint = () => {
-  if (!isPindah.value) return true
-  const missing = PINDAH_DOCS.filter(d => d.wajib && !pindahDokState[d.key].id).map(d => d.label)
-  if (missing.length > 0) {
-    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
-  }
-  return true
-}
-
 const getPindahDokIds = () => PINDAH_DOCS.map(d => pindahDokState[d.key].id).filter(Boolean)
 
 const DOMISILI_DOCS = [
@@ -1211,15 +1166,6 @@ const removeDomDok = async (key) => {
   domDokState[key].id  = null
   domDokState[key].url = null
   domDokState[key].error = ''
-}
-
-const validateDokDomisiliBeforePrint = () => {
-  if (!isDomisili.value) return true
-  const missing = DOMISILI_DOCS.filter(d => d.wajib && !domDokState[d.key].id).map(d => d.label)
-  if (missing.length > 0) {
-    throw new Error('Dokumen persyaratan belum lengkap:\n• ' + missing.join('\n• '))
-  }
-  return true
 }
 
 const getDomDokIds = () => DOMISILI_DOCS.map(d => domDokState[d.key].id).filter(Boolean)
@@ -1306,34 +1252,6 @@ const printNow = async () => {
     return
   }
 
-  try {
-    validateDokDomisiliBeforePrint()
-  } catch (e) {
-    alert(e.message)
-    return
-  }
-
-  try {
-    validateDokKematianBeforePrint()
-  } catch (e) {
-    alert(e.message)
-    return
-  }
-
-  try {
-    validateDokKelahiranBeforePrint()
-  } catch (e) {
-    alert(e.message)
-    return
-  }
-
-  try {
-    validateDokPindahBeforePrint()
-  } catch (e) {
-    alert(e.message)
-    return
-  }
-
   showPreview.value = true
   printMode.value = true
   await nextTick()
@@ -1398,7 +1316,7 @@ const confirmFinalize = async (confirmed) => {
   isFinalizing.value = true
   isPrinting.value = true
   try {
-    await finalizeLetter(props.slug)
+    const data = await finalizeLetter(props.slug)
 
     const mismatches = collectPendudukMismatches()
     if (mismatches.length > 0) {
@@ -1411,7 +1329,9 @@ const confirmFinalize = async (confirmed) => {
         : `/penduduk?q=${encodeURIComponent(mismatches[0].nama)}`
       router.visit(target)
     } else {
-      router.visit('/dashboard')
+      // Arahkan ke arsip surat agar pengguna langsung bisa melengkapi dokumen pendukung
+      // yang belum diupload saat mengisi form, alih-alih lupa saat sudah pindah ke surat lain.
+      router.visit(`/arsip-surat/${data.id}`)
     }
   } catch (e) {
     console.error('finalize error:', e)
@@ -1828,7 +1748,7 @@ const confirmFinalize = async (confirmed) => {
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <div>
                       <div class="text-sm font-semibold text-purple-800">Dokumen Persyaratan</div>
-                      <p class="text-xs text-purple-700 mt-0.5">Semua dokumen <span class="font-semibold">Wajib</span> harus diupload sebelum surat dapat dicetak dan masuk arsip. Format: JPG, PNG, WEBP, atau PDF · maks 5 MB.</p>
+                      <p class="text-xs text-purple-700 mt-0.5">Dokumen tidak wajib diupload sekarang — surat tetap bisa dicetak. Anda bisa melengkapinya nanti di menu Arsip Surat. Format: JPG, PNG, WEBP, atau PDF · maks 5 MB.</p>
                     </div>
                   </div>
 
@@ -2087,33 +2007,32 @@ const confirmFinalize = async (confirmed) => {
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <div>
                       <div class="text-sm font-semibold text-green-800">Dokumen Persyaratan</div>
-                      <p class="text-xs text-green-700 mt-0.5">Pilih studi kasus, lalu upload semua dokumen <span class="font-semibold">Wajib</span> sebelum surat dapat dicetak.</p>
+                      <p class="text-xs text-green-700 mt-0.5">Dokumen tidak wajib diupload sekarang — surat tetap bisa dicetak. Anda bisa melengkapinya nanti di menu Arsip Surat.</p>
                     </div>
                   </div>
 
                   <div class="rounded-lg bg-white border border-green-100 p-3 space-y-3">
                     <div class="flex items-center gap-2">
-                      <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Wajib</span>
-                      <span class="text-xs font-medium text-gray-700">Pilih Studi Kasus Pendaftaran</span>
+                      <span class="text-xs font-medium text-gray-700">Pilih Studi Kasus Pendaftaran (opsional, untuk menampilkan daftar dokumen yang relevan)</span>
                     </div>
                     <div class="flex flex-col gap-2 pl-1">
                       <label class="flex items-start gap-2 cursor-pointer select-none">
-                        <input type="radio" name="jenisPendaftaranKelahiran" value="normal_0_60" v-model="jenisPendaftaranKelahiran" class="accent-green-600 h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <input type="radio" name="jenisPendaftaranKelahiran" value="normal_0_60" v-model="form.jenisPendaftaranKelahiran" class="accent-green-600 h-4 w-4 mt-0.5 flex-shrink-0" />
                         <span class="text-xs text-gray-700"><strong>Kasus 1:</strong> Bayi usia <strong>0–60 hari</strong> (didaftarkan tepat waktu, dalam pernikahan sah)</span>
                       </label>
                       <label class="flex items-start gap-2 cursor-pointer select-none">
-                        <input type="radio" name="jenisPendaftaranKelahiran" value="normal_lebih_60" v-model="jenisPendaftaranKelahiran" class="accent-green-600 h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <input type="radio" name="jenisPendaftaranKelahiran" value="normal_lebih_60" v-model="form.jenisPendaftaranKelahiran" class="accent-green-600 h-4 w-4 mt-0.5 flex-shrink-0" />
                         <span class="text-xs text-gray-700"><strong>Kasus 2:</strong> Bayi usia <strong>lebih dari 60 hari</strong> (terlambat mendaftar, dalam pernikahan sah)</span>
                       </label>
                       <label class="flex items-start gap-2 cursor-pointer select-none">
-                        <input type="radio" name="jenisPendaftaranKelahiran" value="luar_nikah" v-model="jenisPendaftaranKelahiran" class="accent-green-600 h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <input type="radio" name="jenisPendaftaranKelahiran" value="luar_nikah" v-model="form.jenisPendaftaranKelahiran" class="accent-green-600 h-4 w-4 mt-0.5 flex-shrink-0" />
                         <span class="text-xs text-gray-700"><strong>Kasus 3:</strong> Anak lahir <strong>di luar nikah</strong></span>
                       </label>
                     </div>
-                    <p v-if="!jenisPendaftaranKelahiran" class="text-xs text-amber-700 font-medium pl-1">⚠ Pilih salah satu studi kasus di atas untuk melihat daftar dokumen yang diperlukan.</p>
+                    <p v-if="!form.jenisPendaftaranKelahiran" class="text-xs text-amber-700 font-medium pl-1">⚠ Pilih salah satu studi kasus di atas untuk melihat daftar dokumen yang relevan.</p>
                   </div>
 
-                  <div v-if="jenisPendaftaranKelahiran" class="rounded-lg bg-white border border-green-100 p-3">
+                  <div v-if="form.jenisPendaftaranKelahiran" class="rounded-lg bg-white border border-green-100 p-3">
                     <p class="text-xs font-semibold text-gray-700 mb-2">Dokumen yang diperlukan untuk kasus ini:</p>
                     <ul class="space-y-1 pl-1">
                       <li v-for="(doc, idx) in activeKelahiranDocs" :key="doc.key" class="flex items-center gap-2 text-xs text-gray-700">
@@ -2125,7 +2044,7 @@ const confirmFinalize = async (confirmed) => {
                     </ul>
                   </div>
 
-                  <template v-if="jenisPendaftaranKelahiran">
+                  <template v-if="form.jenisPendaftaranKelahiran">
                     <div
                       v-for="(doc, idx) in activeKelahiranDocs"
                       :key="doc.key"
@@ -2347,7 +2266,7 @@ const confirmFinalize = async (confirmed) => {
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <div>
                       <div class="text-sm font-semibold text-amber-800">Dokumen Persyaratan</div>
-                      <p class="text-xs text-amber-700 mt-0.5">Semua dokumen <span class="font-semibold">Wajib</span> harus diupload sebelum surat dapat dicetak dan masuk arsip.</p>
+                      <p class="text-xs text-amber-700 mt-0.5">Dokumen tidak wajib diupload sekarang — surat tetap bisa dicetak. Anda bisa melengkapinya nanti di menu Arsip Surat.</p>
                     </div>
                   </div>
 
@@ -2933,7 +2852,7 @@ const confirmFinalize = async (confirmed) => {
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mt-0.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <div>
                       <div class="text-sm font-semibold text-blue-800">Dokumen Persyaratan</div>
-                      <p class="text-xs text-blue-700 mt-0.5">Semua dokumen <span class="font-semibold">Wajib</span> harus diupload sebelum surat dapat dicetak dan masuk arsip.</p>
+                      <p class="text-xs text-blue-700 mt-0.5">Dokumen tidak wajib diupload sekarang — surat tetap bisa dicetak. Anda bisa melengkapinya nanti di menu Arsip Surat.</p>
                     </div>
                   </div>
 

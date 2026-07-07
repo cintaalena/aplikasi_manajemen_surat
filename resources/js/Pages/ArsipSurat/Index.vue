@@ -458,6 +458,14 @@ function submitDisposisi() {
                     >
                       Baru
                     </span>
+                    <Link
+                      v-if="row.missing_required_docs && row.missing_required_docs.length > 0"
+                      :href="`/arsip-surat/${row.id}`"
+                      class="inline-flex items-center justify-center rounded-full bg-red-100 text-red-600 h-5 w-5 text-xs font-bold flex-shrink-0 hover:bg-red-200 transition"
+                      :title="`Dokumen pendukung belum lengkap (${row.missing_required_docs.length} kurang). Klik untuk melengkapi.`"
+                    >
+                      !
+                    </Link>
                   </div>
                 </td>
                 <td class="p-3 text-gray-700 text-xs whitespace-nowrap">

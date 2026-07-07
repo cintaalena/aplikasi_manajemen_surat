@@ -7,6 +7,7 @@ use App\Models\LetterDocument;
 use App\Models\LetterNotification;
 use App\Models\LetterView;
 use App\Models\User;
+use App\Support\LetterDocumentRequirements;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -32,6 +33,7 @@ class LetterArchiveController extends Controller
         'printed_at',
         'printed_by',
         'is_manual',
+        'payload',
     ])
             ->with('printedBy:id,name')
             ->with('documents:id,letter_id,doc_key,doc_label,original_name,mime_type,file_size,file_path')
@@ -67,6 +69,16 @@ class LetterArchiveController extends Controller
             ->orderByDesc('printed_at')
             ->paginate(15)
             ->withQueryString();
+
+        $letters->getCollection()->transform(function ($letter) {
+            $existingKeys = $letter->documents->pluck('doc_key')->all();
+            $letter->missing_required_docs = LetterDocumentRequirements::missingKeys(
+                $letter->template_slug,
+                $letter->payload ?? [],
+                $existingKeys
+            );
+            return $letter;
+        });
 
         $viewedIds = LetterView::where('user_id', $request->user()->id)
             ->whereIn('letter_id', $letters->pluck('id')->toArray())
@@ -179,6 +191,8 @@ class LetterArchiveController extends Controller
     {
         $letter->load('printedBy', 'documents');
 
+        $existingKeys = $letter->documents->pluck('doc_key')->all();
+
         return Inertia::render('ArsipSurat/Show', [
             'letter' => [
                 'id'            => $letter->id,
@@ -205,6 +219,11 @@ class LetterArchiveController extends Controller
                     'file_size'     => $doc->file_size,
                     'url'           => $doc->url,
                 ]),
+                'missing_required_docs' => LetterDocumentRequirements::missingKeys(
+                    $letter->template_slug,
+                    $letter->payload ?? [],
+                    $existingKeys
+                ),
             ],
         ]);
     }

@@ -1,15 +1,56 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { Link } from '@inertiajs/vue3'
+import { Link, router } from '@inertiajs/vue3'
 import DomisiliTemplate from '@/Components/Surat/DomisiliTemplate.vue'
 import KelahiranTemplate from '@/Components/Surat/KelahiranTemplate.vue'
 import KematianTemplate from '@/Components/Surat/KematianTemplate.vue'
 import PindahTemplate from '@/Components/Surat/PindahTemplate.vue'
-import { computed, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 
 const props = defineProps({
   letter: Object,
 })
+
+// Label dokumen wajib per doc_key, harus sinkron dengan Show.vue (halaman buat surat)
+// dan app/Support/LetterDocumentRequirements.php.
+const REQUIRED_DOC_LABELS = {
+  'keterangan-domisili': {
+    suratPengantarRtRwDom: 'Surat Pengantar RT/RW',
+    fotoKtpDomisili: 'Fotocopy KTP Pemohon',
+  },
+  'keterangan-kematian': {
+    suratPengantarRtRw: 'Surat Pengantar RT/RW',
+    suratKetKematian: 'Dokumen Keterangan Kematian (dari Dokter/Bidan atau Pernyataan Saksi)',
+    fotoKtpAlmarhum: 'Fotocopy KTP Almarhum/Almarhumah',
+    fotoKkAlmarhum: 'Fotocopy Kartu Keluarga Almarhum/Almarhumah',
+    fotoKtpPemohon: 'Fotocopy KTP Pemohon (Pelapor)',
+    suratPernyataanPelapor: 'Surat Pernyataan dari Pelapor (ditandatangani 2 saksi & RT)',
+  },
+  'keterangan-pindah': {
+    suratPengantarRt: 'Surat Pengantar dari RT',
+    fotoKtpPindah: 'Fotocopy KTP yang akan pindah',
+    fotoKkPindah: 'Fotocopy Kartu Keluarga',
+    suratKetPasFoto: 'Surat keterangan yang sudah ditempel pas foto',
+    pasFotoPindah: 'Pas foto yang akan pindah',
+  },
+  'keterangan-kelahiran': {
+    suratKetLahir: 'Surat Keterangan Lahir dari RS/Bidan/Puskesmas',
+    fotoKkKelahiran: 'Kartu Keluarga (KK)',
+    fotoKtpAyahIbu: 'Fotocopy KTP Ayah dan Ibu',
+    fotoBukuNikah: 'Fotocopy Buku Nikah / Akta Perkawinan',
+    fotoKtp2Saksi: 'Fotocopy KTP 2 Orang Saksi',
+    suratPengantarRtRwLahir: 'Surat Pengantar RT/RW',
+    sptjmDataKelahiran: 'SPTJM Kebenaran Data Kelahiran',
+    suratPernyataanBelumAkta: 'Surat Pernyataan Belum Punya Akta',
+    fotoIjazahOrtu: 'Fotocopy Ijazah Orang Tua',
+    suratKetLahirLN: 'Surat Keterangan Lahir dari RS/Bidan/Puskesmas',
+    fotoKkIbu: 'KK Asli dari Ibu',
+    fotoKtpAyahIbuLN: 'Fotocopy KTP Ayah dan Ibu',
+    fotoKtp2SaksiLN: 'KTP 2 Orang Saksi',
+    suratPengantarRtRwLN: 'Surat Pengantar RT/RW',
+    sptjmPengakuanAnak: 'SPTJM Pengakuan Anak dari Ayah Biologis',
+  },
+}
 
 const tanggalIndo = (yyyy_mm_dd) => {
   if (!yyyy_mm_dd) return ''
@@ -38,6 +79,60 @@ const isKematian  = computed(() => slug.value === 'keterangan-kematian')
 const isPindah    = computed(() => slug.value === 'keterangan-pindah')
 
 const documents = computed(() => props.letter.documents ?? [])
+
+const missingDocs = computed(() =>
+  (props.letter.missing_required_docs ?? []).map((key) => ({
+    key,
+    label: REQUIRED_DOC_LABELS[slug.value]?.[key] ?? key,
+  }))
+)
+
+const uploadingKey = ref(null)
+const uploadErrors = reactive({})
+
+const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? ''
+
+async function handleMissingDocUpload(docKey, docLabel, event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  if (file.size > 5 * 1024 * 1024) {
+    uploadErrors[docKey] = 'Ukuran file terlalu besar. Maksimal 5 MB.'
+    return
+  }
+
+  uploadingKey.value = docKey
+  uploadErrors[docKey] = ''
+
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('doc_key', docKey)
+    fd.append('doc_label', docLabel)
+    fd.append('letter_id', props.letter.id)
+
+    const res = await fetch('/surat/dokumen/upload', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': getCsrfToken(),
+      },
+      body: fd,
+    })
+    const data = await res.json().catch(() => null)
+    if (!res.ok) {
+      throw new Error(data?.message ?? `Upload gagal (${res.status})`)
+    }
+
+    router.reload({ only: ['letter'] })
+  } catch (e) {
+    uploadErrors[docKey] = e.message ?? 'Gagal upload dokumen.'
+  } finally {
+    uploadingKey.value = null
+  }
+}
 
 const formatDate = (raw) => {
   if (!raw) return '-'
@@ -118,6 +213,12 @@ function isPdf(mime) {
               Dokumen Pendukung
               <span class="ml-1 rounded-full bg-amber-200 text-amber-800 text-xs px-2 py-0.5">{{ documents.length }}</span>
             </span>
+            <span
+              v-if="missingDocs.length > 0"
+              class="inline-flex items-center gap-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold px-2 py-0.5"
+            >
+              ⚠ {{ missingDocs.length }} belum lengkap
+            </span>
           </div>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -130,6 +231,36 @@ function isPdf(mime) {
         </button>
 
         <div v-show="dokOpen">
+          <div v-if="missingDocs.length > 0" class="p-4 border-b border-amber-100 bg-red-50/50">
+            <p class="text-xs font-semibold text-red-700 mb-3">
+              Dokumen berikut belum diupload. Lengkapi agar arsip surat ini lengkap:
+            </p>
+            <div class="space-y-2">
+              <div
+                v-for="doc in missingDocs"
+                :key="doc.key"
+                class="flex items-center justify-between gap-2 rounded-lg bg-white border border-red-200 px-3 py-2"
+              >
+                <span class="text-xs font-medium text-gray-700">{{ doc.label }}</span>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <span v-if="uploadingKey === doc.key" class="text-xs text-amber-600 italic">Mengupload...</span>
+                  <label v-else class="cursor-pointer rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition">
+                    Upload
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,application/pdf"
+                      class="hidden"
+                      @change="handleMissingDocUpload(doc.key, doc.label, $event)"
+                    />
+                  </label>
+                </div>
+              </div>
+              <template v-for="doc in missingDocs" :key="`err-${doc.key}`">
+                <p v-if="uploadErrors[doc.key]" class="text-xs text-red-600">{{ doc.label }}: {{ uploadErrors[doc.key] }}</p>
+              </template>
+            </div>
+          </div>
+
           <div v-if="documents.length === 0" class="px-5 py-6 text-center text-sm text-gray-400 italic">
             Tidak ada dokumen pendukung untuk surat ini.
           </div>

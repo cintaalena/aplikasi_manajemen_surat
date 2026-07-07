@@ -23,7 +23,9 @@ class LetterDocumentController extends Controller
 
     /**
      * Upload satu file dokumen pendukung surat.
-     * Mengembalikan ID sementara (record tanpa letter_id) yang nanti di-link saat finalize.
+     * Kalau 'letter_id' disertakan (upload dari halaman arsip untuk surat yang sudah ada),
+     * dokumen langsung ditautkan. Kalau tidak, dokumen dibuat tanpa letter_id dan baru
+     * ditautkan saat finalize (lihat LetterController::finalize).
      */
     public function upload(Request $request)
     {
@@ -31,6 +33,7 @@ class LetterDocumentController extends Controller
             'file'      => ['required', 'file', 'max:5120'],
             'doc_key'   => ['required', 'string', 'max:80'],
             'doc_label' => ['required', 'string', 'max:200'],
+            'letter_id' => ['sometimes', 'nullable', 'integer', 'exists:letters,id'],
         ]);
 
         $file = $request->file('file');
@@ -68,7 +71,7 @@ class LetterDocumentController extends Controller
         $path     = $file->storeAs($dir, $filename, 'public');
 
         $doc = LetterDocument::create([
-            'letter_id'     => null,
+            'letter_id'     => $request->input('letter_id'),
             'doc_key'       => $request->input('doc_key'),
             'doc_label'     => $request->input('doc_label'),
             'file_path'     => $path,
