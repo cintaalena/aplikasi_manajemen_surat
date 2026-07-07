@@ -510,7 +510,6 @@ const pendudukHasMismatch = computed(() => pendudukMismatchFields.value.length >
 
 const ayahLocked     = computed(() => form.ayah_id !== null)
 const ibuLocked      = computed(() => form.ibu_id !== null)
-const ortuAddrLocked = computed(() => form.ayah_id !== null)
 
 const resetAyah = () => {
   form.namaAyah = ''
@@ -691,6 +690,16 @@ const onAyahInput = (value) => {
   ayahSearchTimer = setTimeout(() => searchOrtu(value, ayahSuggestions, showAyahDropdown, isSearchingAyah), 300)
 }
 
+// Kalau data ayah sudah dipilih dari database, ketikan pada kolom Nama Ayah adalah
+// koreksi manual (mis. salah ketik) — bukan pencarian baru, jadi ayah_id dipertahankan.
+const handleAyahInput = (value) => {
+  if (ayahLocked.value) {
+    form.namaAyah = value
+    return
+  }
+  onAyahInput(value)
+}
+
 const applyAyah = async (p) => {
   form.namaAyah             = p.nama ?? ''
   form.ayah_id              = p.id ?? null
@@ -730,6 +739,15 @@ const onIbuInput = (value) => {
   clearTimeout(ibuSearchTimer)
   if (!value || value.trim().length < 2) { ibuSuggestions.value = []; return }
   ibuSearchTimer = setTimeout(() => searchOrtu(value, ibuSuggestions, showIbuDropdown, isSearchingIbu), 300)
+}
+
+// Sama seperti nama ayah: kalau ibu sudah dipilih, ketikan berikutnya adalah koreksi manual.
+const handleIbuInput = (value) => {
+  if (ibuLocked.value) {
+    form.namaIbu = value
+    return
+  }
+  onIbuInput(value)
 }
 
 const applyIbu = (p) => {
@@ -1856,13 +1874,11 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Nama Ayah</label>
                 <input
                   :value="form.namaAyah"
-                  @input="!ayahLocked && onAyahInput($event.target.value)"
+                  @input="handleAyahInput($event.target.value)"
                   @focus="!ayahLocked && searchOrtu(form.namaAyah, ayahSuggestions, showAyahDropdown, isSearchingAyah)"
                   type="text"
                   autocomplete="off"
-                  :readonly="ayahLocked"
-                  :class="ayahLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Ketik nama ayah..."
                 />
                 <div
@@ -1908,13 +1924,11 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Nama Ibu</label>
                 <input
                   :value="form.namaIbu"
-                  @input="!ibuLocked && onIbuInput($event.target.value)"
+                  @input="handleIbuInput($event.target.value)"
                   @focus="!ibuLocked && searchOrtu(form.namaIbu, ibuSuggestions, showIbuDropdown, isSearchingIbu)"
                   type="text"
                   autocomplete="off"
-                  :readonly="ibuLocked"
-                  :class="ibuLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Ketik nama ibu..."
                 />
                 <div
@@ -1944,9 +1958,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.pekerjaan"
                   type="text"
-                  :readonly="ortuAddrLocked"
-                  :class="ortuAddrLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan pekerjaan"
                 />
               </div>
@@ -1956,9 +1968,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.alamat"
                   type="text"
-                  :readonly="ortuAddrLocked"
-                  :class="ortuAddrLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Contoh: Jl. Alor No.1 A"
                 />
               </div>
@@ -1969,11 +1979,9 @@ const confirmFinalize = async (confirmed) => {
                   v-model="form.rt"
                   type="text"
                   inputmode="numeric"
-                  :readonly="ortuAddrLocked"
-                  :class="ortuAddrLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="001"
-                  @input="!ortuAddrLocked && (form.rt = $event.target.value.replace(/\D/g, ''))"
+                  @input="form.rt = $event.target.value.replace(/\D/g, '')"
                 />
               </div>
 
@@ -1983,11 +1991,9 @@ const confirmFinalize = async (confirmed) => {
                   v-model="form.rw"
                   type="text"
                   inputmode="numeric"
-                  :readonly="ortuAddrLocked"
-                  :class="ortuAddrLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="002"
-                  @input="!ortuAddrLocked && (form.rw = $event.target.value.replace(/\D/g, ''))"
+                  @input="form.rw = $event.target.value.replace(/\D/g, '')"
                 />
               </div>
 
@@ -1996,9 +2002,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.kelurahan"
                   type="text"
-                  :readonly="ortuAddrLocked"
-                  :class="ortuAddrLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Fatubesi"
                 />
               </div>
@@ -2008,9 +2012,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.kecamatan"
                   type="text"
-                  :readonly="ortuAddrLocked"
-                  :class="ortuAddrLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Kota Lama"
                 />
               </div>
