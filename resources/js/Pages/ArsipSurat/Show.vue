@@ -195,6 +195,10 @@ function isPdf(mime) {
       <KematianTemplate  v-else-if="isKematian"  :form="form" :tanggalIndo="tanggalIndo" :signer="signer" />
       <PindahTemplate    v-else-if="isPindah"    :form="form" :tanggalIndo="tanggalIndo" :signer="signer" />
 
+      <div v-else-if="letter.is_manual" class="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-400 italic">
+        Surat {{ letter.manual_type === 'keluar' ? 'keluar' : 'masuk' }} manual — tidak ada pratinjau, lihat berkas di bagian Dokumen Pendukung di bawah.
+      </div>
+
       <div v-else class="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-400 italic">
         Pratinjau tidak tersedia untuk surat ini.
       </div>

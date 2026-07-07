@@ -56,10 +56,16 @@ const reset = () => {
 const showManualForm = ref(false)
 
 const manualForm = useForm({
-  no_surat: '',
-  title:    '',
-  files:    [],
+  no_surat:    '',
+  title:       '',
+  manual_type: 'masuk',
+  files:       [],
 })
+
+const openManualForm = (type) => {
+  manualForm.manual_type = type
+  showManualForm.value = true
+}
 
 const selectedFiles = ref([])
 const uploadError   = ref('')
@@ -199,14 +205,22 @@ function submitDisposisi() {
             Cari arsip berdasarkan tanggal, nomor surat, atau judul.
           </p>
         </div>
-        <button
-          v-if="userRole !== 'lurah'"
-          type="button"
-          class="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 shadow-sm transition whitespace-nowrap"
-          @click="showManualForm = !showManualForm"
-        >
-          + Tambah Surat Masuk
-        </button>
+        <div v-if="userRole !== 'lurah'" class="flex items-center gap-2">
+          <button
+            type="button"
+            class="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 shadow-sm transition whitespace-nowrap"
+            @click="showManualForm && manualForm.manual_type === 'masuk' ? (showManualForm = false) : openManualForm('masuk')"
+          >
+            + Tambah Surat Masuk
+          </button>
+          <button
+            type="button"
+            class="rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 shadow-sm transition whitespace-nowrap"
+            @click="showManualForm && manualForm.manual_type === 'keluar' ? (showManualForm = false) : openManualForm('keluar')"
+          >
+            + Tambah Surat Keluar
+          </button>
+        </div>
       </div>
 
       <div
@@ -224,10 +238,20 @@ function submitDisposisi() {
 
       <div
         v-if="showManualForm && userRole !== 'lurah'"
-        class="rounded-2xl border border-green-200 bg-white p-5 shadow-sm space-y-4"
+        class="rounded-2xl border p-5 shadow-sm space-y-4 bg-white"
+        :class="manualForm.manual_type === 'keluar' ? 'border-blue-200' : 'border-green-200'"
       >
-        <h2 class="text-sm font-bold text-gray-800">Tambah Surat Masuk Manual</h2>
-        <p class="text-xs text-gray-500">Untuk surat yang diterima dari luar (mis. dari kecamatan). Waktu masuk akan dicatat otomatis.</p>
+        <h2 class="text-sm font-bold text-gray-800">
+          Tambah {{ manualForm.manual_type === 'keluar' ? 'Surat Keluar' : 'Surat Masuk' }} Manual
+        </h2>
+        <p class="text-xs text-gray-500">
+          <template v-if="manualForm.manual_type === 'keluar'">
+            Untuk surat yang dikirim ke instansi/pihak di luar kelurahan. Waktu keluar akan dicatat otomatis.
+          </template>
+          <template v-else>
+            Untuk surat yang diterima dari luar (mis. dari kecamatan). Waktu masuk akan dicatat otomatis.
+          </template>
+        </p>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="flex flex-col gap-1">
@@ -317,7 +341,8 @@ function submitDisposisi() {
           <button
             type="button"
             :disabled="manualForm.processing || selectedFiles.length === 0"
-            class="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed"
+            class="rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed"
+            :class="manualForm.manual_type === 'keluar' ? 'bg-blue-700 hover:bg-blue-800' : 'bg-green-700 hover:bg-green-800'"
             :title="selectedFiles.length === 0 ? 'Upload file terlebih dahulu' : ''"
             @click="submitManual"
           >
@@ -474,7 +499,13 @@ function submitDisposisi() {
                 </td>
                 <td class="p-3">
                   <span
-                    v-if="row.is_manual"
+                    v-if="row.is_manual && row.manual_type === 'keluar'"
+                    class="inline-block rounded-full bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-0.5 whitespace-nowrap"
+                  >
+                    Surat Keluar
+                  </span>
+                  <span
+                    v-else-if="row.is_manual"
                     class="inline-block rounded-full bg-amber-100 text-amber-700 text-xs font-medium px-2.5 py-0.5 whitespace-nowrap"
                   >
                     Surat Masuk

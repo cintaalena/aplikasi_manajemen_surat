@@ -33,6 +33,7 @@ class LetterArchiveController extends Controller
         'printed_at',
         'printed_by',
         'is_manual',
+        'manual_type',
         'payload',
     ])
             ->with('printedBy:id,name')
@@ -120,26 +121,32 @@ class LetterArchiveController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'no_surat'  => ['required', 'string', 'max:100', 'unique:letters,no_surat'],
-            'title'     => ['required', 'string', 'max:255'],
-            'files'     => ['required', 'array', 'min:1', 'max:10'],
-            'files.*'   => ['file', 'mimes:jpeg,jpg,png,webp,pdf', 'max:5120'],
+            'no_surat'    => ['required', 'string', 'max:100', 'unique:letters,no_surat'],
+            'title'       => ['required', 'string', 'max:255'],
+            'manual_type' => ['required', 'string', 'in:masuk,keluar'],
+            'files'       => ['required', 'array', 'min:1', 'max:10'],
+            'files.*'     => ['file', 'mimes:jpeg,jpg,png,webp,pdf', 'max:5120'],
         ], [
-            'no_surat.required' => 'Nomor surat wajib diisi.',
-            'no_surat.unique'   => 'Nomor surat sudah ada di arsip.',
-            'title.required'    => 'Judul surat wajib diisi.',
-            'files.required'    => 'File berkas surat wajib diupload minimal 1 file.',
-            'files.min'         => 'File berkas surat wajib diupload minimal 1 file.',
-            'files.*.mimes'     => 'File harus berupa JPG, PNG, WEBP, atau PDF.',
-            'files.*.max'       => 'Ukuran file maksimal 5 MB.',
+            'no_surat.required'    => 'Nomor surat wajib diisi.',
+            'no_surat.unique'      => 'Nomor surat sudah ada di arsip.',
+            'title.required'       => 'Judul surat wajib diisi.',
+            'manual_type.required' => 'Jenis surat wajib dipilih.',
+            'manual_type.in'       => 'Jenis surat tidak valid.',
+            'files.required'       => 'File berkas surat wajib diupload minimal 1 file.',
+            'files.min'            => 'File berkas surat wajib diupload minimal 1 file.',
+            'files.*.mimes'        => 'File harus berupa JPG, PNG, WEBP, atau PDF.',
+            'files.*.max'          => 'Ukuran file maksimal 5 MB.',
         ]);
 
+        $isKeluar = $validated['manual_type'] === 'keluar';
+
         $letter = Letter::create([
-            'no_surat'   => $validated['no_surat'],
-            'title'      => $validated['title'],
-            'is_manual'  => true,
-            'printed_at' => now(),
-            'printed_by' => $request->user()?->id,
+            'no_surat'    => $validated['no_surat'],
+            'title'       => $validated['title'],
+            'is_manual'   => true,
+            'manual_type' => $validated['manual_type'],
+            'printed_at'  => now(),
+            'printed_by'  => $request->user()?->id,
         ]);
 
         if ($request->hasFile('files')) {
@@ -157,8 +164,8 @@ class LetterArchiveController extends Controller
 
                 LetterDocument::create([
                     'letter_id'     => $letter->id,
-                    'doc_key'       => 'surat_masuk',
-                    'doc_label'     => 'Berkas Surat Masuk',
+                    'doc_key'       => $isKeluar ? 'surat_keluar' : 'surat_masuk',
+                    'doc_label'     => $isKeluar ? 'Berkas Surat Keluar' : 'Berkas Surat Masuk',
                     'file_path'     => $path,
                     'original_name' => $file->getClientOriginalName(),
                     'mime_type'     => $realMime,
@@ -167,21 +174,22 @@ class LetterArchiveController extends Controller
             }
         }
 
-        $this->notifyLurah($letter);
+        $this->notifyLurah($letter, $isKeluar);
 
         return redirect()->route('arsip-surat.index')
-            ->with('success', 'Surat berhasil ditambahkan ke arsip.');
+            ->with('success', $isKeluar ? 'Surat keluar berhasil ditambahkan ke arsip.' : 'Surat masuk berhasil ditambahkan ke arsip.');
     }
 
-    private function notifyLurah(Letter $letter): void
+    private function notifyLurah(Letter $letter, bool $isKeluar = false): void
     {
         $lurahUsers = User::where('role', 'lurah')->where('is_active', true)->get(['id']);
+        $label = $isKeluar ? 'Surat keluar baru ditambahkan' : 'Arsip baru ditambahkan';
 
         foreach ($lurahUsers as $lurah) {
             LetterNotification::create([
                 'user_id'   => $lurah->id,
                 'letter_id' => $letter->id,
-                'message'   => 'Arsip baru ditambahkan: ' . $letter->no_surat . ' — ' . $letter->title,
+                'message'   => $label . ': ' . $letter->no_surat . ' — ' . $letter->title,
                 'is_read'   => false,
             ]);
         }
@@ -202,6 +210,7 @@ class LetterArchiveController extends Controller
                 'payload'       => $letter->payload ?? [],
                 'printed_at'    => $letter->printed_at,
                 'is_manual'     => $letter->is_manual,
+                'manual_type'   => $letter->manual_type,
                 'printed_by'    => $letter->printedBy
                     ? [
                         'id'      => $letter->printedBy->id,

@@ -24,6 +24,7 @@ class Letter extends Model
         'printed_by',
         'signer',
         'is_manual',
+        'manual_type',
     ];
 
     protected $hidden = [
