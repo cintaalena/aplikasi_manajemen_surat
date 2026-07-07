@@ -1449,7 +1449,7 @@ const confirmFinalize = async (confirmed) => {
     </div>
 
     <div v-else class="space-y-6">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 class="text-xl font-bold text-gray-900">{{ form.judulSurat }}</h1>
           <p class="mt-1 text-sm text-gray-600">
@@ -1457,58 +1457,60 @@ const confirmFinalize = async (confirmed) => {
           </p>
         </div>
 
-        <div class="flex flex-col items-stretch gap-2 sm:items-end sm:w-56">
-          <div
-            v-if="!isCurrentUserSigner"
-            class="flex w-full flex-col gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2"
+        <div
+          v-if="!isCurrentUserSigner"
+          class="flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5"
+        >
+          <span class="text-xs font-semibold text-amber-800 whitespace-nowrap">TTD:</span>
+          <select
+            v-model="signerMode"
+            class="rounded-lg border-gray-300 py-1 text-xs focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
           >
-            <span class="text-xs font-semibold text-amber-800">Penanda tangan</span>
-            <select
-              v-model="signerMode"
-              class="w-full rounded-lg border-gray-300 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            >
-              <option value="lurah">Lurah</option>
-              <option value="kasie">Kepala Seksi</option>
-            </select>
-            <select
-              v-if="signerMode === 'kasie'"
-              v-model="selectedKasieId"
-              class="w-full rounded-lg border-gray-300 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            >
-              <option value="" disabled>Pilih Kepala Seksi</option>
-              <option v-for="u in kasieUsers" :key="u.id" :value="u.id">
-                {{ u.name }} — {{ KASIE_LABELS[u.jabatan] ?? u.jabatan }}
-              </option>
-            </select>
-            <span v-if="!isSignerReady" class="text-xs font-semibold text-red-600">
-              ⚠ Pilih penanda tangan sebelum mencetak
-            </span>
-            <span v-else class="text-xs font-semibold text-green-700">
-              ✓ TTD: {{ effectiveSigner?.name }}
-            </span>
-          </div>
+            <option value="lurah">Lurah</option>
+            <option value="kasie">Kasie</option>
+          </select>
+          <select
+            v-if="signerMode === 'kasie'"
+            v-model="selectedKasieId"
+            class="max-w-[130px] rounded-lg border-gray-300 py-1 text-xs focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+          >
+            <option value="" disabled>Pilih...</option>
+            <option v-for="u in kasieUsers" :key="u.id" :value="u.id">
+              {{ u.name }}
+            </option>
+          </select>
+          <span
+            v-if="!isSignerReady"
+            class="text-xs font-semibold text-red-600 whitespace-nowrap"
+            title="Pilih penanda tangan sebelum mencetak"
+          >⚠</span>
+          <span
+            v-else
+            class="max-w-[110px] truncate text-xs font-semibold text-green-700"
+            :title="`TTD: ${effectiveSigner?.name}`"
+          >✓ {{ effectiveSigner?.name }}</span>
+        </div>
 
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              class="rounded-xl border border-purple-200 bg-white px-4 py-2 text-sm font-semibold text-purple-800 hover:bg-purple-50 transition"
-              @click.prevent.stop="showPreview = !showPreview"
-            >
-              {{ showPreview ? 'Tutup View' : 'View' }}
-            </button>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="rounded-xl border border-purple-200 bg-white px-4 py-2 text-sm font-semibold text-purple-800 hover:bg-purple-50 transition"
+            @click.prevent.stop="showPreview = !showPreview"
+          >
+            {{ showPreview ? 'Tutup View' : 'View' }}
+          </button>
 
-            <button
-              type="button"
-              :disabled="isPrinting || !selectedIndexCode"
-              class="rounded-xl px-4 py-2 text-sm font-semibold text-white
-                     bg-gradient-to-r from-green-600 to-emerald-500
-                     hover:from-green-700 hover:to-emerald-600 transition
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-              @click.prevent.stop="printNow"
-            >
-              {{ isPrinting ? 'Memproses...' : 'Cetak' }}
-            </button>
-          </div>
+          <button
+            type="button"
+            :disabled="isPrinting || !selectedIndexCode"
+            class="rounded-xl px-4 py-2 text-sm font-semibold text-white
+                   bg-gradient-to-r from-green-600 to-emerald-500
+                   hover:from-green-700 hover:to-emerald-600 transition
+                   disabled:opacity-50 disabled:cursor-not-allowed"
+            @click.prevent.stop="printNow"
+          >
+            {{ isPrinting ? 'Memproses...' : 'Cetak' }}
+          </button>
         </div>
       </div>
 
