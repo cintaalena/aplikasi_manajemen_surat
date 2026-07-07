@@ -1,0 +1,227 @@
+classDiagram
+    direction TB
+
+    %% ─── Base / Abstract ───────────────────────────────────────
+    class Authenticatable {
+        <<abstract>>
+    }
+    class Model {
+        <<abstract>>
+    }
+
+    %% ─── Trait ──────────────────────────────────────────────────
+    class Auditable {
+        <<trait>>
+        +bootAuditable()$ void
+    }
+
+    %% ─── Models ─────────────────────────────────────────────────
+    class User {
+        +int id
+        +string name
+        +string nip
+        +string email
+        +string recovery_email
+        +string jabatan
+        +string role
+        +bool is_active
+        +datetime email_verified_at
+        +datetime credential_issued_at
+        +int failed_login_attempts
+        +datetime locked_until
+        +datetime last_failed_login_at
+        +datetime created_at
+        +datetime updated_at
+        +MAX_LOGIN_ATTEMPTS = 10$
+        +LOCKOUT_DURATION_MINUTES = 15$
+        +isLockedOut() bool
+        +recordFailedLogin() bool
+        +clearLoginAttempts() void
+    }
+
+    class Letter {
+        +int id
+        +string template_slug
+        +string title
+        +string no_surat
+        +string index_code
+        +int urut
+        +string month_roman
+        +int year
+        +array payload
+        +datetime printed_at
+        +int printed_by
+        +bool is_manual
+        +datetime deleted_at
+        +datetime created_at
+        +datetime updated_at
+        +printedBy() User
+        +dispositions() LetterDisposition
+        +documents() LetterDocument
+    }
+
+    class LetterDisposition {
+        +int id
+        +int letter_id
+        +int from_user_id
+        +int to_user_id
+        +string catatan
+        +string status
+        +datetime created_at
+        +datetime updated_at
+        +letter() Letter
+        +fromUser() User
+        +toUser() User
+    }
+
+    class LetterDocument {
+        +int id
+        +int letter_id
+        +string doc_key
+        +string doc_label
+        +string file_path
+        +string original_name
+        +string mime_type
+        +int file_size
+        +int uploaded_by
+        +string url
+        +datetime created_at
+        +datetime updated_at
+        +letter() Letter
+        +getUrlAttribute() string
+    }
+
+    class LetterNotification {
+        +int id
+        +int user_id
+        +int letter_id
+        +string message
+        +bool is_read
+        +datetime created_at
+        +datetime updated_at
+        +user() User
+        +letter() Letter
+    }
+
+    class LetterCounter {
+        +int id
+        +string template_slug
+        +int count
+        +datetime created_at
+        +datetime updated_at
+    }
+
+    class LetterView {
+        +int id
+        +int letter_id
+        +int user_id
+        +datetime viewed_at
+        +letter() Letter
+        +user() User
+    }
+
+    class ActivityLog {
+        +int id
+        +int user_id
+        +string user_name
+        +string action
+        +string model_type
+        +int model_id
+        +array old_values
+        +array new_values
+        +string ip_address
+        +string user_agent
+        +datetime created_at
+        +record(action, model, newValues, oldValues)$ void
+        +user() User
+    }
+
+    class SecurityEvent {
+        +int id
+        +string event_type
+        +string severity
+        +int user_id
+        +string username_attempted
+        +string ip_address
+        +string user_agent
+        +string url
+        +array context
+        +datetime created_at
+        +EVENT_LOGIN_FAILED$
+        +EVENT_LOGIN_SUCCESS$
+        +EVENT_ACCOUNT_LOCKED$
+        +EVENT_UNAUTHORIZED_ACCESS$
+        +EVENT_SUSPICIOUS_UPLOAD$
+        +SEVERITY_INFO$
+        +SEVERITY_WARNING$
+        +SEVERITY_CRITICAL$
+        +record(eventType, severity, userId, context)$ void
+    }
+
+    class Penduduk {
+        +int id
+        +string kode_keluarga
+        +string nama_kepala_keluarga
+        +string alamat
+        +string rt
+        +string rw
+        +string dusun
+        +int no_urut
+        +string nik
+        +string nama
+        +string jenis_kelamin
+        +string hubungan
+        +string tempat_lahir
+        +date tanggal_lahir
+        +int usia
+        +string status_perkawinan
+        +string agama
+        +string golongan_darah
+        +string kewarganegaraan
+        +string etnis
+        +string pendidikan
+        +string pekerjaan
+        +string status_kehidupan
+        +datetime deleted_at
+        +datetime created_at
+        +datetime updated_at
+    }
+
+    %% ─── Generalisasi (Inheritance) ─────────────────────────────
+    %% Simbol: garis solid + segitiga kosong mengarah ke induk
+    User --|> Authenticatable
+    Letter --|> Model
+    LetterDisposition --|> Model
+    LetterDocument --|> Model
+    LetterNotification --|> Model
+    LetterCounter --|> Model
+    LetterView --|> Model
+    ActivityLog --|> Model
+    SecurityEvent --|> Model
+    Penduduk --|> Model
+
+    %% ─── Dependency (Ketergantungan) ─────────────────────────────
+    %% Simbol: garis putus-putus + panah (..>)
+    User ..> Auditable : uses
+    Letter ..> Auditable : uses
+    Penduduk ..> Auditable : uses
+    Auditable ..> ActivityLog : records to
+
+    %% ─── Aggregation (Whole-Part) ────────────────────────────────
+    %% Simbol: garis solid + diamond kosong di sisi induk (o--)
+    %% Letter adalah "keseluruhan", Disposition & Document adalah "bagian"
+    Letter "1" o-- "0..*" LetterDisposition : memiliki
+    Letter "1" o-- "0..*" LetterDocument : memiliki
+
+    %% ─── Directed Association (Asosiasi Berarah) ─────────────────
+    %% Simbol: garis solid + panah (-->)
+    Letter "1" --> "0..*" LetterNotification : menghasilkan
+    Letter "1" --> "0..*" LetterView : dicatat pada
+
+    User "1" --> "0..*" Letter : mencetak
+    User "1" --> "0..*" LetterDisposition : mengirim
+    User "1" --> "0..*" LetterDisposition : menerima
+    User "1" --> "0..*" LetterNotification : mendapat notifikasi
+    User "1" --> "0..*" LetterView : melihat
+    User "1" --> "0..*" ActivityLog : tercatat di
+    User "1" --> "0..*" SecurityEvent : memicu

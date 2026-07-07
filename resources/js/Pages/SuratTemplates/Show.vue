@@ -45,7 +45,30 @@ const isSearchingPenduduk = ref(false)
 const pendudukSearchError = ref('')
 const showPendudukDropdown = ref(false)
 const pendudukSelected = ref(false)
+const pendudukSnapshot = ref(null)
 let pendudukSearchTimer = null
+
+const PENDUDUK_FIELD_LABELS = {
+  nama: 'Nama',
+  nik: 'NIK',
+  jenisKelamin: 'Jenis Kelamin',
+  tempatLahir: 'Tempat Lahir',
+  tanggalLahir: 'Tanggal Lahir',
+  pekerjaan: 'Pekerjaan',
+  agama: 'Agama',
+  alamat: 'Alamat',
+  rt: 'RT',
+  rw: 'RW',
+  statusPerkawinan: 'Status Perkawinan',
+  kewarganegaraan: 'Kewarganegaraan',
+}
+
+const PENGIKUT_FIELD_LABELS = {
+  nama: 'Nama',
+  nik: 'NIK',
+  tempatLahir: 'Tempat Lahir',
+  tanggalLahir: 'Tanggal Lahir',
+}
 
 const previewContainerRef = ref(null)
 const previewInnerRef = ref(null)
@@ -206,6 +229,7 @@ const addPengikut = () => {
   showPengikutDropdown.value.push(false)
   pengikutSelected.value.push(false)
   pengikutSearchError.value.push('')
+  pengikutSnapshots.value.push(null)
 }
 
 const removePengikut = (index) => {
@@ -214,12 +238,14 @@ const removePengikut = (index) => {
   showPengikutDropdown.value.splice(index, 1)
   pengikutSelected.value.splice(index, 1)
   pengikutSearchError.value.splice(index, 1)
+  pengikutSnapshots.value.splice(index, 1)
 }
 
 const pengikutSuggestions    = ref([])
 const showPengikutDropdown   = ref([])
 const pengikutSelected       = ref([])
 const pengikutSearchError    = ref([])
+const pengikutSnapshots      = ref([])
 const pengikutSearchTimers   = {}
 
 const applyPengikutFromDb = (index, p) => {
@@ -235,6 +261,32 @@ const applyPengikutFromDb = (index, p) => {
   showPengikutDropdown.value[index]  = false
   pengikutSuggestions.value[index]   = []
   pengikutSearchError.value[index]   = ''
+  pengikutSnapshots.value[index] = {
+    nama: item.nama,
+    nik: item.nik,
+    tempatLahir: item.tempatLahir,
+    tanggalLahir: item.tanggalLahir,
+  }
+}
+
+const pengikutMismatchFields = (index) => {
+  const snap = pengikutSnapshots.value[index]
+  const item = form.pengikut[index]
+  if (!snap || !item || !pengikutSelected.value[index]) return []
+  return Object.keys(PENGIKUT_FIELD_LABELS).filter(
+    (k) => String(item[k] ?? '').trim() !== String(snap[k] ?? '').trim()
+  )
+}
+
+const pengikutHasMismatch = (index) => pengikutMismatchFields(index).length > 0
+
+const resetPengikutSelection = (index) => {
+  const item = form.pengikut[index]
+  if (!item) return
+  item.penduduk_id = null
+  pengikutSelected.value[index] = false
+  pengikutSnapshots.value[index] = null
+  pengikutSearchError.value[index] = ''
 }
 
 const searchPengikutByName = async (index, keyword) => {
@@ -264,9 +316,16 @@ const searchPengikutByName = async (index, keyword) => {
 const onPengikutNamaInput = (index, value) => {
   const item = form.pengikut[index]
   if (!item) return
+
+  // Kalau pengikut ini sudah terhubung ke database, biarkan nama dikoreksi manual
+  // (mis. salah ketik) tanpa memutus tautan penduduk_id atau memicu pencarian ulang.
+  if (pengikutSelected.value[index]) {
+    item.nama = value
+    return
+  }
+
   item.nama = value
   item.penduduk_id = null
-  pengikutSelected.value[index] = false
   pengikutSearchError.value[index] = ''
   clearTimeout(pengikutSearchTimers[index])
   if (!value || String(value).trim().length < 2) {
@@ -406,9 +465,17 @@ const requiresPendudukValidation = computed(() =>
 const clearPendudukSelection = () => {
   form.penduduk_id = ''
   pendudukSelected.value = false
+  pendudukSnapshot.value = null
 }
 
-const pendudukLocked = computed(() => pendudukSelected.value)
+const pendudukMismatchFields = computed(() => {
+  if (!pendudukSelected.value || !pendudukSnapshot.value) return []
+  return Object.keys(PENDUDUK_FIELD_LABELS).filter(
+    (k) => String(form[k] ?? '').trim() !== String(pendudukSnapshot.value[k] ?? '').trim()
+  )
+})
+const pendudukHasMismatch = computed(() => pendudukMismatchFields.value.length > 0)
+
 const ayahLocked     = computed(() => form.ayah_id !== null)
 const ibuLocked      = computed(() => form.ibu_id !== null)
 const ortuAddrLocked = computed(() => form.ayah_id !== null)
@@ -456,6 +523,10 @@ const applyPendudukToForm = (p) => {
   showPendudukDropdown.value = false
   pendudukSuggestions.value = []
   pendudukSearchError.value = ''
+
+  pendudukSnapshot.value = Object.fromEntries(
+    Object.keys(PENDUDUK_FIELD_LABELS).map((k) => [k, form[k]])
+  )
 }
 
 const searchPendudukByName = async (keyword) => {
@@ -524,6 +595,17 @@ const onNamaInput = (value) => {
   pendudukSearchTimer = setTimeout(() => {
     searchPendudukByName(value)
   }, 300)
+}
+
+// Kalau penduduk sudah dipilih, ketikan pada kolom Nama adalah koreksi manual
+// (mis. salah ketik di database) — bukan pencarian baru, jadi tautan penduduk_id
+// dipertahankan. Untuk mencari orang lain, pengguna harus menekan tombol "Ganti".
+const handleNamaInput = (value) => {
+  if (pendudukSelected.value) {
+    form.nama = value
+    return
+  }
+  onNamaInput(value)
 }
 
 const ayahSuggestions = ref([])
@@ -1253,6 +1335,34 @@ const showSuccessModal = ref(false)
 const savedLetter = ref(null)
 const isFinalizing = ref(false)
 
+// Kumpulkan penduduk yang datanya dikoreksi manual di form (berbeda dari database),
+// supaya pengguna diarahkan memperbarui data induknya setelah surat berhasil dibuat.
+const collectPendudukMismatches = () => {
+  const list = []
+
+  if (pendudukHasMismatch.value && form.penduduk_id) {
+    list.push({
+      id: form.penduduk_id,
+      nama: form.nama,
+      fields: pendudukMismatchFields.value.map(f => PENDUDUK_FIELD_LABELS[f]),
+    })
+  }
+
+  if (isPindah.value) {
+    form.pengikut.forEach((item, i) => {
+      if (item.penduduk_id && pengikutHasMismatch(i)) {
+        list.push({
+          id: item.penduduk_id,
+          nama: item.nama,
+          fields: pengikutMismatchFields(i).map(f => PENGIKUT_FIELD_LABELS[f]),
+        })
+      }
+    })
+  }
+
+  return list
+}
+
 const confirmFinalize = async (confirmed) => {
   showPrintConfirm.value = false
 
@@ -1266,7 +1376,20 @@ const confirmFinalize = async (confirmed) => {
   isPrinting.value = true
   try {
     await finalizeLetter(props.slug)
-    router.visit('/dashboard')
+
+    const mismatches = collectPendudukMismatches()
+    if (mismatches.length > 0) {
+      const rincian = mismatches.map(m => `- ${m.nama} (${m.fields.join(', ')})`).join('\n')
+      alert(
+        `Surat berhasil dibuat.\n\nBeberapa data berikut berbeda dari database penduduk dan sebaiknya diperbarui:\n${rincian}\n\nAnda akan diarahkan ke halaman Database Penduduk.`
+      )
+      const target = mismatches.length === 1
+        ? `/penduduk/${mismatches[0].id}/edit`
+        : `/penduduk?q=${encodeURIComponent(mismatches[0].nama)}`
+      router.visit(target)
+    } else {
+      router.visit('/dashboard')
+    }
   } catch (e) {
     console.error('finalize error:', e)
     if (e.isDuplicate) {
@@ -1433,16 +1556,29 @@ const confirmFinalize = async (confirmed) => {
                 </p>
               </div>
               <div
-                v-if="pendudukLocked"
+                v-if="pendudukSelected && !pendudukHasMismatch"
                 class="sm:col-span-2 flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mt-0.5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                 </svg>
                 <p class="text-xs text-blue-700">
-                  <span class="font-semibold">Field diisi otomatis dari database dan tidak dapat diedit langsung.</span>
-                  Untuk mengubah data, perbarui terlebih dahulu di menu
-                  <a href="/penduduk" class="underline font-semibold hover:text-blue-900">Database Penduduk</a>.
+                  <span class="font-semibold">Data terisi otomatis dari database penduduk.</span>
+                  Jika ada data yang salah, Anda bisa langsung mengoreksinya di kolom di bawah ini.
+                </p>
+              </div>
+              <div
+                v-if="pendudukHasMismatch"
+                class="sm:col-span-2 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mt-0.5 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="text-xs text-amber-800">
+                  <span class="font-semibold">Data berikut berbeda dari database penduduk:</span>
+                  {{ pendudukMismatchFields.map(f => PENDUDUK_FIELD_LABELS[f]).join(', ') }}.
+                  Surat tetap bisa dibuat. Setelah surat berhasil dibuat, Anda akan diarahkan ke halaman
+                  Database Penduduk agar data tersebut tidak lupa diperbarui.
                 </p>
               </div>
               <div>
@@ -1450,9 +1586,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.nik"
                   :disabled="!pendudukSelected"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Terisi otomatis setelah nama dipilih"
                 />
               </div>
@@ -1461,12 +1595,10 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Nama</label>
                 <input
                   :value="form.nama"
-                  @input="!pendudukLocked && onNamaInput($event.target.value)"
-                  @focus="!pendudukLocked && searchPendudukByName(form.nama)"
+                  @input="handleNamaInput($event.target.value)"
+                  @focus="!pendudukSelected && searchPendudukByName(form.nama)"
                   autocomplete="off"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Ketik nama penduduk..."
                 />
 
@@ -1504,8 +1636,8 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Jenis Kelamin</label>
                 <select
                   v-model="form.jenisKelamin"
-                  :disabled="!pendudukSelected || pendudukLocked"
-                  class="mt-1 w-full rounded-xl border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                 >
                   <option value="">Pilih</option>
                   <option>Laki-laki</option>
@@ -1518,9 +1650,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.tempatLahir"
                   :disabled="!pendudukSelected"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -1530,9 +1660,7 @@ const confirmFinalize = async (confirmed) => {
                   type="date"
                   v-model="form.tanggalLahir"
                   :disabled="!pendudukSelected"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -1541,9 +1669,7 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.pekerjaan"
                   :disabled="!pendudukSelected"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -1626,9 +1752,7 @@ const confirmFinalize = async (confirmed) => {
                   v-model="form.alamatDomisili"
                   rows="2"
                   :disabled="!pendudukSelected"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                 ></textarea>
               </div>
 
@@ -1639,10 +1763,8 @@ const confirmFinalize = async (confirmed) => {
                   type="text"
                   inputmode="numeric"
                   :disabled="!pendudukSelected"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
-                  @input="!pendudukLocked && (form.rt = $event.target.value.replace(/\D/g, ''))"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
+                  @input="form.rt = $event.target.value.replace(/\D/g, '')"
                 />
               </div>
 
@@ -1653,10 +1775,8 @@ const confirmFinalize = async (confirmed) => {
                   type="text"
                   inputmode="numeric"
                   :disabled="!pendudukSelected"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
-                  @input="!pendudukLocked && (form.rw = $event.target.value.replace(/\D/g, ''))"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
+                  @input="form.rw = $event.target.value.replace(/\D/g, '')"
                 />
               </div>
 
@@ -2005,16 +2125,29 @@ const confirmFinalize = async (confirmed) => {
             <template v-else-if="isKematian">
 
               <div
-                v-if="pendudukLocked"
+                v-if="pendudukSelected && !pendudukHasMismatch"
                 class="sm:col-span-2 flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mt-0.5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                 </svg>
                 <p class="text-xs text-blue-700">
-                  <span class="font-semibold">Field diisi otomatis dari database dan tidak dapat diedit langsung.</span>
-                  Untuk mengubah data, perbarui terlebih dahulu di menu
-                  <a href="/penduduk" class="underline font-semibold hover:text-blue-900">Database Penduduk</a>.
+                  <span class="font-semibold">Data terisi otomatis dari database penduduk.</span>
+                  Jika ada data yang salah, Anda bisa langsung mengoreksinya di kolom di bawah ini.
+                </p>
+              </div>
+              <div
+                v-if="pendudukHasMismatch"
+                class="sm:col-span-2 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mt-0.5 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="text-xs text-amber-800">
+                  <span class="font-semibold">Data berikut berbeda dari database penduduk:</span>
+                  {{ pendudukMismatchFields.map(f => PENDUDUK_FIELD_LABELS[f]).join(', ') }}.
+                  Surat tetap bisa dibuat. Setelah surat berhasil dibuat, Anda akan diarahkan ke halaman
+                  Database Penduduk agar data tersebut tidak lupa diperbarui.
                 </p>
               </div>
 
@@ -2022,13 +2155,11 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Nama</label>
                 <input
                   :value="form.nama"
-                  @input="!pendudukLocked && onNamaInput($event.target.value)"
-                  @focus="!pendudukLocked && searchPendudukByName(form.nama)"
+                  @input="handleNamaInput($event.target.value)"
+                  @focus="!pendudukSelected && searchPendudukByName(form.nama)"
                   type="text"
                   autocomplete="off"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Ketik nama penduduk..."
                 />
 
@@ -2064,13 +2195,15 @@ const confirmFinalize = async (confirmed) => {
 
               <div>
                 <label class="text-xs font-semibold text-gray-700">Jenis Kelamin</label>
-                <input
-                  :value="form.jenisKelamin || '-'"
-                  type="text"
-                  readonly
-                  class="mt-1 w-full rounded-xl border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed"
-                  placeholder="Otomatis dari data penduduk"
-                />
+                <select
+                  v-model="form.jenisKelamin"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+                >
+                  <option value="">Pilih</option>
+                  <option>Laki-laki</option>
+                  <option>Perempuan</option>
+                </select>
               </div>
 
               <div>
@@ -2078,9 +2211,8 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.nik"
                   type="text"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan NIK"
                 />
               </div>
@@ -2090,9 +2222,8 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.tempatLahir"
                   type="text"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan tempat lahir"
                 />
               </div>
@@ -2102,9 +2233,8 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.tanggalLahir"
                   type="date"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -2113,9 +2243,8 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.agama"
                   type="text"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan agama"
                 />
               </div>
@@ -2125,9 +2254,8 @@ const confirmFinalize = async (confirmed) => {
                 <textarea
                   v-model="form.alamat"
                   rows="2"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan alamat"
                 ></textarea>
               </div>
@@ -2369,16 +2497,29 @@ const confirmFinalize = async (confirmed) => {
                 <div class="space-y-4">
 
               <div
-                v-if="pendudukLocked"
+                v-if="pendudukSelected && !pendudukHasMismatch"
                 class="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mt-0.5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                 </svg>
                 <p class="text-xs text-blue-700">
-                  <span class="font-semibold">Field diisi otomatis dari database dan tidak dapat diedit langsung.</span>
-                  Untuk mengubah data, perbarui terlebih dahulu di menu
-                  <a href="/penduduk" class="underline font-semibold hover:text-blue-900">Database Penduduk</a>.
+                  <span class="font-semibold">Data terisi otomatis dari database penduduk.</span>
+                  Jika ada data yang salah, Anda bisa langsung mengoreksinya di kolom di bawah ini.
+                </p>
+              </div>
+              <div
+                v-if="pendudukHasMismatch"
+                class="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mt-0.5 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="text-xs text-amber-800">
+                  <span class="font-semibold">Data berikut berbeda dari database penduduk:</span>
+                  {{ pendudukMismatchFields.map(f => PENDUDUK_FIELD_LABELS[f]).join(', ') }}.
+                  Surat tetap bisa dibuat. Setelah surat berhasil dibuat, Anda akan diarahkan ke halaman
+                  Database Penduduk agar data tersebut tidak lupa diperbarui.
                 </p>
               </div>
 
@@ -2386,12 +2527,10 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Nama</label>
                 <input
                   :value="form.nama"
-                  @input="!pendudukLocked && onNamaInput($event.target.value)"
-                  @focus="!pendudukLocked && searchPendudukByName(form.nama)"
+                  @input="handleNamaInput($event.target.value)"
+                  @focus="!pendudukSelected && searchPendudukByName(form.nama)"
                   autocomplete="off"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Ketik nama penduduk..."
                 />
 
@@ -2408,7 +2547,7 @@ const confirmFinalize = async (confirmed) => {
                   >
                     <div class="font-semibold text-gray-900">{{ item.nama }}</div>
                     <div class="text-xs text-gray-500">
-                      NIK: {{ item.nik }} Î“Ã‡Ã³ RT {{ item.rt }}/RW {{ item.rw }}
+                      NIK: {{ item.nik }} • RT {{ item.rt }}/RW {{ item.rw }}
                     </div>
                   </button>
                 </div>
@@ -2431,9 +2570,8 @@ const confirmFinalize = async (confirmed) => {
                 <label class="text-xs font-semibold text-gray-700">Jenis Kelamin</label>
                 <select
                   v-model="form.jenisKelamin"
-                  :disabled="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-purple-400 focus:ring-purple-400 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                 >
                   <option value="">Pilih Jenis Kelamin</option>
                   <option value="Laki-laki">Laki-laki</option>
@@ -2446,9 +2584,8 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.nik"
                   type="text"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan NIK"
                 />
               </div>
@@ -2458,9 +2595,8 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.tempatLahir"
                   type="text"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan tempat lahir"
                 />
               </div>
@@ -2470,9 +2606,8 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.tanggalLahir"
                   type="date"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                 />
               </div>
 
@@ -2481,9 +2616,8 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.statusPerkawinan"
                   type="text"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Contoh: Kawin"
                 />
               </div>
@@ -2493,9 +2627,8 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.kewarganegaraan"
                   type="text"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Contoh: Indonesia"
                 />
               </div>
@@ -2505,9 +2638,8 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.agama"
                   type="text"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan agama"
                 />
               </div>
@@ -2517,9 +2649,8 @@ const confirmFinalize = async (confirmed) => {
                 <input
                   v-model="form.pekerjaan"
                   type="text"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan pekerjaan"
                 />
               </div>
@@ -2529,9 +2660,8 @@ const confirmFinalize = async (confirmed) => {
                 <textarea
                   v-model="form.alamatAsal"
                   rows="2"
-                  :readonly="pendudukLocked"
-                  :class="pendudukLocked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'focus:border-purple-400 focus:ring-purple-400'"
-                  class="mt-1 w-full rounded-xl border-gray-200"
+                  :disabled="!pendudukSelected"
+                  class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                   placeholder="Masukkan alamat asal"
                 ></textarea>
               </div>
@@ -2703,15 +2833,22 @@ const confirmFinalize = async (confirmed) => {
                         Nama tidak ditemukan di database penduduk
                       </p>
                       <p v-if="pengikutSearchError[index]" class="mt-1 text-xs text-red-600">{{ pengikutSearchError[index] }}</p>
+                      <div v-if="pengikutSelected[index]" class="mt-1">
+                        <button type="button" @click="resetPengikutSelection(index)" class="text-xs text-gray-400 hover:text-red-500 underline whitespace-nowrap">Ganti</button>
+                      </div>
+                      <p v-if="pengikutHasMismatch(index)" class="mt-1 text-xs text-amber-700">
+                        ⚠ Data berikut berbeda dari database: {{ pengikutMismatchFields(index).map(f => PENGIKUT_FIELD_LABELS[f]).join(', ') }}.
+                        Anda akan diarahkan ke Database Penduduk setelah surat berhasil dibuat.
+                      </p>
                     </div>
 
                     <div>
-                      <label class="text-xs font-semibold text-gray-700">NIK <span class="font-normal text-gray-400">(otomatis dari database)</span></label>
+                      <label class="text-xs font-semibold text-gray-700">NIK <span class="font-normal text-gray-400">(otomatis dari database, bisa dikoreksi)</span></label>
                       <input
-                        :value="item.nik"
-                        readonly
+                        v-model="item.nik"
+                        :disabled="!pengikutSelected[index]"
                         type="text"
-                        class="mt-1 w-full rounded-xl border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed"
+                        class="mt-1 w-full rounded-xl border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed focus:border-purple-400 focus:ring-purple-400"
                         placeholder="Terisi otomatis saat nama dipilih"
                       />
                     </div>

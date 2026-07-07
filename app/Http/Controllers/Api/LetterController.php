@@ -76,13 +76,9 @@ class LetterController extends Controller
                 ], 422);
             }
 
-            $namaDb = $this->normalizeName($penduduk->nama);
-
-            if ($namaDb !== $namaInput) {
-                return response()->json([
-                    'message' => 'nama ini tidak terdaftar di database penduduk kelurahan fatubesi',
-                ], 422);
-            }
+            // Nama pada form boleh dikoreksi manual (mis. data di database salah ketik) selama
+            // penduduk_id tetap merujuk ke rekaman penduduk yang valid. Ketidakcocokan tidak lagi
+            // memblokir pembuatan surat, tapi ditandai agar pengguna diarahkan memperbarui data induk.
         }
 
         if ($templateSlug === 'keterangan-pindah') {
@@ -106,11 +102,7 @@ class LetterController extends Controller
                     ], 422);
                 }
 
-                if ($this->normalizeName($pRec->nama) !== $pNama) {
-                    return response()->json([
-                        'message' => "Nama pengikut {$no} tidak cocok dengan data di database.",
-                    ], 422);
-                }
+                // Nama pengikut boleh dikoreksi manual selama tetap terhubung ke penduduk_id yang valid.
             }
         }
 
