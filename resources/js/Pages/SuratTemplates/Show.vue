@@ -8,8 +8,9 @@ import { computed, reactive, ref, nextTick, onMounted, onBeforeUnmount, watch } 
 import { router, usePage } from '@inertiajs/vue3'
 
 const props = defineProps({
-  slug:      String,
-  lurahUser: { type: Object, default: null },
+  slug:       String,
+  lurahUser:  { type: Object, default: null },
+  kasieUsers: { type: Array, default: () => [] },
 })
 const isDomisili = computed(() => props.slug === 'keterangan-domisili')
 const isKelahiran = computed(() => props.slug === 'keterangan-kelahiran')
@@ -31,15 +32,32 @@ const showPreview = ref(false)
 const printMode = ref(false)
 const isPrinting = ref(false)
 
-const lurahDiTempat = ref(false)
+// Hanya Lurah dan Kepala Seksi yang berwenang menandatangani surat. Kalau yang login
+// bukan salah satu dari itu, harus pilih manual siapa penanda tangannya sebelum surat bisa dicetak.
+const SIGNER_JABATAN = ['lurah', 'kasie_pelayanan_masyarakat', 'kasie_pem_trantib_umum']
+const KASIE_LABELS = {
+  kasie_pelayanan_masyarakat: 'Kasie Pelayanan Masyarakat',
+  kasie_pem_trantib_umum: 'Kasie PEM & Trantibum',
+}
+
 const authUser = computed(() => usePage().props.auth?.user ?? {})
-const isCurrentUserLurah = computed(() => authUser.value?.jabatan === 'lurah')
+const isCurrentUserSigner = computed(() => SIGNER_JABATAN.includes(authUser.value?.jabatan))
+
+const signerMode = ref('lurah') // 'lurah' | 'kasie' — hanya dipakai kalau isCurrentUserSigner false
+const selectedKasieId = ref('')
+
+const selectedKasieUser = computed(() =>
+  (props.kasieUsers ?? []).find(u => String(u.id) === String(selectedKasieId.value)) ?? null
+)
+
 const effectiveSigner = computed(() => {
-  if (lurahDiTempat.value && !isCurrentUserLurah.value && props.lurahUser) {
-    return props.lurahUser
-  }
+  if (isCurrentUserSigner.value) return null // tanda tangan sendiri, template pakai auth.user
+  if (signerMode.value === 'lurah') return props.lurahUser ?? null
+  if (signerMode.value === 'kasie') return selectedKasieUser.value
   return null
 })
+
+const isSignerReady = computed(() => isCurrentUserSigner.value || !!effectiveSigner.value)
 const pendudukSuggestions = ref([])
 const isSearchingPenduduk = ref(false)
 const pendudukSearchError = ref('')
@@ -1269,6 +1287,11 @@ const printNow = async () => {
     return
   }
 
+  if (!isSignerReady.value) {
+    alert('Silakan pilih penanda tangan (Lurah atau Kepala Seksi) terlebih dahulu.')
+    return
+  }
+
   try {
     validatePendudukSelectionBeforePrint()
   } catch (e) {
@@ -1435,20 +1458,35 @@ const confirmFinalize = async (confirmed) => {
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-          <label
-            v-if="!isCurrentUserLurah && props.lurahUser"
-            class="flex items-center gap-2 cursor-pointer select-none rounded-xl border border-gray-200 bg-white px-3 py-2"
+          <div
+            v-if="!isCurrentUserSigner"
+            class="flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2"
           >
-            <input
-              type="checkbox"
-              v-model="lurahDiTempat"
-              class="h-4 w-4 rounded border-gray-400 accent-purple-600"
-            />
-            <span class="text-sm text-gray-700">
-              Lurah ada di tempat?
-              <span v-if="lurahDiTempat" class="text-xs text-purple-600 font-semibold">(TTD: {{ props.lurahUser?.name }})</span>
+            <span class="text-xs font-semibold text-amber-800">Penanda tangan:</span>
+            <select
+              v-model="signerMode"
+              class="rounded-lg border-gray-300 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            >
+              <option value="lurah">Lurah</option>
+              <option value="kasie">Kepala Seksi</option>
+            </select>
+            <select
+              v-if="signerMode === 'kasie'"
+              v-model="selectedKasieId"
+              class="rounded-lg border-gray-300 text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            >
+              <option value="" disabled>Pilih Kepala Seksi</option>
+              <option v-for="u in kasieUsers" :key="u.id" :value="u.id">
+                {{ u.name }} — {{ KASIE_LABELS[u.jabatan] ?? u.jabatan }}
+              </option>
+            </select>
+            <span v-if="!isSignerReady" class="text-xs font-semibold text-red-600">
+              ⚠ Pilih penanda tangan sebelum mencetak
             </span>
-          </label>
+            <span v-else class="text-xs font-semibold text-green-700">
+              ✓ TTD: {{ effectiveSigner?.name }}
+            </span>
+          </div>
 
           <button
             type="button"

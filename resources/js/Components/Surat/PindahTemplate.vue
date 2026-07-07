@@ -39,11 +39,17 @@ const jabatanLabel = {
   penata_layanan_operasional:        'Penata Layanan Operasional',
 }
 
-const authUser = computed(() => props.signer ?? usePage().props.auth?.user ?? {})
-const isLurah  = computed(() => authUser.value.jabatan === 'lurah')
-const ttdNama  = computed(() => authUser.value.name ?? '')
-const ttdNip   = computed(() => authUser.value.nip  ?? '')
-const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? authUser.value.jabatan ?? '')
+// Hanya Lurah dan Kepala Seksi yang berwenang menandatangani surat.
+const SIGNER_JABATAN = ['lurah', 'kasie_pelayanan_masyarakat', 'kasie_pem_trantib_umum']
+const authUser = computed(() => {
+  if (props.signer) return props.signer
+  const u = usePage().props.auth?.user ?? {}
+  return SIGNER_JABATAN.includes(u.jabatan) ? u : null
+})
+const isLurah  = computed(() => authUser.value?.jabatan === 'lurah')
+const ttdNama  = computed(() => authUser.value?.name ?? '')
+const ttdNip   = computed(() => authUser.value?.nip  ?? '')
+const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value?.jabatan] ?? authUser.value?.jabatan ?? '')
 </script>
 
 <template>
@@ -239,7 +245,7 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
           <div class="ttd-nip">&nbsp;</div>
         </div>
 
-        <div class="ttd" style="display:flex; flex-direction:column;">
+        <div class="ttd" style="display:flex; flex-direction:column;" v-if="authUser">
           <div class="ttd-tanggal">Kupang, {{ formatTanggalSurat() }}</div>
           <template v-if="isLurah">
             <div class="ttd-jabatan" style="margin-bottom: 65px;">Lurah Fatubesi,</div>
@@ -250,6 +256,9 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value.jabatan] ?? a
           </template>
           <div class="ttd-nama">{{ ttdNama }}</div>
           <div class="ttd-nip" v-if="ttdNip">NIP. {{ ttdNip }}</div>
+        </div>
+        <div class="ttd print:hidden" style="display:flex; flex-direction:column;" v-else>
+          <p class="text-xs italic text-gray-400">Pilih penanda tangan (Lurah/Kepala Seksi) di form sebelum mencetak.</p>
         </div>
       </div>
 

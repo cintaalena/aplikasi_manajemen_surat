@@ -34,10 +34,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('surat-templates.index');
 
     Route::get('/template-surat/{slug}', function (string $slug) {
-        $lurahUser = \App\Models\User::where('jabatan', 'lurah')->first(['id', 'name', 'nip', 'jabatan']);
+        $lurahUser = \App\Models\User::where('jabatan', 'lurah')
+            ->where('is_active', true)
+            ->first(['id', 'name', 'nip', 'jabatan']);
+
+        $kasieUsers = \App\Models\User::whereIn('jabatan', ['kasie_pelayanan_masyarakat', 'kasie_pem_trantib_umum'])
+            ->where('is_active', true)
+            ->get(['id', 'name', 'nip', 'jabatan']);
+
         return Inertia::render('SuratTemplates/Show', [
-            'slug'      => $slug,
-            'lurahUser' => $lurahUser,
+            'slug'       => $slug,
+            'lurahUser'  => $lurahUser,
+            'kasieUsers' => $kasieUsers,
         ]);
     })->name('surat-templates.show');
 
