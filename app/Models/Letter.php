@@ -22,6 +22,7 @@ class Letter extends Model
         'payload',
         'printed_at',
         'printed_by',
+        'signer',
         'is_manual',
     ];
 
@@ -32,6 +33,7 @@ class Letter extends Model
 
     protected $casts = [
         'payload' => 'array',
+        'signer' => 'array',
         'printed_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];

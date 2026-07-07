@@ -164,11 +164,19 @@ $jabatanLabel = [
 
 $p       = $letter->payload ?? [];
 $slug    = $letter->template_slug ?? '';
-$signer  = $letter->printedBy;
-$isLurah = $signer?->jabatan === 'lurah';
-$ttdNama = $signer?->name ?? '';
-$ttdNip  = $signer?->nip  ?? '';
-$ttdJabatan = $jabatanLabel[$signer?->jabatan ?? ''] ?? ($signer?->jabatan ?? '');
+
+// Penanda tangan yang benar-benar dipilih saat surat dibuat (bisa berbeda dari akun yang
+// mencetak, kalau staf memilih Lurah/Kasie sebagai penanda tangan). Surat lama sebelum fitur
+// ini ada tidak punya snapshot ini, jadi jatuh ke printed_by seperti sebelumnya.
+$signerData = $letter->signer ?? ($letter->printedBy ? [
+    'name'    => $letter->printedBy->name,
+    'nip'     => $letter->printedBy->nip,
+    'jabatan' => $letter->printedBy->jabatan,
+] : null);
+$isLurah = ($signerData['jabatan'] ?? null) === 'lurah';
+$ttdNama = $signerData['name'] ?? '';
+$ttdNip  = $signerData['nip']  ?? '';
+$ttdJabatan = $jabatanLabel[$signerData['jabatan'] ?? ''] ?? ($signerData['jabatan'] ?? '');
 
 $tanggalSurat = $p['tanggalSurat'] ?? $letter->printed_at?->format('Y-m-d') ?? date('Y-m-d');
 $tanggalSuratFmt = bl_tanggalIndo($tanggalSurat);

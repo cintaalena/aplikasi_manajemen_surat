@@ -70,7 +70,7 @@ const form = computed(() => ({
   judulSurat: props.letter.title,
 }))
 
-const signer = computed(() => props.letter.printed_by ?? null)
+const signer = computed(() => props.letter.signer ?? props.letter.printed_by ?? null)
 
 const slug = computed(() => props.letter.template_slug ?? '')
 const isDomisili  = computed(() => slug.value === 'keterangan-domisili')

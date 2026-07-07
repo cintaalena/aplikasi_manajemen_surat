@@ -53,6 +53,10 @@ class LetterController extends Controller
             'payload'  => ['required', 'array'],
             'doc_ids'  => ['sometimes', 'array'],
             'doc_ids.*' => ['integer', 'exists:letter_documents,id'],
+            'signer'   => ['sometimes', 'nullable', 'array'],
+            'signer.name'    => ['sometimes', 'nullable', 'string', 'max:150'],
+            'signer.nip'     => ['sometimes', 'nullable', 'string', 'max:30'],
+            'signer.jabatan' => ['sometimes', 'nullable', 'string', 'max:100'],
         ]);
 
         if ($this->mustExistInPenduduk($templateSlug)) {
@@ -142,6 +146,7 @@ class LetterController extends Controller
 
                     'printed_at' => $now,
                     'printed_by' => auth()->id(),
+                    'signer' => $validated['signer'] ?? null,
                 ]);
             });
         } catch (\Illuminate\Database\QueryException $e) {

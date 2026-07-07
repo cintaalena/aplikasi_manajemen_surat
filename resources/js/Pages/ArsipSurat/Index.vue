@@ -422,7 +422,8 @@ function submitDisposisi() {
       </div>
 
       <div class="rounded-2xl border border-green-100 bg-white shadow-sm overflow-hidden">
-        <table class="w-full text-sm">
+        <div class="overflow-x-auto">
+        <table class="w-full min-w-[880px] text-sm">
           <thead class="bg-green-50 text-gray-700">
             <tr>
               <th class="p-3 text-left font-semibold whitespace-nowrap">Waktu</th>
@@ -485,8 +486,8 @@ function submitDisposisi() {
                     Dicetak
                   </span>
                 </td>
-                <td class="p-3">
-                  <div class="flex items-center gap-1.5 flex-wrap">
+                <td class="p-3 whitespace-nowrap">
+                  <div class="flex items-center gap-1.5 flex-nowrap">
                     <a
                       v-if="!row.is_manual && row.template_slug"
                       :href="`/arsip-surat/${row.id}/pratinjau`"
@@ -604,6 +605,7 @@ function submitDisposisi() {
             </tr>
           </tbody>
         </table>
+        </div>
 
         <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm">
           <div class="text-gray-500">

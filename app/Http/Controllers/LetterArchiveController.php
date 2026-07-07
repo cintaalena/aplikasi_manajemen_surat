@@ -210,6 +210,16 @@ class LetterArchiveController extends Controller
                         'jabatan' => $letter->printedBy->jabatan,
                     ]
                     : null,
+                // Penanda tangan yang benar-benar dipilih saat surat dibuat (bisa berbeda dari
+                // printed_by kalau staf memilih Lurah/Kasie sebagai penanda tangan). Surat lama
+                // sebelum fitur ini ada tidak punya snapshot ini, jadi jatuh ke printed_by.
+                'signer'        => $letter->signer ?? ($letter->printedBy
+                    ? [
+                        'name'    => $letter->printedBy->name,
+                        'nip'     => $letter->printedBy->nip,
+                        'jabatan' => $letter->printedBy->jabatan,
+                    ]
+                    : null),
                 'documents'     => $letter->documents->map(fn($doc) => [
                     'id'            => $doc->id,
                     'doc_key'       => $doc->doc_key,

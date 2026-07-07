@@ -58,6 +58,19 @@ const effectiveSigner = computed(() => {
 })
 
 const isSignerReady = computed(() => isCurrentUserSigner.value || !!effectiveSigner.value)
+
+// Snapshot penanda tangan yang benar-benar dipakai, dikirim ke server saat finalize supaya
+// arsip surat menampilkan orang yang dipilih sebagai penanda tangan — bukan akun yang mencetak.
+const resolvedSigner = computed(() => {
+  const s = isCurrentUserSigner.value ? authUser.value : effectiveSigner.value
+  if (!s) return null
+  return {
+    name: s.name ?? '',
+    nip: s.nip ?? '',
+    jabatan: s.jabatan ?? '',
+  }
+})
+
 const pendudukSuggestions = ref([])
 const isSearchingPenduduk = ref(false)
 const pendudukSearchError = ref('')
@@ -1179,6 +1192,7 @@ const finalizeLetter = async (templateSlug) => {
     title: form.judulSurat,
     index_code: selectedIndexCode.value,
     payload: { ...form },
+    signer: resolvedSigner.value,
   }
 
   if (isDomisili.value) {
