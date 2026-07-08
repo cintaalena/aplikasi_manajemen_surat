@@ -8,9 +8,10 @@ import { computed, reactive, ref, nextTick, onMounted, onBeforeUnmount, watch } 
 import { router, usePage } from '@inertiajs/vue3'
 
 const props = defineProps({
-  slug:       String,
-  lurahUser:  { type: Object, default: null },
-  kasieUsers: { type: Array, default: () => [] },
+  slug:           String,
+  lurahUser:      { type: Object, default: null },
+  sekretarisUser: { type: Object, default: null },
+  kasieUsers:     { type: Array, default: () => [] },
 })
 const isDomisili = computed(() => props.slug === 'keterangan-domisili')
 const isKelahiran = computed(() => props.slug === 'keterangan-kelahiran')
@@ -32,9 +33,9 @@ const showPreview = ref(false)
 const printMode = ref(false)
 const isPrinting = ref(false)
 
-// Hanya Lurah dan Kepala Seksi yang berwenang menandatangani surat. Kalau yang login
+// Yang berwenang menandatangani surat: Lurah, Sekretaris Lurah, dan Kepala Seksi. Kalau yang login
 // bukan salah satu dari itu, harus pilih manual siapa penanda tangannya sebelum surat bisa dicetak.
-const SIGNER_JABATAN = ['lurah', 'kasie_pelayanan_masyarakat', 'kasie_pem_trantib_umum']
+const SIGNER_JABATAN = ['lurah', 'sekretaris', 'kasie_pelayanan_masyarakat', 'kasie_pem_trantib_umum']
 const KASIE_LABELS = {
   kasie_pelayanan_masyarakat: 'Kasie Pelayanan Masyarakat',
   kasie_pem_trantib_umum: 'Kasie PEM & Trantibum',
@@ -43,7 +44,7 @@ const KASIE_LABELS = {
 const authUser = computed(() => usePage().props.auth?.user ?? {})
 const isCurrentUserSigner = computed(() => SIGNER_JABATAN.includes(authUser.value?.jabatan))
 
-const signerMode = ref('lurah') // 'lurah' | 'kasie' — hanya dipakai kalau isCurrentUserSigner false
+const signerMode = ref('lurah') // 'lurah' | 'sekretaris' | 'kasie' — hanya dipakai kalau isCurrentUserSigner false
 const selectedKasieId = ref('')
 
 const selectedKasieUser = computed(() =>
@@ -53,6 +54,7 @@ const selectedKasieUser = computed(() =>
 const effectiveSigner = computed(() => {
   if (isCurrentUserSigner.value) return null // tanda tangan sendiri, template pakai auth.user
   if (signerMode.value === 'lurah') return props.lurahUser ?? null
+  if (signerMode.value === 'sekretaris') return props.sekretarisUser ?? null
   if (signerMode.value === 'kasie') return selectedKasieUser.value
   return null
 })
@@ -1266,7 +1268,7 @@ const printNow = async () => {
   }
 
   if (!isSignerReady.value) {
-    alert('Silakan pilih penanda tangan (Lurah atau Kepala Seksi) terlebih dahulu.')
+    alert('Silakan pilih penanda tangan (Lurah, Sekretaris, atau Kepala Seksi) terlebih dahulu.')
     return
   }
 
@@ -1419,6 +1421,7 @@ const confirmFinalize = async (confirmed) => {
             class="rounded-lg border-gray-300 py-1 text-xs focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
           >
             <option value="lurah">Lurah</option>
+            <option value="sekretaris">Sekretaris</option>
             <option value="kasie">Kasie</option>
           </select>
           <select

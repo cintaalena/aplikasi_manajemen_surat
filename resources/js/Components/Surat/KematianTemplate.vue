@@ -34,8 +34,8 @@ const jabatanLabel = {
   penata_layanan_operasional:        'Penata Layanan Operasional',
 }
 
-// Hanya Lurah dan Kepala Seksi yang berwenang menandatangani surat.
-const SIGNER_JABATAN = ['lurah', 'kasie_pelayanan_masyarakat', 'kasie_pem_trantib_umum']
+// Yang berwenang menandatangani surat: Lurah, Sekretaris Lurah, dan Kepala Seksi.
+const SIGNER_JABATAN = ['lurah', 'sekretaris', 'kasie_pelayanan_masyarakat', 'kasie_pem_trantib_umum']
 const authUser = computed(() => {
   if (props.signer) return props.signer
   const u = usePage().props.auth?.user ?? {}
@@ -153,7 +153,7 @@ const ttdJabatanLabel = computed(() => jabatanLabel[authUser.value?.jabatan] ?? 
         <div class="ttd-nip" v-if="ttdNip">NIP. {{ ttdNip }}</div>
       </div>
       <div class="ttd print:hidden" v-else>
-        <p class="text-xs italic text-gray-400">Pilih penanda tangan (Lurah/Kepala Seksi) di form sebelum mencetak.</p>
+        <p class="text-xs italic text-gray-400">Pilih penanda tangan (Lurah/Sekretaris/Kepala Seksi) di form sebelum mencetak.</p>
       </div>
     </div>
   </div>

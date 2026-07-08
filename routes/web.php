@@ -38,14 +38,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->where('is_active', true)
             ->first(['id', 'name', 'nip', 'jabatan']);
 
+        $sekretarisUser = \App\Models\User::where('jabatan', 'sekretaris')
+            ->where('is_active', true)
+            ->first(['id', 'name', 'nip', 'jabatan']);
+
         $kasieUsers = \App\Models\User::whereIn('jabatan', ['kasie_pelayanan_masyarakat', 'kasie_pem_trantib_umum'])
             ->where('is_active', true)
             ->get(['id', 'name', 'nip', 'jabatan']);
 
         return Inertia::render('SuratTemplates/Show', [
-            'slug'       => $slug,
-            'lurahUser'  => $lurahUser,
-            'kasieUsers' => $kasieUsers,
+            'slug'           => $slug,
+            'lurahUser'      => $lurahUser,
+            'sekretarisUser' => $sekretarisUser,
+            'kasieUsers'     => $kasieUsers,
         ]);
     })->name('surat-templates.show');
 
