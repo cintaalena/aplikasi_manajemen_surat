@@ -33,38 +33,46 @@ const showPreview = ref(false)
 const printMode = ref(false)
 const isPrinting = ref(false)
 
-// Yang berwenang menandatangani surat: Lurah, Sekretaris Lurah, dan Kepala Seksi. Kalau yang login
-// bukan salah satu dari itu, harus pilih manual siapa penanda tangannya sebelum surat bisa dicetak.
-const SIGNER_JABATAN = ['lurah', 'sekretaris', 'kasie_pelayanan_masyarakat', 'kasie_pem_trantib_umum']
+// Yang berwenang menandatangani surat: Lurah, Sekretaris Lurah, dan Kepala Seksi. Siapa pun yang
+// login tetap bisa memilih siapa penanda tangannya — defaultnya diri sendiri (kalau termasuk salah
+// satu jabatan di atas), tapi tidak dikunci: misalnya Kasie A tetap bisa pilih Kasie B, Sekretaris,
+// atau Lurah sebagai penanda tangan.
+const KASIE_JABATAN = ['kasie_pelayanan_masyarakat', 'kasie_pem_trantib_umum']
 const KASIE_LABELS = {
   kasie_pelayanan_masyarakat: 'Kasie Pelayanan Masyarakat',
   kasie_pem_trantib_umum: 'Kasie PEM & Trantibum',
 }
 
 const authUser = computed(() => usePage().props.auth?.user ?? {})
-const isCurrentUserSigner = computed(() => SIGNER_JABATAN.includes(authUser.value?.jabatan))
 
-const signerMode = ref('lurah') // 'lurah' | 'sekretaris' | 'kasie' — hanya dipakai kalau isCurrentUserSigner false
-const selectedKasieId = ref('')
+const defaultSignerMode = (jabatan) => {
+  if (jabatan === 'sekretaris') return 'sekretaris'
+  if (KASIE_JABATAN.includes(jabatan)) return 'kasie'
+  return 'lurah'
+}
+
+const signerMode = ref(defaultSignerMode(authUser.value?.jabatan)) // 'lurah' | 'sekretaris' | 'kasie'
+const selectedKasieId = ref(
+  KASIE_JABATAN.includes(authUser.value?.jabatan) ? String(authUser.value?.id ?? '') : ''
+)
 
 const selectedKasieUser = computed(() =>
   (props.kasieUsers ?? []).find(u => String(u.id) === String(selectedKasieId.value)) ?? null
 )
 
 const effectiveSigner = computed(() => {
-  if (isCurrentUserSigner.value) return null // tanda tangan sendiri, template pakai auth.user
   if (signerMode.value === 'lurah') return props.lurahUser ?? null
   if (signerMode.value === 'sekretaris') return props.sekretarisUser ?? null
   if (signerMode.value === 'kasie') return selectedKasieUser.value
   return null
 })
 
-const isSignerReady = computed(() => isCurrentUserSigner.value || !!effectiveSigner.value)
+const isSignerReady = computed(() => !!effectiveSigner.value)
 
 // Snapshot penanda tangan yang benar-benar dipakai, dikirim ke server saat finalize supaya
 // arsip surat menampilkan orang yang dipilih sebagai penanda tangan — bukan akun yang mencetak.
 const resolvedSigner = computed(() => {
-  const s = isCurrentUserSigner.value ? authUser.value : effectiveSigner.value
+  const s = effectiveSigner.value
   if (!s) return null
   return {
     name: s.name ?? '',
@@ -1412,7 +1420,6 @@ const confirmFinalize = async (confirmed) => {
         </div>
 
         <div
-          v-if="!isCurrentUserSigner"
           class="flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5"
         >
           <span class="text-xs font-semibold text-amber-800 whitespace-nowrap">TTD:</span>
