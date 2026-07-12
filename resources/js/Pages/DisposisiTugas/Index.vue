@@ -27,10 +27,20 @@ function markDiterima(id) {
   })
 }
 
+const showSelesaiConfirm = ref(false)
+
 function markSelesai(id) {
   router.patch(route('disposisi-tugas.selesai', { disposisi: id }), {}, {
     preserveScroll: true,
+    onSuccess: () => { showSelesaiConfirm.value = true },
   })
+}
+
+function konfirmasiSuratKeluar(hasilkanSurat) {
+  showSelesaiConfirm.value = false
+  if (hasilkanSurat) {
+    router.visit(route('arsip-surat.index', { open: 'keluar' }))
+  }
 }
 
 const expandedId = ref(null)
@@ -333,6 +343,34 @@ function isPdf(mime)     { return mime === 'application/pdf' }
                 Buka / Unduh File
               </a>
             </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <div v-if="showSelesaiConfirm" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60"></div>
+        <div class="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl overflow-hidden z-10 p-5">
+          <h2 class="text-base font-bold text-gray-900">Tugas selesai ✓</h2>
+          <p class="mt-2 text-sm text-gray-600">
+            Apakah tugas ini menghasilkan surat keluar? Kalau iya, Anda akan diarahkan ke form Tambah Surat Keluar supaya tidak lupa mengisinya.
+          </p>
+          <div class="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+              @click="konfirmasiSuratKeluar(false)"
+            >
+              Tidak
+            </button>
+            <button
+              type="button"
+              class="rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 transition"
+              @click="konfirmasiSuratKeluar(true)"
+            >
+              Ya, buat Surat Keluar
+            </button>
           </div>
         </div>
       </div>

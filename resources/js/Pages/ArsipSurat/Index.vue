@@ -1,7 +1,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Link, router, useForm, usePage } from '@inertiajs/vue3'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const props = defineProps({
   filters: Object,
@@ -66,6 +66,15 @@ const openManualForm = (type) => {
   manualForm.manual_type = type
   showManualForm.value = true
 }
+
+// Dibuka otomatis kalau diarahkan dari halaman lain (mis. setelah menyelesaikan
+// tugas disposisi) lewat query ?open=keluar, supaya pengguna tidak lupa mengisi.
+onMounted(() => {
+  const openType = new URLSearchParams(window.location.search).get('open')
+  if (userRole.value !== 'lurah' && (openType === 'keluar' || openType === 'masuk')) {
+    openManualForm(openType)
+  }
+})
 
 const selectedFiles = ref([])
 const uploadError   = ref('')
