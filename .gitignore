@@ -37,3 +37,27 @@ check_schema.php
 
 # Test-only controllers (MUST DELETE before production!)
 /app/Http/Controllers/Api/RateLimitTestController.php
+
+# Cache framework yang seharusnya tidak pernah ter-commit (dibuat ulang otomatis)
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+
+# Data mentah / dump database — data pribadi warga & kredensial, jangan diupload
+/database_penduduk.csv
+/database_penduduk.xls
+/database_penduduk.xlsx
+/grid_agtkeluarga.csv
+/grid_agtkeluarga.xls
+/manajemen_surat.sql
+
+# Skrip/berkas tidak terkait langsung dengan aplikasi ini
+/tipe_data.py
+/scripts/check_vue_tags.py
+/scripts/README_TESTING.md
+
+# Diagram & dokumentasi (disimpan terpisah dari GitHub, bukan bagian dari kode)
+*.mmd
+/sequence_diagrams.html
+*.docx
