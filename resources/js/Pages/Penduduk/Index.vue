@@ -332,14 +332,14 @@ const importCsv = () => {
                   <th class="px-3 py-3">Tempat Lahir</th>
                   <th class="px-3 py-3">Tanggal Lahir</th>
                   <th class="px-3 py-3">Usia</th>
-                  <th class="px-3 py-3">Status</th>
+                  <th class="px-3 py-3">Status Kawin</th>
                   <th class="px-3 py-3">Agama</th>
                   <th class="px-3 py-3">Gol. Darah</th>
                   <th class="px-3 py-3">Kewarganegaraan</th>
                   <th class="px-3 py-3">Etnis/Suku</th>
                   <th class="px-3 py-3">Pendidikan</th>
                   <th class="px-3 py-3">Pekerjaan</th>
-                  <th class="px-3 py-3">Ket. Hidup/Wafat</th>
+                  <th class="px-3 py-3">Status</th>
                 </tr>
               </thead>
 

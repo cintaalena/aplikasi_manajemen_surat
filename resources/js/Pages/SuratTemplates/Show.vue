@@ -1801,7 +1801,6 @@ const confirmFinalize = async (confirmed) => {
                   >
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
-                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
                         <span class="text-xs font-medium text-gray-700">{{ idx + 1 }}. {{ doc.label }}</span>
                       </div>
                       <div v-if="domDokState[doc.key].isUploading" class="text-xs text-purple-600 italic">Mengupload...</div>
@@ -2077,10 +2076,6 @@ const confirmFinalize = async (confirmed) => {
                       class="rounded-lg bg-white border border-green-100 p-3 space-y-2"
                     >
                       <div class="flex items-start gap-2">
-                        <span
-                          :class="doc.wajib ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'"
-                          class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold flex-shrink-0 mt-0.5"
-                        >{{ doc.wajib ? 'Wajib' : 'Opsional' }}</span>
                         <span class="text-xs font-medium text-gray-700 leading-snug">{{ idx + 1 }}. {{ doc.label }}</span>
                       </div>
                       <div v-if="kelDokState[doc.key].isUploading" class="rounded-lg border-2 border-dashed border-green-300 bg-green-50 py-2 text-center text-xs text-green-700 font-medium">
@@ -2299,7 +2294,6 @@ const confirmFinalize = async (confirmed) => {
                   <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
-                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
                         <span class="text-xs font-medium text-gray-700">1. Surat Pengantar RT/RW</span>
                       </div>
                       <div v-if="dokState.suratPengantarRtRw.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
@@ -2323,7 +2317,6 @@ const confirmFinalize = async (confirmed) => {
 
                   <div class="rounded-lg bg-white border border-amber-100 p-3 space-y-3">
                     <div class="flex items-center gap-2">
-                      <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Wajib</span>
                       <span class="text-xs font-medium text-gray-700">2. Keterangan Kematian</span>
                     </div>
 
@@ -2377,7 +2370,6 @@ const confirmFinalize = async (confirmed) => {
                   <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
-                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
                         <span class="text-xs font-medium text-gray-700">3. Fotocopy KTP Almarhum/Almarhumah</span>
                       </div>
                       <div v-if="dokState.fotoKtpAlmarhum.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
@@ -2402,7 +2394,6 @@ const confirmFinalize = async (confirmed) => {
                   <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
-                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
                         <span class="text-xs font-medium text-gray-700">4. Fotocopy Kartu Keluarga Almarhum/Almarhumah</span>
                       </div>
                       <div v-if="dokState.fotoKkAlmarhum.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
@@ -2427,7 +2418,6 @@ const confirmFinalize = async (confirmed) => {
                   <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
-                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
                         <span class="text-xs font-medium text-gray-700">5. Fotocopy KTP Pemohon (Pelapor)</span>
                       </div>
                       <div v-if="dokState.fotoKtpPemohon.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
@@ -2452,7 +2442,6 @@ const confirmFinalize = async (confirmed) => {
                   <div class="rounded-lg bg-white border border-amber-100 p-3">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
-                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
                         <span class="text-xs font-medium text-gray-700">6. Surat Pernyataan dari Pelapor (2 saksi &amp; RT)</span>
                       </div>
                       <div v-if="dokState.suratPernyataanPelapor.isUploading" class="text-xs text-amber-600 italic">Mengupload...</div>
@@ -2889,7 +2878,6 @@ const confirmFinalize = async (confirmed) => {
                   >
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                       <div class="flex items-center gap-2 min-w-0">
-                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 flex-shrink-0">Wajib</span>
                         <span class="text-xs font-medium text-gray-700">{{ idx + 1 }}. {{ doc.label }}</span>
                       </div>
                       <div v-if="pindahDokState[doc.key].isUploading" class="text-xs text-blue-600 italic">Mengupload...</div>

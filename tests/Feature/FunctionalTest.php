@@ -854,9 +854,10 @@ class FunctionalTest extends TestCase
         $file = UploadedFile::fake()->create('surat_masuk.pdf', 100, 'application/pdf');
 
         $response = $this->actingAs($staf)->post('/arsip-surat', [
-            'no_surat' => 'SM/001/2026',
-            'title'    => 'Surat Masuk Dinas Pendidikan',
-            'files'    => [$file],
+            'no_surat'    => 'SM/001/2026',
+            'title'       => 'Surat Masuk Dinas Pendidikan',
+            'manual_type' => 'masuk',
+            'files'       => [$file],
         ]);
 
         $response->assertRedirect(route('arsip-surat.index'));
@@ -899,9 +900,10 @@ class FunctionalTest extends TestCase
         $file = UploadedFile::fake()->create('dokumen.pdf', 50, 'application/pdf');
 
         $this->actingAs($staf)->post('/arsip-surat', [
-            'no_surat' => 'SM/002/2026',
-            'title'    => 'Surat Masuk Test Notifikasi',
-            'files'    => [$file],
+            'no_surat'    => 'SM/002/2026',
+            'title'       => 'Surat Masuk Test Notifikasi',
+            'manual_type' => 'masuk',
+            'files'       => [$file],
         ]);
 
         // Notifikasi harus terkirim ke lurah
@@ -1107,5 +1109,109 @@ class FunctionalTest extends TestCase
             session('success'),
             'Pesan sukses harus mencantumkan bahwa notifikasi ke Lurah gagal dikirim.'
         );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // K. SURAT KELUAR & INTEGRASI DISPOSISI — TC11
+    // ═══════════════════════════════════════════════════════
+
+    /**
+     * TC11-01 (Normal): Staf mencatat surat keluar manual dengan nomor dan berkas valid.
+     * Diharapkan: Sistem menyimpan surat keluar ke arsip dan mengirim notifikasi ke Lurah.
+     */
+    public function test_TC11_01_catat_surat_keluar_valid_berhasil_disimpan(): void
+    {
+        $staf  = $this->buatStaf();
+        $lurah = $this->buatLurah();
+        Storage::fake('public');
+
+        $file = UploadedFile::fake()->create('surat_keluar.pdf', 100, 'application/pdf');
+
+        $response = $this->actingAs($staf)->post('/arsip-surat', [
+            'no_surat'    => 'SK/001/2026',
+            'title'       => 'Surat Keluar Balasan Kecamatan',
+            'manual_type' => 'keluar',
+            'files'       => [$file],
+        ]);
+
+        $response->assertRedirect(route('arsip-surat.index'));
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('letters', [
+            'no_surat'    => 'SK/001/2026',
+            'is_manual'   => true,
+            'manual_type' => 'keluar',
+        ]);
+        $this->assertDatabaseHas('letter_documents', ['doc_key' => 'surat_keluar']);
+        $this->assertDatabaseHas('letter_notifications', ['user_id' => $lurah->id]);
+    }
+
+    /**
+     * TC11-02 (Alternatif): Catat surat keluar dengan nomor surat yang sudah ada di arsip.
+     * Diharapkan: Sistem menolak dengan validasi nomor surat duplikat, tidak ada data baru tersimpan.
+     */
+    public function test_TC11_02_catat_surat_keluar_nomor_duplikat_ditolak(): void
+    {
+        $staf = $this->buatStaf();
+        $this->buatLetterDb(['no_surat' => 'SK/DUP/2026']);
+
+        $file = UploadedFile::fake()->create('surat_keluar.pdf', 100, 'application/pdf');
+
+        $response = $this->actingAs($staf)->post('/arsip-surat', [
+            'no_surat'    => 'SK/DUP/2026',
+            'title'       => 'Surat Keluar Duplikat',
+            'manual_type' => 'keluar',
+            'files'       => [$file],
+        ]);
+
+        $response->assertSessionHasErrors('no_surat');
+        $this->assertEquals(1, Letter::where('no_surat', 'SK/DUP/2026')->count());
+    }
+
+    /**
+     * TC11-03 (Alternatif): Catat surat keluar dengan berkas berformat tidak sesuai (bukan
+     * gambar/PDF). Diharapkan: Sistem menolak berkas dan tidak menyimpan surat ke arsip.
+     */
+    public function test_TC11_03_catat_surat_keluar_berkas_tidak_sesuai_ditolak(): void
+    {
+        $staf = $this->buatStaf();
+        $file = UploadedFile::fake()->create('naskah.exe', 100, 'application/octet-stream');
+
+        $response = $this->actingAs($staf)->post('/arsip-surat', [
+            'no_surat'    => 'SK/002/2026',
+            'title'       => 'Surat Keluar Berkas Salah',
+            'manual_type' => 'keluar',
+            'files'       => [$file],
+        ]);
+
+        $response->assertSessionHasErrors();
+        $this->assertDatabaseMissing('letters', ['no_surat' => 'SK/002/2026']);
+    }
+
+    /**
+     * TC11-04 (Alternatif): Staf menyelesaikan tugas disposisi tanpa mencatat surat keluar
+     * (memilih "Tidak" pada konfirmasi). Diharapkan: Tugas tetap berhasil ditandai selesai dan
+     * hilang dari daftar tugas, tanpa mewajibkan adanya surat keluar yang dihasilkan.
+     */
+    public function test_TC11_04_penyelesaian_disposisi_tanpa_surat_keluar_tetap_berhasil(): void
+    {
+        $lurah     = $this->buatLurah();
+        $staf      = $this->buatStaf();
+        $letter    = $this->buatLetterDb(['no_surat' => 'TEST/TANPA-KELUAR/2026']);
+        $disposisi = $this->buatDisposisi($letter, $lurah, $staf, 'diterima');
+
+        $response = $this->actingAs($staf)
+            ->patch("/disposisi-tugas/{$disposisi->id}/selesai");
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertEquals('selesai', $disposisi->fresh()->status);
+
+        // Tidak ada surat keluar yang otomatis tercatat — penyelesaian tugas tidak mewajibkannya
+        $this->assertDatabaseMissing('letters', ['manual_type' => 'keluar']);
+
+        // Tugas yang sudah selesai tidak lagi muncul di daftar disposisi staf
+        $indexResponse = $this->actingAs($staf)->get('/disposisi-tugas');
+        $indexResponse->assertOk();
+        $indexResponse->assertDontSee('TEST/TANPA-KELUAR/2026');
     }
 }
